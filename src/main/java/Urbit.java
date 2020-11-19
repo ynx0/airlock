@@ -1,52 +1,59 @@
-import okhttp3.OkHttpClient;
+import okhttp3.*;
 import okhttp3.sse.EventSource;
+import okhttp3.sse.EventSourceListener;
+import okhttp3.sse.EventSources;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.Objects;
+
+import static java.util.Objects.*;
+import static java.util.Objects.requireNonNull;
 
 public class Urbit {
 
-	private OkHttpClient client;
+	public static final MediaType JSON
+			= MediaType.get("application/json; charset=utf-8");
+
+
+	private final OkHttpClient client;
 	/**
 	 * Code is the deterministic password
 	 */
-	String code;
+	private String code;
 
 	/**
 	 * URL is the location of the instance.
 	 */
-	String url;
+	private String url;
 
 	/**
 	 * UID will be used for the channel: The current unix time plus a random hex string
 	 */
-	String uid;
+	private String uid;
 
 	/**
 	 * Last Event ID is an auto-updated index of which events have been sent over this channel
 	 */
-	int lastEventId = 0;
+	private int lastEventId = 0;
 
 	/**
 	 * SSE Client is null for now; we don't want to start polling until it the channel exists
 	 */
-	EventSource sseClient;
+	private EventSource sseClient;
 
 	/**
 	 * Cookie gets set when we log in.
 	 */
-	String cookie;
+	private String cookie;
 
 	/**
 	 * Ship can be set, in which case we can do some magic stuff like send chats
 	 */
-	String ship;
+	private String ship;
 
-	/** This is basic interpolation to get the channel URL of an instantiated Urbit connection. */
-	String channelUrl() {
-		return this.url + "/~/channel/" + this.uid;
-	}
 
 	/**
 	 * Constructs a new Urbit connection.
@@ -58,47 +65,75 @@ public class Urbit {
 		this.uid = Math.floor(Instant.now().toEpochMilli())+ "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
+//		CookieManager cookieManager = new CookieManager( , CookiePolicy.ACCEPT_ORIGINAL_SERVER);
+// new JavaNetCookieJar()
+		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		this.client = new OkHttpClient();
+		this.initEventSource();
 	}
 
+	/** This is basic interpolation to get the channel URL of an instantiated Urbit connection. */
+	public String channelUrl() {
+		return this.url + "/~/channel/" + this.uid;
+	}
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
 	 */
-	async connect(): Promise<AxiosResponse> {
-    const headers = { connection: 'keep-alive' };
-		return axios
-				.post(`${this.url}/~/login`, `password=${this.code}`, { headers })
-      .then((response: AxiosResponse) => {
-			this.cookie = response.headers['set-cookie'][0];
+	public Response connect() throws Exception {
+		RequestBody formBody = new FormBody.Builder()
+				.add("password", this.code)
+				.build();
+
+		Request request = new Request.Builder()
+			.header("connection", "keep-alive")
+			.url(this.url + "/~/login")
+			.post(formBody)
+			.build();
+
+		try (Response response = client.newCall(request).execute()) {
+			if (!response.isSuccessful()) throw new IOException("Error: " + response);
+
+			// todo remove ugly requireNonNull or migrate to kotlin lmao
+			System.out.println(requireNonNull(response.body(), "No response body").string());
+			this.cookie = requireNonNull(response.header("set-cookie"), "No cookie given"); // todo check if this is analogous to typescript version with just string
 			return response;
-		})
-      .catch((error: any) => {
-			console.error('connection error', error);
-		});
+		}
 	}
 
 	/**
 	 * Returns (and initializes, if necessary) the SSE pipe for the appropriate channel.
 	 */
-	eventSource() {
-		if (!this.sseClient) {
-      const headers = { cookie: this.cookie, connection: 'keep-alive' };
-			this.sseClient = new EventSource(this.channelUrl, { headers });
-			this.sseClient?.addEventListener('message', (event: MessageEvent) => {
-				this.ack(Number(event.lastEventId));
-			});
-			this.sseClient?.addEventListener('error', function(event: Event) {
-				console.error('pipe error', event);
-			});
+	void initEventSource() {
+		if (this.sseClient != null) {
+			return;
 		}
-		return this.sseClient;
+		Request sseRequest = new Request.Builder()
+				.url(this.channelUrl())
+				.header("connection", "keep-alive")
+				.build();
+		this.sseClient = EventSources.createFactory(this.client)
+						.newEventSource(sseRequest, new EventSourceListener() {
+							@Override
+							public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
+								super.onEvent(eventSource, id, type, data); // todo see if we need this or not
+								this.ack(lastEventId);
+							}
+
+							@Override
+							public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+								super.onFailure(eventSource, t, response);
+								System.err.println("Event Source Error: " + response);
+							}
+						});
 	}
+
+
 
 	/**
 	 * Returns the next event ID for the appropriate channel.
 	 */
 	int getEventId() {
-		this.lastEventId = this.lastEventId + 1;
+		this.lastEventId++;
 		return this.lastEventId;
 	}
 
@@ -107,8 +142,8 @@ public class Urbit {
 	 *
 	 * @param eventId The event to acknowledge.
 	 */
-	async ack(int eventId): Promise<AxiosResponse> {
-		return this.sendMessage('ack', { 'event-id': eventId });
+	public Response ack(int eventId) {
+		return this.sendMessage("ack", {"event-id": eventId });
 	}
 
 	/**
@@ -118,34 +153,29 @@ public class Urbit {
 	 * structure, so this method exists to prevent duplication.
 	 *
 	 * @param action The action to send
-	 * @param data The data to send with the action
+	 * @param jsonData The data to send with the action
 	 */
-	async sendMessage(String action, data?: object): Promise<AxiosResponse> {
-    const headers = {
-				Connection: 'keep-alive',
-				Cookie: this.cookie,
-				'Content-Type': 'application/json',
-    };
-		return axios
-				.request({
-						// PUT data to the appropriate channel
-						url: this.channelUrl,
-				method: 'put',
-				headers,
-				data: [
-		{
-			// Get a new event ID,
-			id: this.getEventId(),
-					// Include the action,
-					action,
-			// And all the properties of the data to be passed.
-            ...data,
-		},
-        ],
-      })
-      .catch((error: any) => {
-			console.error('message error', error);
-		});
+	public Response sendMessage(String action, String jsonData) throws IOException {
+		// FIXME: Json data should be GSON class/collection not string cause thats not gonna cut it
+
+		// todo append `id` and `action` to jsonData before creating reqbody
+		RequestBody requestBody = RequestBody.create(jsonData, JSON);
+
+
+		Request request = new Request.Builder()
+				.url(this.channelUrl())
+				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
+				.header("connection", "keep-alive") // todo see what the difference between header and addHeader is
+				.header("Content-Type", "application/json")
+				.put(requestBody)
+				.build();
+
+		try (Response response = client.newCall(request).execute()) {
+			if (!response.isSuccessful()) throw new IOException("Error: " + response);
+			System.out.println(requireNonNull(response.body(), "No response body").string());
+
+			return response;
+		}
 	}
 
 	/**
@@ -156,13 +186,15 @@ public class Urbit {
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
 	 */
-	async poke(
-			ship: String = this.ship ? this.ship : '',
-			app: string,
-			mark: string,
-			json: Object
-	): Promise<AxiosResponse> {
-		return this.sendMessage('poke', { ship, app, mark, json });
+	public Response poke(
+			@Nullable String ship,
+			@NotNull String app,
+			@NotNull String mark,
+			@NotNull String json  // fixme migrate to GSON
+	) {
+
+		ship = requireNonNullElse(this.ship,"");
+		return this.sendMessage("poke", { ship, app, mark, json });  // fixme migrate to GSON
 	}
 
 	/**
@@ -172,12 +204,13 @@ public class Urbit {
 	 * @param app The app to subsribe to
 	 * @param path The path to which to subscribe
 	 */
-	async subscribe(
-			ship: String = this.ship ? this.ship : '',
-			app: string,
-			path: string
-	): Promise<AxiosResponse> {
-		return this.sendMessage("subscribe", { ship, app, path });
+	public Response subscribe(
+			@Nullable String ship,
+			@NotNull String app,
+			@NotNull String path
+	) {
+		ship = requireNonNullElse(this.ship,"");
+		return this.sendMessage("subscribe", { ship, app, path });  // fixme migrate to GSON
 	}
 
 	/**
@@ -185,15 +218,15 @@ public class Urbit {
 	 *
 	 * @param subscription
 	 */
-	async unsubscribe(String subscription): Promise<AxiosResponse> {
-		return this.sendMessage("unsubscribe", { subscription });
+	public Response unsubscribe(String subscription) {
+		return this.sendMessage("unsubscribe", { subscription });  // fixme migrate to GSON
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	async delete() {
-		return this.sendMessage("delete");
+	public Response delete() {
+		return this.sendMessage("delete", null);
 	}
 
 	/**
@@ -202,8 +235,8 @@ public class Urbit {
 	 * @param name Name of the ship e.g. zod
 	 * @param code Code to log in
 	 */
-	static onArvoNetwork(name: string, code: string): Urbit {
-    const ship = new Urbit(`https://${name}.arvo.network`, code);
+	static Urbit onArvoNetwork(String name, String code) {
+        final Urbit ship = new Urbit("https://" +  name + ".arvo.network", code);
 		ship.ship = name;
 		return ship;
 	}
