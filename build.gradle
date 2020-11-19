@@ -7,11 +7,16 @@ version "1.0-SNAPSHOT"
 
 repositories {
 	mavenCentral()
+	maven { url "https://jitpack.io" }
 }
 
 dependencies {
 	implementation "com.squareup.okhttp3:okhttp:4.9.0"
 	implementation "com.squareup.okhttp3:okhttp-sse:4.9.0"
+	implementation "com.squareup.okhttp3:okhttp-urlconnection:4.5.0"
+	implementation 'com.google.code.gson:gson:2.8.6'
+	implementation 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
+	implementation 'com.google.code.gson:gson:2.8.6'
 	testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
 
