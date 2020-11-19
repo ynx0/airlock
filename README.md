@@ -7,3 +7,6 @@ More details can be found here: https://grants.urbit.org/proposals/288224550-urb
 
 First, I'll try to do a port of the typescript implementation, which can be found here: https://github.com/tylershuster/urbit/blob/master/src/index.ts
 
+## Misc thoughts
+
+- Maybe shed okhttp library if I end up not needing it/too bloated
