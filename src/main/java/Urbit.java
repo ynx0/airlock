@@ -10,10 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
 
-import static java.util.Objects.*;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 
 public class Urbit {
 
@@ -62,6 +61,9 @@ public class Urbit {
 	 */
 	private final String shipName;
 
+	public String getShipName() {
+		return shipName;
+	}
 
 	private final Gson gson;
 
@@ -78,7 +80,6 @@ public class Urbit {
 		this.url = url;
 
 		this.client = new OkHttpClient();
-		this.initEventSource();
 		this.shipName = requireNonNullElse(shipName, "");
 
 		gson = new Gson();
@@ -192,16 +193,20 @@ public class Urbit {
 	public Response sendMessage(String action, JsonArray jsonData) throws IOException {
 
 		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
-		JsonObject messageMetadataObj = new JsonObject();
-		messageMetadataObj.addProperty("id", this.getEventId());
-		messageMetadataObj.addProperty("action", action);
+		JsonArray fullJsonDataArray = jsonData.deepCopy(); // todo seems like a wasteful way to do it; possibly refactor
+		// extract out first object
+		assert fullJsonDataArray.get(0).isJsonObject();
+		JsonObject fullJsonData = fullJsonDataArray.get(0).getAsJsonObject();
 
-		JsonArray messageMetadata = new JsonArray();
-		messageMetadata.add(messageMetadataObj);
-		jsonData.deepCopy().addAll(messageMetadata); // todo seems like a wasteful way to do it; possibly refactor
+		// add metadata
+		fullJsonData.addProperty("id", this.getEventId());
+		fullJsonData.addProperty("action", action);
 
 
-		RequestBody requestBody = RequestBody.create(gson.toJson(jsonData), JSON);
+		String jsonString = gson.toJson(fullJsonDataArray);
+		System.out.println(jsonString);
+
+		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 		System.out.println("Current cookie is " + cookie);
 		Request request = new Request.Builder()
@@ -214,6 +219,7 @@ public class Urbit {
 
 		try (Response response = client.newCall(request).execute()) {
 			if (!response.isSuccessful()) {
+				System.out.println(requireNonNull(response.body()).string());
 				throw new IOException("Error: " + response);
 			}
 
