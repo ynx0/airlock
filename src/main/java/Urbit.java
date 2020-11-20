@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -7,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.*;
 
 import static java.util.Objects.*;
 import static java.util.Objects.requireNonNull;
@@ -52,7 +53,10 @@ public class Urbit {
 	/**
 	 * Ship can be set, in which case we can do some magic stuff like send chats
 	 */
-	private String ship;
+	private final String ship;
+
+
+	private final Gson gson;
 
 
 	/**
@@ -61,15 +65,20 @@ public class Urbit {
 	 * @param url  The URL (with protocol and port) of the ship to be accessed
 	 * @param code The access code for the ship at that address
 	 */
-	public Urbit(String url, String code) {
+	public Urbit(String url, String ship, String code) {
 		this.uid = Math.floor(Instant.now().toEpochMilli())+ "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
-//		CookieManager cookieManager = new CookieManager( , CookiePolicy.ACCEPT_ORIGINAL_SERVER);
-// new JavaNetCookieJar()
-		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
+
 		this.client = new OkHttpClient();
 		this.initEventSource();
+		this.ship = requireNonNullElse(ship, "");
+
+		gson = new Gson();
+
+
+		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
+		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 	}
 
 	/** This is basic interpolation to get the channel URL of an instantiated Urbit connection. */
@@ -116,7 +125,12 @@ public class Urbit {
 							@Override
 							public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 								super.onEvent(eventSource, id, type, data); // todo see if we need this or not
-								this.ack(lastEventId);
+								try {
+									ack(lastEventId);
+								} catch (IOException e) {
+									// todo make less ugly?
+									e.printStackTrace();
+								}
 							}
 
 							@Override
@@ -142,8 +156,8 @@ public class Urbit {
 	 *
 	 * @param eventId The event to acknowledge.
 	 */
-	public Response ack(int eventId) {
-		return this.sendMessage("ack", {"event-id": eventId });
+	public Response ack(int eventId) throws IOException {
+		return this.sendMessage("ack", null/*{"event-id": eventId }*/);
 	}
 
 	/**
@@ -155,11 +169,10 @@ public class Urbit {
 	 * @param action The action to send
 	 * @param jsonData The data to send with the action
 	 */
-	public Response sendMessage(String action, String jsonData) throws IOException {
-		// FIXME: Json data should be GSON class/collection not string cause thats not gonna cut it
+	public Response sendMessage(String action, Collection<Object> jsonData) throws IOException {
 
 		// todo append `id` and `action` to jsonData before creating reqbody
-		RequestBody requestBody = RequestBody.create(jsonData, JSON);
+		RequestBody requestBody = RequestBody.create(gson.toJson(jsonData), JSON);
 
 
 		Request request = new Request.Builder()
@@ -190,11 +203,11 @@ public class Urbit {
 			@Nullable String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull String json  // fixme migrate to GSON
-	) {
+			@NotNull Object json
+	) throws IOException {
 
-		ship = requireNonNullElse(this.ship,"");
-		return this.sendMessage("poke", { ship, app, mark, json });  // fixme migrate to GSON
+		ship = requireNonNullElse(ship, this.ship);
+		return this.sendMessage("poke", Arrays.asList(ship, app, mark, json));
 	}
 
 	/**
@@ -208,9 +221,9 @@ public class Urbit {
 			@Nullable String ship,
 			@NotNull String app,
 			@NotNull String path
-	) {
-		ship = requireNonNullElse(this.ship,"");
-		return this.sendMessage("subscribe", { ship, app, path });  // fixme migrate to GSON
+	) throws IOException {
+		ship = requireNonNullElse(ship, this.ship);
+		return this.sendMessage("subscribe", Arrays.asList(ship, app, path));
 	}
 
 	/**
@@ -218,15 +231,15 @@ public class Urbit {
 	 *
 	 * @param subscription
 	 */
-	public Response unsubscribe(String subscription) {
-		return this.sendMessage("unsubscribe", { subscription });  // fixme migrate to GSON
+	public Response unsubscribe(String subscription) throws IOException {
+		return this.sendMessage("unsubscribe", Collections.singleton(subscription));
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public Response delete() {
-		return this.sendMessage("delete", null);
+	public Response delete() throws IOException {
+		return this.sendMessage("delete", Collections.EMPTY_LIST);
 	}
 
 	/**
@@ -235,10 +248,9 @@ public class Urbit {
 	 * @param name Name of the ship e.g. zod
 	 * @param code Code to log in
 	 */
+	@NotNull
 	static Urbit onArvoNetwork(String name, String code) {
-        final Urbit ship = new Urbit("https://" +  name + ".arvo.network", code);
-		ship.ship = name;
-		return ship;
+		return new Urbit("https://" +  name + ".arvo.network", name, code);
 	}
 
 	/**
