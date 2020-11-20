@@ -208,7 +208,6 @@ public class Urbit {
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
-		System.out.println("Current cookie is " + cookie);
 		Request request = new Request.Builder()
 				.url(this.channelUrl())
 				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
@@ -219,11 +218,8 @@ public class Urbit {
 
 		try (Response response = client.newCall(request).execute()) {
 			if (!response.isSuccessful()) {
-				System.out.println(requireNonNull(response.body()).string());
 				throw new IOException("Error: " + response);
 			}
-
-			System.out.println(requireNonNull(response.body(), "No response body").string());
 
 			return response;
 		}
