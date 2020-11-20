@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Collections;
 
 import static java.util.Objects.*;
 import static java.util.Objects.requireNonNull;
@@ -110,7 +111,12 @@ public class Urbit {
 
 			// todo remove ugly requireNonNull or migrate to kotlin lmao
 			System.out.println(requireNonNull(response.body(), "No response body").string());
-			this.cookie = requireNonNull(response.header("set-cookie"), "No cookie given"); // todo check if this is analogous to typescript version with just string
+
+			String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
+			Cookie cookie = Cookie.parse(request.url(), cookieString);
+			requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
+			this.cookie = cookie.name() + "=" + cookie.value();
+			System.out.println(this.cookie);
 			return response;
 		}
 	}
@@ -196,17 +202,19 @@ public class Urbit {
 
 		RequestBody requestBody = RequestBody.create(gson.toJson(jsonData), JSON);
 
-
+		System.out.println("Current cookie is " + cookie);
 		Request request = new Request.Builder()
 				.url(this.channelUrl())
 				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
-				.header("connection", "keep-alive") // todo see what the difference between header and addHeader is
+				.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
 				.header("Content-Type", "application/json")
 				.put(requestBody)
 				.build();
 
 		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()) throw new IOException("Error: " + response);
+			if (!response.isSuccessful()){
+				throw new IOException("Error: " + response);}
+
 			System.out.println(requireNonNull(response.body(), "No response body").string());
 
 			return response;
