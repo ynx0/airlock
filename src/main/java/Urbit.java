@@ -43,11 +43,11 @@ public class Urbit {
 	private int lastEventId = 0;
 
 
-
 	/**
 	 * SSE Client is null for now; we don't want to start polling until it the channel exists
 	 */
 	private EventSource sseClient;
+
 	public EventSource getSseClient() {
 		return sseClient;
 	}
@@ -88,10 +88,13 @@ public class Urbit {
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 	}
 
-	/** This is basic interpolation to get the channel URL of an instantiated Urbit connection. */
+	/**
+	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
+	 */
 	public String channelUrl() {
 		return this.url + "/~/channel/" + this.uid;
 	}
+
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
 	 */
@@ -101,10 +104,10 @@ public class Urbit {
 				.build();
 
 		Request request = new Request.Builder()
-			.header("connection", "keep-alive")
-			.url(this.url + "/~/login")
-			.post(formBody)
-			.build();
+				.header("connection", "keep-alive")
+				.url(this.url + "/~/login")
+				.post(formBody)
+				.build();
 
 		try (Response response = client.newCall(request).execute()) {
 			if (!response.isSuccessful()) throw new IOException("Error: " + response);
@@ -133,26 +136,25 @@ public class Urbit {
 				.header("connection", "keep-alive")
 				.build();
 		this.sseClient = EventSources.createFactory(this.client)
-						.newEventSource(sseRequest, new EventSourceListener() {
-							@Override
-							public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-								super.onEvent(eventSource, id, type, data); // todo see if we need this or not
-								try {
-									ack(lastEventId);
-								} catch (IOException e) {
-									// todo make less ugly?
-									e.printStackTrace();
-								}
-							}
+				.newEventSource(sseRequest, new EventSourceListener() {
+					@Override
+					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
+						super.onEvent(eventSource, id, type, data); // todo see if we need this or not
+						try {
+							ack(lastEventId);
+						} catch (IOException e) {
+							// todo make less ugly?
+							e.printStackTrace();
+						}
+					}
 
-							@Override
-							public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-								super.onFailure(eventSource, t, response);
-								System.err.println("Event Source Error: " + response);
-							}
-						});
+					@Override
+					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+						super.onFailure(eventSource, t, response);
+						System.err.println("Event Source Error: " + response);
+					}
+				});
 	}
-
 
 
 	/**
@@ -180,11 +182,11 @@ public class Urbit {
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
-	 *
+	 * <p>
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
-	 * @param action The action to send
+	 * @param action   The action to send
 	 * @param jsonData The data to send with the action
 	 */
 	public Response sendMessage(String action, JsonArray jsonData) throws IOException {
@@ -199,7 +201,6 @@ public class Urbit {
 		jsonData.deepCopy().addAll(messageMetadata); // todo seems like a wasteful way to do it; possibly refactor
 
 
-
 		RequestBody requestBody = RequestBody.create(gson.toJson(jsonData), JSON);
 
 		System.out.println("Current cookie is " + cookie);
@@ -212,8 +213,9 @@ public class Urbit {
 				.build();
 
 		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()){
-				throw new IOException("Error: " + response);}
+			if (!response.isSuccessful()) {
+				throw new IOException("Error: " + response);
+			}
 
 			System.out.println(requireNonNull(response.body(), "No response body").string());
 
@@ -225,7 +227,7 @@ public class Urbit {
 	 * Pokes a ship with data.
 	 *
 	 * @param ship The ship to poke
-	 * @param app The app to poke
+	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
 	 */
@@ -252,7 +254,7 @@ public class Urbit {
 	 * Subscribes to a path on an app on a ship.
 	 *
 	 * @param ship The ship to subscribe to
-	 * @param app The app to subsribe to
+	 * @param app  The app to subsribe to
 	 * @param path The path to which to subscribe
 	 */
 	public Response subscribe(
@@ -305,12 +307,12 @@ public class Urbit {
 	 */
 	@NotNull
 	static Urbit onArvoNetwork(String name, String code) {
-		return new Urbit("https://" +  name + ".arvo.network", name, code);
+		return new Urbit("https://" + name + ".arvo.network", name, code);
 	}
 
 	/**
 	 * Returns a hex string of given length.
-	 *
+	 * <p>
 	 * Poached from StackOverflow.
 	 *
 	 * @param len Length of hex string to return.
@@ -330,7 +332,7 @@ public class Urbit {
 
 	/**
 	 * Generates a random UID.
-	 *
+	 * <p>
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {
