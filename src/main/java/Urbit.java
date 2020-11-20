@@ -254,8 +254,8 @@ public class Urbit {
 		final double max = Math.pow(16, Math.min(len, maxlen)) - 1;
 		final double n = Math.floor(Math.random() * (max - min + 1)) + min;
 
-		StringBuilder r = new StringBuilder(n.toString(16));
-		while (r.toString().length < len) {
+		StringBuilder r = new StringBuilder(Integer.toString((int) n, 16));
+		while (r.toString().length() < len) {
 			r.append(Urbit.hexString(len - maxlen));
 		}
 		return r.toString();
@@ -270,10 +270,10 @@ public class Urbit {
 		StringBuilder str = new StringBuilder("0v");
 		str.append(Math.ceil(Math.random() * 8)).append('.');
 		for (int i = 0; i < 5; i++) {
-			String _str = Math.ceil(Math.random() * 10000000).toString(32);
-			_str = ("00000" + _str).substr(-5, 5);
+			String _str = Integer.toString((int) Math.ceil(Math.random() * 10000000), 32); // todo check to see if this is equivalent with js number behaviours
+			_str = ("00000" + _str).substring(-5, 5);
 			str.append(_str).append('.');
 		}
-		return str.toString().slice(0, -1);
+		return str.substring(0, str.length() - 1);
 	}
 }
