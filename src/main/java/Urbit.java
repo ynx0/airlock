@@ -1,4 +1,6 @@
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -8,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
 
 import static java.util.Objects.*;
 import static java.util.Objects.requireNonNull;
@@ -40,10 +41,15 @@ public class Urbit {
 	 */
 	private int lastEventId = 0;
 
+
+
 	/**
 	 * SSE Client is null for now; we don't want to start polling until it the channel exists
 	 */
 	private EventSource sseClient;
+	public EventSource getSseClient() {
+		return sseClient;
+	}
 
 	/**
 	 * Cookie gets set when we log in.
@@ -53,7 +59,7 @@ public class Urbit {
 	/**
 	 * Ship can be set, in which case we can do some magic stuff like send chats
 	 */
-	private final String ship;
+	private final String shipName;
 
 
 	private final Gson gson;
@@ -65,14 +71,14 @@ public class Urbit {
 	 * @param url  The URL (with protocol and port) of the ship to be accessed
 	 * @param code The access code for the ship at that address
 	 */
-	public Urbit(String url, String ship, String code) {
-		this.uid = Math.floor(Instant.now().toEpochMilli())+ "-" + Urbit.hexString(6);
+	public Urbit(String url, String shipName, String code) {
+		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
 
 		this.client = new OkHttpClient();
 		this.initEventSource();
-		this.ship = requireNonNullElse(ship, "");
+		this.shipName = requireNonNullElse(shipName, "");
 
 		gson = new Gson();
 
@@ -157,7 +163,13 @@ public class Urbit {
 	 * @param eventId The event to acknowledge.
 	 */
 	public Response ack(int eventId) throws IOException {
-		return this.sendMessage("ack", null/*{"event-id": eventId }*/);
+		JsonObject ackObj = new JsonObject();
+		ackObj.addProperty("event-id", eventId);
+
+		JsonArray ackData = new JsonArray();
+		ackData.add(ackObj);
+
+		return this.sendMessage("ack", ackData);
 	}
 
 	/**
@@ -169,9 +181,19 @@ public class Urbit {
 	 * @param action The action to send
 	 * @param jsonData The data to send with the action
 	 */
-	public Response sendMessage(String action, Collection<Object> jsonData) throws IOException {
+	public Response sendMessage(String action, JsonArray jsonData) throws IOException {
 
-		// todo append `id` and `action` to jsonData before creating reqbody
+		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
+		JsonObject messageMetadataObj = new JsonObject();
+		messageMetadataObj.addProperty("id", this.getEventId());
+		messageMetadataObj.addProperty("action", action);
+
+		JsonArray messageMetadata = new JsonArray();
+		messageMetadata.add(messageMetadataObj);
+		jsonData.deepCopy().addAll(messageMetadata); // todo seems like a wasteful way to do it; possibly refactor
+
+
+
 		RequestBody requestBody = RequestBody.create(gson.toJson(jsonData), JSON);
 
 
@@ -203,11 +225,19 @@ public class Urbit {
 			@Nullable String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull Object json
+			@NotNull String json // todo maybe migrate type to JsonObject
 	) throws IOException {
 
-		ship = requireNonNullElse(ship, this.ship);
-		return this.sendMessage("poke", Arrays.asList(ship, app, mark, json));
+		ship = requireNonNullElse(ship, this.shipName);
+		JsonObject pokeDataObj = new JsonObject();
+		pokeDataObj.addProperty("ship", ship);
+		pokeDataObj.addProperty("app", app);
+		pokeDataObj.addProperty("mark", mark);
+		pokeDataObj.addProperty("json", json);
+		JsonArray pokeData = new JsonArray();
+		pokeData.add(pokeDataObj);
+
+		return this.sendMessage("poke", pokeData);
 	}
 
 	/**
@@ -222,24 +252,41 @@ public class Urbit {
 			@NotNull String app,
 			@NotNull String path
 	) throws IOException {
-		ship = requireNonNullElse(ship, this.ship);
-		return this.sendMessage("subscribe", Arrays.asList(ship, app, path));
+		ship = requireNonNullElse(ship, this.shipName);
+		JsonObject subscribeDataObj = new JsonObject();
+		subscribeDataObj.addProperty("ship", ship);
+		subscribeDataObj.addProperty("app", app);
+		subscribeDataObj.addProperty("path", path);
+
+		JsonArray subscribeData = new JsonArray();
+		subscribeData.add(subscribeDataObj);
+		return this.sendMessage("subscribe", subscribeData);
 	}
 
 	/**
 	 * Unsubscribes to a given subscription.
 	 *
-	 * @param subscription
+	 * @param subscription The subscription to unsubscribe from
 	 */
 	public Response unsubscribe(String subscription) throws IOException {
-		return this.sendMessage("unsubscribe", Collections.singleton(subscription));
+		JsonObject unsubscribeDataObj = new JsonObject();
+		unsubscribeDataObj.addProperty("subscription", subscription);
+
+		JsonArray unsubscribeData = new JsonArray();
+		unsubscribeData.add(unsubscribeDataObj);
+
+		return this.sendMessage("unsubscribe", unsubscribeData);
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
 	public Response delete() throws IOException {
-		return this.sendMessage("delete", Collections.EMPTY_LIST);
+		JsonObject deleteDataObj = new JsonObject(); // no data necessary
+		JsonArray deleteData = new JsonArray();
+		deleteData.add(deleteDataObj);
+
+		return this.sendMessage("delete", deleteData);
 	}
 
 	/**
@@ -266,7 +313,7 @@ public class Urbit {
 		final double max = Math.pow(16, Math.min(len, maxlen)) - 1;
 		final double n = Math.floor(Math.random() * (max - min + 1)) + min;
 
-		StringBuilder r = new StringBuilder(Integer.toString((int) n, 16));
+		StringBuilder r = new StringBuilder(Integer.toString((int) Math.round(n), 16));
 		while (r.toString().length() < len) {
 			r.append(Urbit.hexString(len - maxlen));
 		}
@@ -282,9 +329,11 @@ public class Urbit {
 		StringBuilder str = new StringBuilder("0v");
 		str.append(Math.ceil(Math.random() * 8)).append('.');
 		for (int i = 0; i < 5; i++) {
-			String _str = Integer.toString((int) Math.ceil(Math.random() * 10000000), 32); // todo check to see if this is equivalent with js number behaviours
-			_str = ("00000" + _str).substring(-5, 5);
-			str.append(_str).append('.');
+			String entropy = Integer.toString((int) Math.round(Math.ceil(Math.random() * 10000000)), 32); // todo check to see if this is equivalent with js number behaviours
+			// pad entropy with zeroes
+			entropy = "00000" + entropy;
+			entropy = entropy.substring(entropy.length() - 5);
+			str.append(entropy).append('.');
 		}
 		return str.substring(0, str.length() - 1);
 	}
