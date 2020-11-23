@@ -16,8 +16,8 @@ public class Main {
 		Urbit ship = new Urbit(url, shipName, code);
 		ship.connect();
 
-		Main.test1(ship); // successful
-		Main.test0(ship);
+		Main.test0(ship); // successful
+		Main.test1(ship);
 //		Main.test2(ship);
 //		Main.test3(ship);
 
@@ -27,13 +27,15 @@ public class Main {
 //		System.out.println("Cancelled event source");
 	}
 
-	public static void test0(Urbit ship) {
+	public static void test1(Urbit ship) {
+		// as per the guide, this code can only be called after
+		// a channel has been created, which means only after the `helm-hi`
 		ship.initEventSource();
 		EventSource sseClient = ship.getSseClient();
 		System.out.println(sseClient.request());
 	}
 
-	public static void test1(Urbit ship) throws IOException {
+	public static void test0(Urbit ship) throws IOException {
 		String json = "Opening airlock :)";
 		ship.poke(ship.getShipName(), "hood", "helm-hi", json);
 	}
