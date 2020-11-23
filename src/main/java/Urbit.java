@@ -134,25 +134,37 @@ public class Urbit {
 		}
 		Request sseRequest = new Request.Builder()
 				.url(this.channelUrl())
+				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
 		this.sseClient = EventSources.createFactory(this.client)
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-						super.onEvent(eventSource, id, type, data); // todo see if we need this or not
 						try {
-							ack(lastEventId);
+							System.out.println("Received event with id " + id + " type: " + type);
+							System.out.println("Data Received:\n" + data);
+							ack(lastEventId); // TODO see if we use this or the provided `id`
+
+//							JsonObject jsonObject = gson.fromJson(data)
+
+							// todo port https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168 here
 						} catch (IOException e) {
-							// todo make less ugly?
 							e.printStackTrace();
 						}
 					}
 
 					@Override
 					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-						super.onFailure(eventSource, t, response);
 						System.err.println("Event Source Error: " + response);
+					}
+
+					@Override
+					public void onClosed(@NotNull EventSource eventSource) {
+						super.onClosed(eventSource);
+						// TODO maybe we have to impl a 'complete' handler,
+						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
+
 					}
 				});
 	}
