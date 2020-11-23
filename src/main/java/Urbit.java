@@ -9,7 +9,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.net.CookieStore;
 import java.time.Instant;
+
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -79,7 +84,14 @@ public class Urbit {
 		this.code = code;
 		this.url = url;
 
-		this.client = new OkHttpClient();
+		// init cookie manager
+		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+
+
+
+		this.client = new OkHttpClient.Builder()
+//				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
+				.build();
 		this.shipName = requireNonNullElse(shipName, "");
 
 		gson = new Gson();
@@ -309,12 +321,16 @@ public class Urbit {
 	 * Deletes the connection to a channel.
 	 */
 	public Response delete() throws IOException {
-		JsonObject deleteDataObj = new JsonObject(); // no data necessary
+		JsonObject deleteDataObj = new JsonObject();
 		JsonArray deleteData = new JsonArray();
 		deleteData.add(deleteDataObj);
+		// deleteDataObj is now equivalent to {}
+		// no data is necessary for deletes
 
 		return this.sendMessage("delete", deleteData);
 	}
+
+
 
 	/**
 	 * Utility function to connect to a ship that has its *.arvo.network domain configured.
