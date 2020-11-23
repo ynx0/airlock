@@ -17,10 +17,20 @@ public class Main {
 		ship.connect();
 
 		Main.test1(ship); // successful
-		Main.test2(ship);
-		Main.test3(ship);
+		Main.test0(ship);
+//		Main.test2(ship);
+//		Main.test3(ship);
 
 		System.out.println("Done communicating with mars.");
+		Thread.sleep(1000);
+//		ship.getSseClient().cancel();
+//		System.out.println("Cancelled event source");
+	}
+
+	public static void test0(Urbit ship) {
+		ship.initEventSource();
+		EventSource sseClient = ship.getSseClient();
+		System.out.println(sseClient.request());
 	}
 
 	public static void test1(Urbit ship) throws IOException {
@@ -28,7 +38,7 @@ public class Main {
 		ship.poke(ship.getShipName(), "hood", "helm-hi", json);
 	}
 
-	public static void test2(Urbit ship) throws IOException {
+	public static void test3(Urbit ship) throws IOException {
 
 
 		String json = "{message: {path: '/~/~zod/mc', envelope: {\n" +
@@ -42,18 +52,12 @@ public class Main {
 
 	}
 
-	public static void test3(Urbit ship) throws IOException {
+	public static void test2(Urbit ship) throws IOException {
 		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc");
 		ResponseBody body = res.body();
 		Objects.requireNonNull(body);
 		String resBodyString = body.string();
 		System.out.println(resBodyString);
-	}
-
-	public static void test4(Urbit ship) {
-		ship.initEventSource();
-		EventSource pipe = ship.getSseClient();
-		System.out.println(pipe);
 	}
 
 }
