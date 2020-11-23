@@ -17,6 +17,12 @@ dependencies {
 	implementation 'com.google.code.gson:gson:2.8.6'
 	implementation 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
 	implementation 'com.google.code.gson:gson:2.8.6'
-	testImplementation group: 'junit', name: 'junit', version: '4.12'
+//	testImplementation group: 'junit', name: 'junit', version: ''
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+	useJUnitPlatform()
 }
 
