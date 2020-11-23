@@ -1,4 +1,10 @@
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okhttp3.sse.EventSource;
+
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Objects;
 
 public class Main {
 
@@ -10,7 +16,9 @@ public class Main {
 		Urbit ship = new Urbit(url, shipName, code);
 		ship.connect();
 
-		Main.test1(ship);
+		Main.test1(ship); // successful
+		Main.test2(ship);
+		Main.test3(ship);
 
 		System.out.println("Done communicating with mars.");
 	}
@@ -21,17 +29,31 @@ public class Main {
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-//		ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc");
-//		EventSource pipe = ship.getSseClient();
-//
-//		String json = "{message: {path: '/~/~zod/mc', envelope: {\n" +
-//				"        uid: " + Urbit.uid() + ",\n" +
-//				"        number: 1,\n" +
-//				"        author: '~zod',\n" +
-//				"        when: " + Instant.now().toEpochMilli() + ",\n" +
-//				"        letter: { text: 'Hello, Mars!' }\n" +
-//				"    }}}".trim();
-//		ship.poke(shipName, "chat-hook", "json", json);
+
+
+		String json = "{message: {path: '/~/~zod/mc', envelope: {\n" +
+				"        uid: " + Urbit.uid() + ",\n" +
+				"        number: 1,\n" +
+				"        author: '~zod',\n" +
+				"        when: " + Instant.now().toEpochMilli() + ",\n" +
+				"        letter: { text: 'Hello, Mars!' }\n" +
+				"    }}}".trim();
+		ship.poke(ship.getShipName(), "chat-hook", "json", json);
+
+	}
+
+	public static void test3(Urbit ship) throws IOException {
+		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc");
+		ResponseBody body = res.body();
+		Objects.requireNonNull(body);
+		String resBodyString = body.string();
+		System.out.println(resBodyString);
+	}
+
+	public static void test4(Urbit ship) {
+		ship.initEventSource();
+		EventSource pipe = ship.getSseClient();
+		System.out.println(pipe);
 	}
 
 }
