@@ -53,6 +53,7 @@ public class Urbit {
 	private EventSource sseClient;
 
 	public EventSource getSseClient() {
+		// todo: evaluate if this is necessary because the object doesn't seem all that useful
 		return sseClient;
 	}
 

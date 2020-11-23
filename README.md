@@ -10,3 +10,5 @@ First, I'll try to do a port of the typescript implementation, which can be foun
 ## Misc thoughts
 
 - Maybe shed okhttp library if I end up not needing it/too bloated
+- possibly make custom exceptions that wrap around known failure modes
+    - for example: ShipNotAvailable when first http request fails ...
