@@ -112,15 +112,18 @@ public class Urbit {
 
 		try (Response response = client.newCall(request).execute()) {
 			if (!response.isSuccessful()) throw new IOException("Error: " + response);
+			// todo figure out best way to return an immutable responsebody obj or something
+			//  or design api around it or use different library.
+			// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
+			// we can't call it multiple times
 
-			// todo remove ugly requireNonNull or migrate to kotlin lmao
-			System.out.println(requireNonNull(response.body(), "No response body").string());
+//			System.out.println(requireNonNull(response.body(), "No response body").string());
 
 			String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
 			Cookie cookie = Cookie.parse(request.url(), cookieString);
 			requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
 			this.cookie = cookie.name() + "=" + cookie.value();
-			System.out.println(this.cookie);
+
 			return response;
 		}
 	}
