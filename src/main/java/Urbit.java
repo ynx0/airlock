@@ -1,5 +1,6 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -14,6 +15,9 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.net.CookieStore;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 
 import static java.util.Objects.requireNonNull;
@@ -71,6 +75,10 @@ public class Urbit {
 		return shipName;
 	}
 
+	private Map<Integer, Consumer<PokeEvent>> pokeHandlers;
+	private Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
+
+
 	private final Gson gson;
 
 
@@ -84,10 +92,11 @@ public class Urbit {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
+		this.pokeHandlers = new HashMap<>();
+		this.subscribeHandlers = new HashMap<>();
 
 		// init cookie manager
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-
 
 
 		this.client = new OkHttpClient.Builder()
@@ -158,13 +167,48 @@ public class Urbit {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						try {
-							System.out.println("Received event with id " + id + " type: " + type);
+							assert id != null;
+							int eventID = Integer.parseInt(id);
+							System.out.println("Received event with id " + eventID + " type: " + type);
 							System.out.println("Data Received:\n" + data);
 							ack(lastEventId); // TODO see if we use this or the provided `id`
+							// todo use poke and subscribeHandlers
 
-//							JsonObject jsonObject = gson.fromJson(data)
+							EyreResponseData eyreResponse = gson.fromJson(data, EyreResponseData.class);
 
-							// todo port https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168 here
+							switch (eyreResponse.responseType) {
+								case "poke":
+									var pokeHandler = pokeHandlers.get(eventID);
+									if (eyreResponse.isOk()) {
+										pokeHandler.accept(PokeEvent.SUCCESS);
+									} else {
+										pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
+									}
+									pokeHandlers.remove(eventID);
+									break;
+								case "subscribe":
+									var subscribeHandler = subscribeHandlers.get(eventID);
+									if (eyreResponse.isOk()) {
+										subscribeHandler.accept(SubscribeEvent.STARTED);
+									} else {
+										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+									}
+									subscribeHandlers.remove(eventID);
+									break;
+								case "diff":
+									subscribeHandler = subscribeHandlers.get(eventID);
+									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
+									break;
+								case "quit":
+									subscribeHandler = subscribeHandlers.get(eventID);
+									subscribeHandler.accept(SubscribeEvent.FINISHED);
+									subscribeHandlers.remove(eventID);
+									break;
+
+								default:
+									throw new IllegalStateException("Got unknown eyre responseType");
+							}
+
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -172,16 +216,31 @@ public class Urbit {
 
 					@Override
 					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-						System.err.println("Event Source Error: " + response);
+						if (response != null && response.code() != 200) {
+							System.err.println("Event Source Error: " + response);
+							return;
+						}
+						// todo i think this is where part of https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168
+						//  should happen (i.e. .okay or .finished)
+						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
 					}
 
 					@Override
 					public void onClosed(@NotNull EventSource eventSource) {
-						super.onClosed(eventSource);
 						// TODO maybe we have to impl a 'complete' handler,
 						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
 
+						// todo possibly extract this code out to main class
+						sseClient = null;
+						uid = Urbit.uid();
+
+						lastEventId = 0;
+						// todo what is request id? it is set to 0 here as well in ursus
+						pokeHandlers.clear();
+						subscribeHandlers.clear();
+
 					}
+
 				});
 	}
 
@@ -203,10 +262,7 @@ public class Urbit {
 		JsonObject ackObj = new JsonObject();
 		ackObj.addProperty("event-id", eventId);
 
-		JsonArray ackData = new JsonArray();
-		ackData.add(ackObj);
-
-		return this.sendMessage("ack", ackData);
+		return this.sendMessage("ack", ackObj);
 	}
 
 	/**
@@ -218,18 +274,17 @@ public class Urbit {
 	 * @param action   The action to send
 	 * @param jsonData The data to send with the action
 	 */
-	public Response sendMessage(String action, JsonArray jsonData) throws IOException {
+	public Response sendMessage(String action, JsonObject jsonData) throws IOException {
 
 		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
-		JsonArray fullJsonDataArray = jsonData.deepCopy(); // todo seems like a wasteful way to do it; possibly refactor
-		// extract out first object
-		assert fullJsonDataArray.get(0).isJsonObject();
-		JsonObject fullJsonData = fullJsonDataArray.get(0).getAsJsonObject();
+		JsonArray fullJsonDataArray = new JsonArray();
+		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it; possibly refactor
 
 		// add metadata
 		fullJsonData.addProperty("id", this.getEventId());
 		fullJsonData.addProperty("action", action);
 
+		fullJsonDataArray.add(fullJsonData);
 
 		String jsonString = gson.toJson(fullJsonDataArray);
 		System.out.println(jsonString);
@@ -265,7 +320,8 @@ public class Urbit {
 			@Nullable String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull String json // todo maybe migrate type to JsonObject
+			@NotNull String json, // todo maybe migrate type to JsonObject
+			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
 		ship = requireNonNullElse(ship, this.shipName);
@@ -277,7 +333,13 @@ public class Urbit {
 		JsonArray pokeData = new JsonArray();
 		pokeData.add(pokeDataObj);
 
-		return this.sendMessage("poke", pokeData);
+		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
+		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
+		if (pokeResponse.isSuccessful()) {
+			pokeHandlers.put(this.getEventId(), pokeHandler);
+		}
+
+		return pokeResponse;
 	}
 
 	/**
@@ -290,7 +352,8 @@ public class Urbit {
 	public Response subscribe(
 			@Nullable String ship,
 			@NotNull String app,
-			@NotNull String path
+			@NotNull String path,
+			@NotNull Consumer<SubscribeEvent> subscribeHandler
 	) throws IOException {
 		ship = requireNonNullElse(ship, this.shipName);
 		JsonObject subscribeDataObj = new JsonObject();
@@ -298,9 +361,14 @@ public class Urbit {
 		subscribeDataObj.addProperty("app", app);
 		subscribeDataObj.addProperty("path", path);
 
-		JsonArray subscribeData = new JsonArray();
-		subscribeData.add(subscribeDataObj);
-		return this.sendMessage("subscribe", subscribeData);
+
+		Response subscribeResponse = this.sendMessage("subscribe", subscribeDataObj);
+
+		if (subscribeResponse.isSuccessful()) {
+			subscribeHandlers.put(this.getEventId(), subscribeHandler);
+		}
+
+		return subscribeResponse;
 	}
 
 	/**
@@ -312,10 +380,7 @@ public class Urbit {
 		JsonObject unsubscribeDataObj = new JsonObject();
 		unsubscribeDataObj.addProperty("subscription", subscription);
 
-		JsonArray unsubscribeData = new JsonArray();
-		unsubscribeData.add(unsubscribeDataObj);
-
-		return this.sendMessage("unsubscribe", unsubscribeData);
+		return this.sendMessage("unsubscribe", unsubscribeDataObj);
 	}
 
 	/**
@@ -323,12 +388,10 @@ public class Urbit {
 	 */
 	public Response delete() throws IOException {
 		JsonObject deleteDataObj = new JsonObject();
-		JsonArray deleteData = new JsonArray();
-		deleteData.add(deleteDataObj);
 		// deleteDataObj is now equivalent to {}
 		// no data is necessary for deletes
 
-		return this.sendMessage("delete", deleteData);
+		return this.sendMessage("delete", deleteDataObj);
 	}
 
 
