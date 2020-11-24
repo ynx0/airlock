@@ -331,7 +331,7 @@ public class Urbit {
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
 		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
 		if (pokeResponse.isSuccessful()) {
-			pokeHandlers.put(this.getEventId(), pokeHandler);
+			pokeHandlers.put(this.lastEventId, pokeHandler);
 		}
 
 		return pokeResponse;
@@ -361,7 +361,7 @@ public class Urbit {
 		Response subscribeResponse = this.sendMessage("subscribe", subscribeDataObj);
 
 		if (subscribeResponse.isSuccessful()) {
-			subscribeHandlers.put(this.getEventId(), subscribeHandler);
+			subscribeHandlers.put(this.lastEventId, subscribeHandler);
 		}
 
 		return subscribeResponse;
