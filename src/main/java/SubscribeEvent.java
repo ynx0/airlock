@@ -28,5 +28,12 @@ public class SubscribeEvent {
 		return new SubscribeEvent(EventType.FAILURE, null, failureMessage);
 	}
 
-
+	@Override
+	public String toString() {
+		return "SubscribeEvent{" +
+				"eventType=" + eventType +
+				", updateJson='" + updateJson + '\'' +
+				", failureMessage='" + failureMessage + '\'' +
+				'}';
+	}
 }

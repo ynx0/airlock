@@ -209,9 +209,6 @@ public class Urbit {
 									throw new IllegalStateException("Got unknown eyre responseType");
 							}
 
-
-
-							// todo port https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168 here
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -360,6 +357,7 @@ public class Urbit {
 	) throws IOException {
 		ship = requireNonNullElse(ship, this.shipName);
 		JsonObject subscribeDataObj = new JsonObject();
+
 		subscribeDataObj.addProperty("ship", ship);
 		subscribeDataObj.addProperty("app", app);
 		subscribeDataObj.addProperty("path", path);
@@ -396,7 +394,6 @@ public class Urbit {
 
 		return this.sendMessage("delete", deleteDataObj);
 	}
-
 
 
 	/**

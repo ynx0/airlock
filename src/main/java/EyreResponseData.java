@@ -17,5 +17,15 @@ public class EyreResponseData {
 		return this.ok.equals("ok");
 	}
 
+	@Override
+	public String toString() {
+		return "EyreResponseData{" +
+				"id=" + id +
+				", ok='" + ok + '\'' +
+				", err='" + err + '\'' +
+				", responseType='" + responseType + '\'' +
+				", json='" + json + '\'' +
+				'}';
+	}
 }
 

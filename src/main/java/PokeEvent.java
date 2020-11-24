@@ -12,4 +12,11 @@ public class PokeEvent {
 		return new PokeEvent(false, failureMessage);
 	}
 
+	@Override
+	public String toString() {
+		return "PokeEvent{" +
+				"success=" + success +
+				", failureMessage='" + failureMessage + '\'' +
+				'}';
+	}
 }
