@@ -72,8 +72,8 @@ public class Urbit {
 		return shipName;
 	}
 
-	private Map<Integer, Consumer<PokeEvent>> pokeHandlers;
-	private Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
+	private final Map<Integer, Consumer<PokeEvent>> pokeHandlers;
+	private final Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
 
 
 	private final Gson gson;
@@ -162,8 +162,6 @@ public class Urbit {
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						assert id != null;
 						int eventID = Integer.parseInt(id); // this thing is kinda useless
-//						System.out.println("Received event with id " + eventID + " type: " + type);
-//						System.out.println("Data Received:\n" + data);
 						try {
 							ack(lastEventId); // TODO see if we use this or the provided `id`
 						} catch (IOException e) {
@@ -175,12 +173,14 @@ public class Urbit {
 //						if(eyreResponse.id != eventID) {
 //							throw new IllegalStateException("invalid ids or something");
 //						}
-						System.out.println("eyreResponse id: " + eyreResponse.id);
 //						System.out.println("eventID: " + eventID);
+//						System.out.println("raw: " + data);
+						System.out.println("=============Event==============");
 						System.out.println("lastEventId: " + lastEventId);
-						System.out.println("raw: " + data);
 						System.out.println("got eyre response data");
 						System.out.println(eyreResponse);
+						System.out.println("=============Event==============");
+
 						switch (eyreResponse.response) {
 							case "poke":
 								var pokeHandler = pokeHandlers.get(eyreResponse.id);
@@ -222,14 +222,13 @@ public class Urbit {
 							System.err.println("Event Source Error: " + response);
 							return;
 						}
-						// todo i think this is where part of https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168
-						//  should happen (i.e. .okay or .finished)
-//						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
+						// todo figure out what to do here
+						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
 					}
 
 					@Override
 					public void onClosed(@NotNull EventSource eventSource) {
-						// TODO maybe we have to impl a 'complete' handler,
+						// todo see if more adaptation is needed
 						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
 
 						// todo possibly extract this code out to main class
@@ -338,8 +337,9 @@ public class Urbit {
 
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
 		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
+
 		if (pokeResponse.isSuccessful()) {
-			pokeHandlers.put(this.lastEventId, pokeHandler);
+			pokeHandlers.put(this.lastEventId, pokeHandler); // sendMessage just incremented it.
 		}
 
 		return pokeResponse;
