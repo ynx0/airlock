@@ -19,7 +19,7 @@ public class Main {
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
 		Main.test2(ship); // doesn't error out
-		Main.test3(ship);
+//		Main.test3(ship);
 
 //		System.out.println("Done communicating with mars.");
 
@@ -27,7 +27,10 @@ public class Main {
 
 	public static void test0(Urbit ship) throws IOException {
 		String json = "Opening airlock :)";
-		ship.poke(ship.getShipName(), "hood", "helm-hi", json, System.out::println);
+		ship.poke(ship.getShipName(), "hood", "helm-hi", json, pokeEvent -> {
+			System.out.println("Got poke event");
+			System.out.println(pokeEvent);
+		});
 	}
 
 	public static void test1(Urbit ship) {
@@ -39,7 +42,7 @@ public class Main {
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc", subscribeEvent -> {
+		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~/~zod/mc", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
 		});
