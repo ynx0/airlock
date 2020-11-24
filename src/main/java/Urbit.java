@@ -109,6 +109,14 @@ public class Urbit {
 	}
 
 	/**
+	 * Returns the next event ID for the appropriate channel.
+	 */
+	int getEventId() {
+		this.lastEventId++;
+		return this.lastEventId;
+	}
+
+	/**
 	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
 	 */
 	public String channelUrl() {
@@ -245,14 +253,6 @@ public class Urbit {
 				});
 	}
 
-
-	/**
-	 * Returns the next event ID for the appropriate channel.
-	 */
-	int getEventId() {
-		this.lastEventId++;
-		return this.lastEventId;
-	}
 
 	/**
 	 * Acknowledges an event.
