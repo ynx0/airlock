@@ -10,7 +10,7 @@ public class EyreResponseData {
 	public int id = 0;
 	public String ok;
 	public String err;
-	public String responseType;
+	public String response;
 	public String json;
 
 	public boolean isOk() {
@@ -23,7 +23,7 @@ public class EyreResponseData {
 				"id=" + id +
 				", ok='" + ok + '\'' +
 				", err='" + err + '\'' +
-				", responseType='" + responseType + '\'' +
+				", response='" + response + '\'' +
 				", json='" + json + '\'' +
 				'}';
 	}

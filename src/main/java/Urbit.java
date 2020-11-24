@@ -162,8 +162,8 @@ public class Urbit {
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						assert id != null;
 						int eventID = Integer.parseInt(id);
-						System.out.println("Received event with id " + eventID + " type: " + type);
-						System.out.println("Data Received:\n" + data);
+//						System.out.println("Received event with id " + eventID + " type: " + type);
+//						System.out.println("Data Received:\n" + data);
 						try {
 							ack(lastEventId); // TODO see if we use this or the provided `id`
 						} catch (IOException e) {
@@ -172,8 +172,10 @@ public class Urbit {
 						// todo use poke and subscribeHandlers
 
 						EyreResponseData eyreResponse = gson.fromJson(data, EyreResponseData.class);
-
-						switch (eyreResponse.responseType) {
+						System.out.println("raw: " + data);
+						System.out.println("got eyre response data");
+						System.out.println(eyreResponse);
+						switch (eyreResponse.response) {
 							case "poke":
 								var pokeHandler = pokeHandlers.get(eventID);
 								if (eyreResponse.isOk()) {
@@ -216,7 +218,7 @@ public class Urbit {
 						}
 						// todo i think this is where part of https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L168
 						//  should happen (i.e. .okay or .finished)
-						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
+//						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
 					}
 
 					@Override
@@ -281,7 +283,7 @@ public class Urbit {
 		fullJsonDataArray.add(fullJsonData);
 
 		String jsonString = gson.toJson(fullJsonDataArray);
-		System.out.println(jsonString);
+//		System.out.println(jsonString);
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
