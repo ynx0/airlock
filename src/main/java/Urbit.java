@@ -161,7 +161,7 @@ public class Urbit {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						assert id != null;
-						int eventID = Integer.parseInt(id);
+						int eventID = Integer.parseInt(id); // this thing is kinda useless
 //						System.out.println("Received event with id " + eventID + " type: " + type);
 //						System.out.println("Data Received:\n" + data);
 						try {
@@ -172,36 +172,42 @@ public class Urbit {
 						// todo use poke and subscribeHandlers
 
 						EyreResponseData eyreResponse = gson.fromJson(data, EyreResponseData.class);
+//						if(eyreResponse.id != eventID) {
+//							throw new IllegalStateException("invalid ids or something");
+//						}
+						System.out.println("eyreResponse id: " + eyreResponse.id);
+//						System.out.println("eventID: " + eventID);
+						System.out.println("lastEventId: " + lastEventId);
 						System.out.println("raw: " + data);
 						System.out.println("got eyre response data");
 						System.out.println(eyreResponse);
 						switch (eyreResponse.response) {
 							case "poke":
-								var pokeHandler = pokeHandlers.get(eventID);
+								var pokeHandler = pokeHandlers.get(eyreResponse.id);
 								if (eyreResponse.isOk()) {
 									pokeHandler.accept(PokeEvent.SUCCESS);
 								} else {
 									pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
 								}
-								pokeHandlers.remove(eventID);
+								pokeHandlers.remove(eyreResponse.id);
 								break;
 							case "subscribe":
-								var subscribeHandler = subscribeHandlers.get(eventID);
+								var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 								if (eyreResponse.isOk()) {
 									subscribeHandler.accept(SubscribeEvent.STARTED);
 								} else {
 									subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
 								}
-								subscribeHandlers.remove(eventID);
+								subscribeHandlers.remove(eyreResponse.id);
 								break;
 							case "diff":
-								subscribeHandler = subscribeHandlers.get(eventID);
+								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 								subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
 								break;
 							case "quit":
-								subscribeHandler = subscribeHandlers.get(eventID);
+								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 								subscribeHandler.accept(SubscribeEvent.FINISHED);
-								subscribeHandlers.remove(eventID);
+								subscribeHandlers.remove(eyreResponse.id);
 								break;
 
 							default:
