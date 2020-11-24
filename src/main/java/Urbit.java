@@ -112,7 +112,7 @@ public class Urbit {
 	 * Returns the next event ID for the appropriate channel.
 	 */
 	int getEventId() {
-		this.lastEventId++;
+		this.lastEventId++; // todo: Figure out if we should return before incrementing or after
 		return this.lastEventId;
 	}
 
@@ -240,6 +240,7 @@ public class Urbit {
 						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
 
 						// todo possibly extract this code out to main class
+						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
 						sseClient = null;
 						uid = Urbit.uid();
 
@@ -282,7 +283,8 @@ public class Urbit {
 		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it; possibly refactor
 
 		// add metadata
-		fullJsonData.addProperty("id", this.getEventId());
+		int nextId = this.getEventId();
+		fullJsonData.addProperty("id", nextId);
 		fullJsonData.addProperty("action", action);
 
 		fullJsonDataArray.add(fullJsonData);
@@ -306,6 +308,11 @@ public class Urbit {
 			throw new IOException("Error: " + response);
 		}
 
+		System.out.println("=============SendMessage=============");
+		System.out.println("Id: " + nextId);
+		System.out.println("Sent message: " + fullJsonDataArray);
+		System.out.println("=============SendMessage=============");
+
 		return response; // TODO Address possible memory leak with returning unclosed response object
 
 	}
@@ -319,14 +326,16 @@ public class Urbit {
 	 * @param json The data to send
 	 */
 	public Response poke(
-			@Nullable String ship,
+			String ship,
 			@NotNull String app,
 			@NotNull String mark,
 			@NotNull String json, // todo maybe migrate type to JsonObject
 			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
-		ship = requireNonNullElse(ship, this.shipName);
+		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
+		//  you cannot poke a foreign ship with any other mark than json
+		// todo make poke strict to follow above rules
 		JsonObject pokeDataObj = new JsonObject();
 		pokeDataObj.addProperty("ship", ship);
 		pokeDataObj.addProperty("app", app);
