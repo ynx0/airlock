@@ -305,6 +305,7 @@ public class Urbit {
 		Response response = client.newCall(request).execute();
 
 		if (!response.isSuccessful()) {
+			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}
 
@@ -407,6 +408,8 @@ public class Urbit {
 		return this.sendMessage("delete", deleteDataObj);
 	}
 
+
+	// TODO add scry and spider requests
 
 	/**
 	 * Utility function to connect to a ship that has its *.arvo.network domain configured.

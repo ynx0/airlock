@@ -18,10 +18,25 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
-		Main.test2(ship); // doesn't error out
+		Main.testChatView(ship);
+//		while (true) {
+//			Thread.sleep(500);
+//		}
+//		var daemon = new Thread(() -> {
+//			try {
+//				Main.testChatView(ship);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		});
+//		daemon.setDaemon(true);
+//		daemon.start();
+//		Thread.sleep(50000);
+//		Main.test2(ship); // doesn't error out
 //		Main.test3(ship);
 
 //		System.out.println("Done communicating with mars.");
+
 
 	}
 
@@ -38,7 +53,7 @@ public class Main {
 		// a channel has been created, which means only after the `helm-hi`
 		ship.initEventSource();
 		EventSource sseClient = ship.getSseClient();
-		System.out.println(sseClient.request());
+//		System.out.println(sseClient.request());
 	}
 
 	public static void test2(Urbit ship) throws IOException {
@@ -47,7 +62,14 @@ public class Main {
 			System.out.println(subscribeEvent);
 		});
 		String body = Objects.requireNonNull(res.body()).string();
-		System.out.println(body);
+		System.out.println(body); // should be empty
+	}
+
+	public static void testChatView(Urbit ship) throws IOException {
+		Response res = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
+			System.out.println("Got Subscribe Event");
+			System.out.println(subscribeEvent);
+		});
 	}
 
 	public static void test3(Urbit ship) throws IOException {
