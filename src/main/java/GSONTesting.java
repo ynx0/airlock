@@ -22,8 +22,8 @@ public class GSONTesting {
 
 		Gson gson = new Gson();
 		String json = gson.toJson(payload);
-		System.out.println("Resulting json:");
-		System.out.println(json);
+//		System.out.println("Resulting json:");
+//		System.out.println(json);
 
 
 

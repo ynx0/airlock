@@ -18,10 +18,11 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
-		Main.test2(ship); // successful
-//		Main.test3(ship);
+		Main.test2(ship); // doesn't error out
+		Main.test3(ship);
 
-		System.out.println("Done communicating with mars.");
+//		System.out.println("Done communicating with mars.");
+
 	}
 
 	public static void test0(Urbit ship) throws IOException {
@@ -38,7 +39,10 @@ public class Main {
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc", System.out::println);
+		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc", subscribeEvent -> {
+			System.out.println("Got Subscribe Event");
+			System.out.println(subscribeEvent);
+		});
 		String body = Objects.requireNonNull(res.body()).string();
 		System.out.println(body);
 	}
