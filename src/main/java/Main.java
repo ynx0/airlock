@@ -17,7 +17,7 @@ public class Main {
 		ship.connect();
 
 		Main.test0(ship); // successful
-		Main.test1(ship);
+		Main.test1(ship); //
 //		Main.test2(ship);
 //		Main.test3(ship);
 
@@ -37,7 +37,7 @@ public class Main {
 
 	public static void test0(Urbit ship) throws IOException {
 		String json = "Opening airlock :)";
-		ship.poke(ship.getShipName(), "hood", "helm-hi", json);
+		ship.poke(ship.getShipName(), "hood", "helm-hi", json, System.out::println);
 	}
 
 	public static void test3(Urbit ship) throws IOException {
@@ -50,12 +50,12 @@ public class Main {
 				"        when: " + Instant.now().toEpochMilli() + ",\n" +
 				"        letter: { text: 'Hello, Mars!' }\n" +
 				"    }}}".trim();
-		ship.poke(ship.getShipName(), "chat-hook", "json", json);
+		ship.poke(ship.getShipName(), "chat-hook", "json", json, System.out::println);
 
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc");
+		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/mc", System.out::println);
 		ResponseBody body = res.body();
 		Objects.requireNonNull(body);
 		String resBodyString = body.string();
