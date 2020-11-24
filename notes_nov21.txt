@@ -39,6 +39,17 @@ https://stackoverflow.com/questions/34881775/automatic-cookie-handling-with-okht
 https://www.twilio.com/blog/5-ways-to-make-http-requests-in-java
 
 
+airlock references
+https://github.com/lukechampine/go-urbit/blob/master/airlock/airlock_test.go
+https://github.com/dclelland/UrsusAirlock/
+https://github.com/dclelland/UrsusChat
+https://github.com/tylershuster/urbit/
+https://urbit.org/using/integrating-api/
+https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/base.ts#L57-L68
+https://github.com/urbit/urbit/tree/master/pkg/interface/src/logic/api
+https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42
+https://docs.google.com/document/d/1no5oos_NE8LrUWz7iG9SKZMTIzruZVevZQ75nD5OHmI/edit
+
 
 
 
