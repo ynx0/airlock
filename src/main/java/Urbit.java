@@ -1,6 +1,5 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -13,12 +12,10 @@ import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
-import java.net.CookieStore;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
@@ -132,22 +129,19 @@ public class Urbit {
 				.post(formBody)
 				.build();
 
-		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()) throw new IOException("Error: " + response);
-			// todo figure out best way to return an immutable responsebody obj or something
-			//  or design api around it or use different library.
-			// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
-			// we can't call it multiple times
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) throw new IOException("Error: " + response);
+		// todo figure out best way to return an immutable responsebody obj or something
+		//  or design api around it or use different library.
+		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
+		// we can't call it multiple times
 
-//			System.out.println(requireNonNull(response.body(), "No response body").string());
+		String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
+		Cookie cookie = Cookie.parse(request.url(), cookieString);
+		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
+		this.cookie = cookie.name() + "=" + cookie.value();
 
-			String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
-			Cookie cookie = Cookie.parse(request.url(), cookieString);
-			requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
-			this.cookie = cookie.name() + "=" + cookie.value();
-
-			return response;
-		}
+		return response; // TODO Address possible memory leak with returning unclosed response object
 	}
 
 	/**
@@ -299,13 +293,14 @@ public class Urbit {
 				.put(requestBody)
 				.build();
 
-		try (Response response = client.newCall(request).execute()) {
-			if (!response.isSuccessful()) {
-				throw new IOException("Error: " + response);
-			}
+		Response response = client.newCall(request).execute();
 
-			return response;
+		if (!response.isSuccessful()) {
+			throw new IOException("Error: " + response);
 		}
+
+		return response; // TODO Address possible memory leak with returning unclosed response object
+
 	}
 
 	/**
