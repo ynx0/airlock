@@ -7,7 +7,7 @@ public class EyreResponseData {
 //		QUIT
 //	}
 	// adapted from https://github.com/lukechampine/go-urbit/blob/master/airlock/airlock.go#L66
-	public int id = 0;
+	public int id;
 	public String ok;
 	public String err;
 	public String response;
