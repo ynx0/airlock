@@ -1,5 +1,6 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -13,6 +14,7 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -103,7 +105,7 @@ public class Urbit {
 
 		gson = new Gson();
 
-
+		// TODO: Instead of returning the response object, which is kind of useless, return a {Completeable}Future<T> for pokes at least, not valid for subscribes
 		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 	}
@@ -341,17 +343,24 @@ public class Urbit {
 			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
+
+//		JsonObject pokeDataObj = new JsonObject();
+//		pokeDataObj.addProperty("ship", ship);
+//		pokeDataObj.addProperty("app", app);
+//		pokeDataObj.addProperty("mark", mark);
+//		pokeDataObj.addProperty("json", json);
+
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
 		// todo make poke strict to follow above rules
-		JsonObject pokeDataObj = new JsonObject();
-		pokeDataObj.addProperty("ship", ship);
-		pokeDataObj.addProperty("app", app);
-		pokeDataObj.addProperty("mark", mark);
-		pokeDataObj.addProperty("json", json);
-		JsonArray pokeData = new JsonArray();
-		pokeData.add(pokeDataObj);
 
+		JsonObject pokeDataObj;
+		pokeDataObj = gson.toJsonTree(Map.of(
+				"ship", ship,
+				"app", app,
+				"mark", mark,
+				"json", json
+		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
 		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
 
@@ -375,14 +384,19 @@ public class Urbit {
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
 	) throws IOException {
-		ship = requireNonNullElse(ship, this.shipName);
-		JsonObject subscribeDataObj = new JsonObject();
+		ship = requireNonNullElse(ship, this.shipName); // todo make this api better
+//		JsonObject subscribeDataObj = new JsonObject();
+//
+//		subscribeDataObj.addProperty("ship", ship);
+//		subscribeDataObj.addProperty("app", app);
+//		subscribeDataObj.addProperty("path", path);
 
-		subscribeDataObj.addProperty("ship", ship);
-		subscribeDataObj.addProperty("app", app);
-		subscribeDataObj.addProperty("path", path);
-
-
+		JsonObject subscribeDataObj;
+		subscribeDataObj = gson.toJsonTree(Map.of(
+			"ship", ship,
+			"app", app,
+			"path", path
+		)).getAsJsonObject();
 		Response subscribeResponse = this.sendMessage("subscribe", subscribeDataObj);
 
 		if (subscribeResponse.isSuccessful()) {
@@ -398,8 +412,11 @@ public class Urbit {
 	 * @param subscription The subscription to unsubscribe from
 	 */
 	public Response unsubscribe(String subscription) throws IOException {
-		JsonObject unsubscribeDataObj = new JsonObject();
-		unsubscribeDataObj.addProperty("subscription", subscription);
+		JsonObject unsubscribeDataObj;
+//		unsubscribeDataObj.addProperty("subscription", subscription);
+		unsubscribeDataObj = gson.toJsonTree(Map.of(
+				"subscription", subscription
+		)).getAsJsonObject();
 
 		return this.sendMessage("unsubscribe", unsubscribeDataObj);
 	}
