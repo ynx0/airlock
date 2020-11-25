@@ -1,12 +1,17 @@
+import com.google.gson.Gson;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.sse.EventSource;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.*;
+
+import static java.util.Map.entry;
 
 public class Main {
+
+	private static final Gson gson = new Gson();
 
 	public static void main(String[] args) throws Exception {
 		String url = "http://localhost:80";
@@ -18,10 +23,11 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
+		Main.test2(ship); // successful but no events back
+		Main.test3(ship); // successful but no events back
+
 		Main.testChatView(ship);
-//		while (true) {
-//			Thread.sleep(500);
-//		}
+
 //		var daemon = new Thread(() -> {
 //			try {
 //				Main.testChatView(ship);
@@ -32,8 +38,6 @@ public class Main {
 //		daemon.setDaemon(true);
 //		daemon.start();
 //		Thread.sleep(50000);
-//		Main.test2(ship); // doesn't error out
-//		Main.test3(ship);
 
 //		System.out.println("Done communicating with mars.");
 
@@ -52,12 +56,10 @@ public class Main {
 		// as per the guide, this code can only be called after
 		// a channel has been created, which means only after the `helm-hi`
 		ship.initEventSource();
-		EventSource sseClient = ship.getSseClient();
-//		System.out.println(sseClient.request());
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~/~zod/mc", subscribeEvent -> {
+		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
 		});
@@ -65,23 +67,38 @@ public class Main {
 		System.out.println(body); // should be empty
 	}
 
-	public static void testChatView(Urbit ship) throws IOException {
+	public static void testChatView(Urbit ship) throws IOException, InterruptedException {
+		List<SubscribeEvent> events = new ArrayList<>();
 		Response res = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
+			events.add(subscribeEvent);
 		});
+		while (events.isEmpty()) {
+			Thread.sleep(1);
+		}
 	}
 
 	public static void test3(Urbit ship) throws IOException {
 
-		String json = "{message: {path: '/~/~zod/mc', envelope: {\n" +
-				"        uid: " + Urbit.uid() + ",\n" +
-				"        number: 1,\n" +
-				"        author: '~zod',\n" +
-				"        when: " + Instant.now().toEpochMilli() + ",\n" +
-				"        letter: { text: 'Hello, Mars!' }\n" +
-				"    }}}".trim();
-		ship.poke(ship.getShipName(), "chat-hook", "json", json, System.out::println);
+
+		Map<String, Object> payload = new HashMap<>();
+
+
+		payload = Map.ofEntries(
+				entry("message", Map.ofEntries(
+						entry("path", "/~zod/test2"),
+						entry("envelope", Map.of(
+								"uid", Urbit.uid(),
+								"number", 1,
+								"author", "~zod",
+								"when", Instant.now().toEpochMilli(),
+								"letter", Map.of("text", "Hello, Mars!")
+						))
+				))
+		);
+
+		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJson(payload), System.out::println);
 
 	}
 
