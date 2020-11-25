@@ -119,9 +119,15 @@ public class Urbit {
 	/**
 	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
 	 */
-	public String channelUrl() {
+	public String getChannelUrl() {
 		return this.url + "/~/channel/" + this.uid;
 	}
+
+	@NotNull
+	public String getLoginUrl() {
+		return this.url + "/~/login";
+	}
+
 
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
@@ -133,7 +139,7 @@ public class Urbit {
 
 		Request request = new Request.Builder()
 				.header("connection", "keep-alive")
-				.url(this.url + "/~/login")
+				.url(this.getLoginUrl())
 				.post(formBody)
 				.build();
 
@@ -152,6 +158,7 @@ public class Urbit {
 		return response; // TODO Address possible memory leak with returning unclosed response object
 	}
 
+
 	/**
 	 * Returns (and initializes, if necessary) the SSE pipe for the appropriate channel.
 	 */
@@ -160,7 +167,7 @@ public class Urbit {
 			return;
 		}
 		Request sseRequest = new Request.Builder()
-				.url(this.channelUrl())
+				.url(this.getChannelUrl())
 				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
@@ -295,7 +302,7 @@ public class Urbit {
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 		Request request = new Request.Builder()
-				.url(this.channelUrl())
+				.url(this.getChannelUrl())
 				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
 				.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
 				.header("Content-Type", "application/json")
