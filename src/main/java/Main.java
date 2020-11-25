@@ -28,19 +28,6 @@ public class Main {
 
 		Main.testChatView(ship);
 
-//		var daemon = new Thread(() -> {
-//			try {
-//				Main.testChatView(ship);
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		});
-//		daemon.setDaemon(true);
-//		daemon.start();
-//		Thread.sleep(50000);
-
-//		System.out.println("Done communicating with mars.");
-
 
 	}
 
