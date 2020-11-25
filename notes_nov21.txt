@@ -51,6 +51,14 @@ https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42
 https://docs.google.com/document/d/1no5oos_NE8LrUWz7iG9SKZMTIzruZVevZQ75nD5OHmI/edit
 
 
+futures
+https://www.baeldung.com/java-completablefuture
+https://stackoverflow.com/questions/35329845/difference-between-completablefuture-future-and-rxjavas-observable
+https://stackoverflow.com/questions/631598/how-to-use-junit-to-test-asynchronous-processes
+
+
+
+
 
 
 
