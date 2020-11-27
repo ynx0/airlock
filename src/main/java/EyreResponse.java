@@ -1,4 +1,4 @@
-public class EyreResponseData {
+public class EyreResponse {
 	// todo write custom deserializer that turns the "poke" -> ResponseType.POKE
 //	enum ResponseType {
 //		POKE,
