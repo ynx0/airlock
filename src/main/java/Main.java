@@ -54,6 +54,24 @@ public class Main {
 		System.out.println(body); // should be empty
 	}
 
+	public static void test3(Urbit ship) throws IOException {
+		Map<String, Object> payload = Map.of(
+				"message", Map.of(
+						"path", "/~zod/test2",
+						"envelope", Map.of(
+								"uid", Urbit.uid(),
+								"number", 1,
+								"author", "~zod",
+								"when", Instant.now().toEpochMilli(),
+								"letter", Map.of("text", "Hello, Mars!")
+						)
+				)
+		);
+
+		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJson(payload), System.out::println);
+
+	}
+
 	public static void testChatView(Urbit ship) throws IOException, InterruptedException {
 		List<SubscribeEvent> events = new ArrayList<>();
 		Response res = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
@@ -64,29 +82,6 @@ public class Main {
 		while (events.isEmpty()) {
 			Thread.sleep(1);
 		}
-	}
-
-	public static void test3(Urbit ship) throws IOException {
-
-
-		Map<String, Object> payload = new HashMap<>();
-
-
-		payload = Map.ofEntries(
-				entry("message", Map.ofEntries(
-						entry("path", "/~zod/test2"),
-						entry("envelope", Map.of(
-								"uid", Urbit.uid(),
-								"number", 1,
-								"author", "~zod",
-								"when", Instant.now().toEpochMilli(),
-								"letter", Map.of("text", "Hello, Mars!")
-						))
-				))
-		);
-
-		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJson(payload), System.out::println);
-
 	}
 
 }
