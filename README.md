@@ -1,14 +1,34 @@
-# Urbit Interface — Java Edition
+# Airlock — Java Edition
 
-This repository will hold the code that provides interoperability with an Urbit ship.
-More details can be found here: https://grants.urbit.org/proposals/288224550-urbit-http-interface-java-edition
+Communicate with an Urbit ship over the eyre protocol in Java.
 
-## Initial Plan
+## Prior Art
+- Typescript - https://github.com/tylershuster/urbit/
+- Go
+- Haskell
+- Swift
+- Landscape channel.js
 
-First, I'll try to do a port of the typescript implementation, which can be found here: https://github.com/tylershuster/urbit/blob/master/src/index.ts
 
-## Misc thoughts
+## Checklist
 
-- Maybe shed okhttp library if I end up not needing it/too bloated
+- [  ] Minimum viable product
+- [  ] Basic integration tests
+- [  ] Examples based off of integration tests
+- [  ] Basic documentation
+- [  ] Create build process (i.e. publishing artifacts to a repository)
+- [  ] Create example application that uses basic functionality
+- [  ] Implementation of surrounding libraries (e.g. `urbit-ob`)
+- [  ] Soundness tests for `urbit-ob`
+- [  ] Implementation of `scry` and `spider` request types
+- [  ] Initial functional implementation of interface to `graph-store` 
+- [  ] Graph store tests
+- [  ] Graph store documentation
+- [  ] Graph store examples 
+- [  ] Other gall agent interface
+
+
+### misc items
+
 - possibly make custom exceptions that wrap around known failure modes
     - for example: ShipNotAvailable when first http request fails ...
