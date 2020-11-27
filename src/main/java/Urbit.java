@@ -1,6 +1,5 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -14,7 +13,6 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -29,29 +27,31 @@ public class Urbit {
 
 
 	private final OkHttpClient client;
+
 	/**
-	 * Code is the deterministic password
+	 * Code is the deterministic password used to authenticate with an Urbit ship
+	 * It can be obtained by running `+code` in the dojo.
 	 */
 	private String code;
 
 	/**
-	 * URL is the location of the instance.
+	 * The location of the ship
 	 */
 	private String url;
 
 	/**
-	 * UID will be used for the channel: The current unix time plus a random hex string
+	 * Used to generate a unique channel name. A channel name is typically the current unix time plus a random hex string
 	 */
 	private String uid;
 
 	/**
-	 * Last Event ID is an auto-updated index of which events have been sent over this channel
+	 * An auto-updated index of which events have been sent over this channel
 	 */
 	private int lastEventId = 0;
 
 
 	/**
-	 * SSE Client is null for now; we don't want to start polling until it the channel exists
+	 * The SSE Client responsible for receiving events from the ship.  Starts off as null and is initialized later; we don't want to start polling until it the channel exists
 	 */
 	private EventSource sseClient;
 
@@ -61,12 +61,14 @@ public class Urbit {
 	}
 
 	/**
-	 * Cookie gets set when we log in.
+	 * The authentication cookie given to us after logging in with the {@link Urbit#code}.
+	 * Note: it is possible to authenticate with an incorrect +code and still get an authcookie.
+	 * Only after sending the first real request will it fail.
 	 */
 	private String cookie;
 
 	/**
-	 * Ship can be set, in which case we can do some magic stuff like send chats
+	 * The name of the ship that we are connecting to. (the @p without '~')
 	 */
 	private final String shipName;
 
@@ -74,7 +76,16 @@ public class Urbit {
 		return shipName;
 	}
 
+	/**
+	 * This is a Map between event-id of a poke request and the respective handler function.
+	 * When the sseClient receives an {@link EyreResponse}, it propagates the data in the form of a {@link PokeEvent}
+	 * to the correct handler function.
+	 */
 	private final Map<Integer, Consumer<PokeEvent>> pokeHandlers;
+
+	/**
+	 * This is the equivalent mapping for subscription handlers. See {@link Urbit#pokeHandlers}.
+	 */
 	private final Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
 
 
@@ -85,6 +96,7 @@ public class Urbit {
 	 * Constructs a new Urbit connection.
 	 *
 	 * @param url  The URL (with protocol and port) of the ship to be accessed
+	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code The access code for the ship at that address
 	 */
 	public Urbit(String url, String shipName, String code) {
@@ -93,6 +105,7 @@ public class Urbit {
 		this.url = url;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
+		this.shipName = requireNonNullElse(shipName, "");
 
 		// init cookie manager
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -101,7 +114,6 @@ public class Urbit {
 		this.client = new OkHttpClient.Builder()
 //				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
 				.build();
-		this.shipName = requireNonNullElse(shipName, "");
 
 		gson = new Gson();
 
@@ -134,7 +146,7 @@ public class Urbit {
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
 	 */
-	public Response connect() throws Exception {
+	public Response connect() throws IOException {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -162,7 +174,7 @@ public class Urbit {
 
 
 	/**
-	 * Returns (and initializes, if necessary) the SSE pipe for the appropriate channel.
+	 * Initializes the SSE pipe for the appropriate channel (if necessary)
 	 */
 	void initEventSource() {
 		if (this.sseClient != null) {
@@ -173,6 +185,7 @@ public class Urbit {
 				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
+
 		this.sseClient = EventSources.createFactory(this.client)
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
@@ -184,13 +197,11 @@ public class Urbit {
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						// todo use poke and subscribeHandlers
 
-						EyreResponseData eyreResponse = gson.fromJson(data, EyreResponseData.class);
+						EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
 //						if(eyreResponse.id != eventID) {
 //							throw new IllegalStateException("invalid ids or something");
 //						}
-//						System.out.println("eventID: " + eventID);
 //						System.out.println("raw: " + data);
 						System.out.println("=============Event==============");
 						System.out.println("lastEventId: " + lastEventId);
@@ -266,7 +277,7 @@ public class Urbit {
 
 	/**
 	 * Acknowledges an event.
-	 *
+	 * All events must be acknowledged as per the eyre protocol.
 	 * @param eventId The event to acknowledge.
 	 */
 	public Response ack(int eventId) throws IOException {
@@ -278,7 +289,7 @@ public class Urbit {
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
-	 * <p>
+	 *
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
@@ -289,7 +300,7 @@ public class Urbit {
 
 		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
 		JsonArray fullJsonDataArray = new JsonArray();
-		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it; possibly refactor
+		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
 
 		// add metadata
 		int nextId = this.getEventId();
@@ -299,7 +310,6 @@ public class Urbit {
 		fullJsonDataArray.add(fullJsonData);
 
 		String jsonString = gson.toJson(fullJsonDataArray);
-//		System.out.println(jsonString);
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
@@ -343,13 +353,6 @@ public class Urbit {
 			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
-
-//		JsonObject pokeDataObj = new JsonObject();
-//		pokeDataObj.addProperty("ship", ship);
-//		pokeDataObj.addProperty("app", app);
-//		pokeDataObj.addProperty("mark", mark);
-//		pokeDataObj.addProperty("json", json);
-
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
 		// todo make poke strict to follow above rules
@@ -384,12 +387,7 @@ public class Urbit {
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
 	) throws IOException {
-		ship = requireNonNullElse(ship, this.shipName); // todo make this api better
-//		JsonObject subscribeDataObj = new JsonObject();
-//
-//		subscribeDataObj.addProperty("ship", ship);
-//		subscribeDataObj.addProperty("app", app);
-//		subscribeDataObj.addProperty("path", path);
+		ship = requireNonNullElse(ship, this.shipName); // todo refactor this part of the api to be more clear.
 
 		JsonObject subscribeDataObj;
 		subscribeDataObj = gson.toJsonTree(Map.of(
@@ -468,7 +466,7 @@ public class Urbit {
 
 	/**
 	 * Generates a random UID.
-	 * <p>
+	 *
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {
