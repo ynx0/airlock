@@ -203,7 +203,7 @@ public class Urbit {
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-						//int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
+						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
 						//lastSeenEventId = eventID; // todo should this be from eyre payload
 
 						synchronized (urbitLock) {
@@ -213,14 +213,17 @@ public class Urbit {
 							lastSeenEventId = eyreResponse.id;
 
 							try {
-								ack(lastSeenEventId);
-								lastAcknowledgedEventId = lastSeenEventId;
+								if (lastSeenEventId != lastAcknowledgedEventId) {
+									ack(lastSeenEventId);
+									lastAcknowledgedEventId = lastSeenEventId;
+								}
 							} catch (IOException e) {
 								throw new IllegalStateException("could not ack");
 							}
 
 							System.out.println(",=============Event==============,");
 							System.out.println("raw: " + data);
+							System.out.println("event id from okhttp " + eventID);
 							System.out.println("lastSeenEventId: " + lastSeenEventId);
 							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
 							System.out.println("got eyre response data");
@@ -248,8 +251,8 @@ public class Urbit {
 										subscribeHandler.accept(SubscribeEvent.STARTED);
 									} else {
 										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+										subscribeHandlers.remove(eyreResponse.id); // haha whoops :p
 									}
-									subscribeHandlers.remove(eyreResponse.id);
 									break;
 								case "diff":
 									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
@@ -433,9 +436,12 @@ public class Urbit {
 				"path", path
 		)).getAsJsonObject();
 		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
-
+		System.out.println("subscribe response is succcesful");
+		System.out.println(subscribeResponse.isSuccessful());
 		if (subscribeResponse.isSuccessful()) {
+			System.out.println("registering handler for id: " + this.requestId);
 			subscribeHandlers.put(this.requestId, subscribeHandler);
+			System.out.println(subscribeHandlers);
 		}
 		subscribeResponse.close();
 

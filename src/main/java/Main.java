@@ -24,8 +24,8 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
-		Main.test2(ship); // successful but no events back
-		Main.test3(ship); // successful but no events back
+		Main.test2(ship); // successful
+		//Main.test3(ship); // successful but no events back
 
 		while(chatStoreEvents.size() < 2) {
 			Thread.sleep(50);
