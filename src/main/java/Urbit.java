@@ -269,6 +269,18 @@ public class Urbit {
 
 					@Override
 					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+						if (t != null) {
+							System.out.println("throwable exists");
+							System.out.println(t.getMessage()); // omg im so stupid i should've been printing this earlier
+							if (response != null) {
+								System.out.println("response");
+								try {
+									System.out.println(requireNonNull(response.body()).string());
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							}
+						}
 						if (response != null && response.code() != 200) {
 							System.err.println("Event Source Error: " + response);
 							return;
