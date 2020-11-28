@@ -12,6 +12,7 @@ import static java.util.Map.entry;
 public class Main {
 
 	private static final Gson gson = new Gson();
+	//private static final List<SubscribeEvent> chatStoreEvents = new ArrayList<>();
 
 	public static void main(String[] args) throws Exception {
 		String url = "http://localhost:80";
@@ -23,8 +24,10 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
-		//Main.test2(ship); // successful but no events back
+		Main.test2(ship); // successful but no events back
 		//Main.test3(ship); // successful but no events back
+
+
 
 		//Main.testChatView(ship);
 
@@ -45,11 +48,17 @@ public class Main {
 		ship.initEventSource();
 	}
 
-	public static void test2(Urbit ship) throws IOException {
+	public static void test2(Urbit ship) throws IOException, InterruptedException {
+		List<SubscribeEvent> chatStoreEvents = new ArrayList<>();
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
+			chatStoreEvents.add(subscribeEvent);
 		});
+		while(chatStoreEvents.size() < 2) {
+			Thread.sleep(50);
+		}
+
 	}
 
 	public static void test3(Urbit ship) throws IOException {

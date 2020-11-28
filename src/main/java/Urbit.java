@@ -15,6 +15,7 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -100,6 +101,8 @@ public class Urbit {
 
 
 	private final Gson gson;
+
+//	private Lock lock = new ;
 
 
 	/**
@@ -205,11 +208,21 @@ public class Urbit {
 
 
 						EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
+
+
 						lastSeenEventId = eyreResponse.id;
+
+						try {
+							ack(lastSeenEventId);
+							lastAcknowledgedEventId = lastSeenEventId;
+						} catch (IOException e) {
+							throw new IllegalStateException("could not ack");
+						}
 
 						System.out.println(",=============Event==============,");
 						System.out.println("raw: " + data);
-						System.out.println("lastEventId: " + lastSeenEventId);
+						System.out.println("lastSeenEventId: " + lastSeenEventId);
+						System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
 						System.out.println("got eyre response data");
 						System.out.println(eyreResponse);
 						System.out.println(".=============Event==============.");
@@ -299,15 +312,17 @@ public class Urbit {
 		//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
 		fullJsonDataArray.add(fullJsonData);
 
-		// acknowledge last seen event
-		if (lastAcknowledgedEventId != lastSeenEventId) {
+//		// acknowledge last seen event
+		System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
+		/*if (lastAcknowledgedEventId != lastSeenEventId) {
 			JsonObject ackObj = new JsonObject();
 			ackObj.addProperty("action", "ack");
 			ackObj.addProperty("event-id", this.lastSeenEventId);
-			System.out.println("Last acked id: " + lastAcknowledgedEventId);
-			System.out.println("Acking id: " + lastSeenEventId);
+//			System.out.println("Last acked id: " + lastAcknowledgedEventId);
+//			System.out.println("Acking id: " + lastSeenEventId);
 			fullJsonDataArray.add(ackObj);
-		}
+			lastAcknowledgedEventId = lastSeenEventId;
+		}*/
 
 		this.lastAcknowledgedEventId = this.lastSeenEventId;
 
@@ -441,6 +456,22 @@ public class Urbit {
 		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "delete"
+		)).getAsJsonObject();
+
+		Response res = this.sendJSONtoChannel(deleteDataObj);
+		res.close();
+	}
+
+	/**
+	 * Deletes the connection to a channel.
+	 */
+	public void ack(int eventID) throws IOException {
+		int id = this.nextID();
+
+		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "ack",
+				"event-id", eventID
 		)).getAsJsonObject();
 
 		Response res = this.sendJSONtoChannel(deleteDataObj);
