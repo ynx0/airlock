@@ -1,7 +1,9 @@
+import com.google.gson.JsonObject;
+
 public class SubscribeEvent {
 
 	public final EventType eventType;
-	public final String updateJson;
+	public final JsonObject updateJson;
 	public final String failureMessage;
 
 	enum EventType {
@@ -14,13 +16,13 @@ public class SubscribeEvent {
 	public static final SubscribeEvent STARTED = new SubscribeEvent(EventType.STARTED, null, null);
 	public static final SubscribeEvent FINISHED = new SubscribeEvent(EventType.FINISHED, null, null);
 
-	private SubscribeEvent(EventType eventType, String updateJson, String failureMessage) {
+	private SubscribeEvent(EventType eventType, JsonObject updateJson, String failureMessage) {
 		this.eventType = eventType;
 		this.updateJson = updateJson;
 		this.failureMessage = failureMessage;
 	}
 
-	public static SubscribeEvent fromUpdate(String updateJson) {
+	public static SubscribeEvent fromUpdate(JsonObject updateJson) {
 		return new SubscribeEvent(EventType.UPDATE, updateJson, null);
 	}
 

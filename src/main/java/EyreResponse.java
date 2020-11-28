@@ -1,3 +1,5 @@
+import com.google.gson.JsonObject;
+
 public class EyreResponse {
 	// todo write custom deserializer that turns the "poke" -> ResponseType.POKE
 //	enum ResponseType {
@@ -11,7 +13,7 @@ public class EyreResponse {
 	public String ok;
 	public String err;
 	public String response;
-	public String json;
+	public JsonObject json;
 
 	public boolean isOk() {
 		return this.ok.equals("ok");
