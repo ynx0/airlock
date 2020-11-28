@@ -102,7 +102,7 @@ public class Urbit {
 
 	private final Gson gson;
 
-//	private Lock lock = new ;
+	private final Object urbitLock = new Object();
 
 
 	/**
@@ -206,65 +206,65 @@ public class Urbit {
 						//int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
 						//lastSeenEventId = eventID; // todo should this be from eyre payload
 
-
-						EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
-
-
-						lastSeenEventId = eyreResponse.id;
-
-						try {
-							ack(lastSeenEventId);
-							lastAcknowledgedEventId = lastSeenEventId;
-						} catch (IOException e) {
-							throw new IllegalStateException("could not ack");
-						}
-
-						System.out.println(",=============Event==============,");
-						System.out.println("raw: " + data);
-						System.out.println("lastSeenEventId: " + lastSeenEventId);
-						System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
-						System.out.println("got eyre response data");
-						System.out.println(eyreResponse);
-						System.out.println(".=============Event==============.");
+						synchronized (urbitLock) {
+							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
 
 
-						//if (eyreResponse.id != eventD) {
+							lastSeenEventId = eyreResponse.id;
+
+							try {
+								ack(lastSeenEventId);
+								lastAcknowledgedEventId = lastSeenEventId;
+							} catch (IOException e) {
+								throw new IllegalStateException("could not ack");
+							}
+
+							System.out.println(",=============Event==============,");
+							System.out.println("raw: " + data);
+							System.out.println("lastSeenEventId: " + lastSeenEventId);
+							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
+							System.out.println("got eyre response data");
+							System.out.println(eyreResponse);
+							System.out.println(".=============Event==============.");
+
+
+							//if (eyreResponse.id != eventD) {
 							//throw new IllegalStateException("invalid ids or something");
-						//}
+							//}
 
-						switch (eyreResponse.response) {
-							case "poke":
-								var pokeHandler = pokeHandlers.get(eyreResponse.id);
-								if (eyreResponse.isOk()) {
-									pokeHandler.accept(PokeEvent.SUCCESS);
-								} else {
-									pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
-								}
-								pokeHandlers.remove(eyreResponse.id);
-								break;
-							case "subscribe":
-								var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								if (eyreResponse.isOk()) {
-									subscribeHandler.accept(SubscribeEvent.STARTED);
-								} else {
-									subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
-								}
-								subscribeHandlers.remove(eyreResponse.id);
-								break;
-							case "diff":
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
-								break;
-							case "quit":
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.FINISHED);
-								subscribeHandlers.remove(eyreResponse.id);
-								break;
+							switch (eyreResponse.response) {
+								case "poke":
+									var pokeHandler = pokeHandlers.get(eyreResponse.id);
+									if (eyreResponse.isOk()) {
+										pokeHandler.accept(PokeEvent.SUCCESS);
+									} else {
+										pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
+									}
+									pokeHandlers.remove(eyreResponse.id);
+									break;
+								case "subscribe":
+									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									if (eyreResponse.isOk()) {
+										subscribeHandler.accept(SubscribeEvent.STARTED);
+									} else {
+										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+									}
+									subscribeHandlers.remove(eyreResponse.id);
+									break;
+								case "diff":
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
+									break;
+								case "quit":
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.FINISHED);
+									subscribeHandlers.remove(eyreResponse.id);
+									break;
 
-							default:
-								throw new IllegalStateException("Got unknown eyre responseType");
+								default:
+									throw new IllegalStateException("Got unknown eyre responseType");
+							}
 						}
-
 					}
 
 					@Override
@@ -299,21 +299,21 @@ public class Urbit {
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
-	 *
+	 * <p>
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
 	 * @param jsonData The data to send with the action
 	 */
 	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
-
-		JsonArray fullJsonDataArray = new JsonArray();
-		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-		//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
-		fullJsonDataArray.add(fullJsonData);
+		synchronized (urbitLock) {
+			JsonArray fullJsonDataArray = new JsonArray();
+			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+			//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
+			fullJsonDataArray.add(fullJsonData);
 
 //		// acknowledge last seen event
-		System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
+			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
 		/*if (lastAcknowledgedEventId != lastSeenEventId) {
 			JsonObject ackObj = new JsonObject();
 			ackObj.addProperty("action", "ack");
@@ -324,34 +324,34 @@ public class Urbit {
 			lastAcknowledgedEventId = lastSeenEventId;
 		}*/
 
-		this.lastAcknowledgedEventId = this.lastSeenEventId;
+			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
-		String jsonString = gson.toJson(fullJsonDataArray);
+			String jsonString = gson.toJson(fullJsonDataArray);
 
-		RequestBody requestBody = RequestBody.create(jsonString, JSON);
+			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
-		Request request = new Request.Builder()
-				.url(this.getChannelUrl())
-				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
-				.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
-				.header("Content-Type", "application/json")
-				.put(requestBody)
-				.build();
+			Request request = new Request.Builder()
+					.url(this.getChannelUrl())
+					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
+					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
+					.header("Content-Type", "application/json")
+					.put(requestBody)
+					.build();
 
-		Response response = client.newCall(request).execute();
+			Response response = client.newCall(request).execute();
 
-		if (!response.isSuccessful()) {
-			System.err.println(requireNonNull(response.body()).string());
-			throw new IOException("Error: " + response);
+			if (!response.isSuccessful()) {
+				System.err.println(requireNonNull(response.body()).string());
+				throw new IOException("Error: " + response);
+			}
+
+			System.out.println("=============SendMessage=============");
+			System.out.println("Id: " + jsonData.get("id").getAsInt());
+			System.out.println("Sent message: " + fullJsonDataArray);
+			System.out.println("=============SendMessage=============");
+
+			return response; // TODO Address possible memory leak with returning unclosed response object
 		}
-
-		System.out.println("=============SendMessage=============");
-		System.out.println("Id: " + jsonData.get("id").getAsInt());
-		System.out.println("Sent message: " + fullJsonDataArray);
-		System.out.println("=============SendMessage=============");
-
-		return response; // TODO Address possible memory leak with returning unclosed response object
-
 	}
 
 	/**
