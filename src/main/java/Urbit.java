@@ -45,9 +45,19 @@ public class Urbit {
 	private String uid;
 
 	/**
-	 * An auto-updated index of which events have been sent over this channel
+	 * The ID of the last request we sent to the server
 	 */
-	private int lastEventId = 0;
+	private int requestId = 0;
+
+	/**
+	 * he id of the last event received from the ship
+	 */
+	private int lastSeenEventId = 0;
+
+	/**
+	 * The id of the last event we acked to the server
+	 */
+	private int lastAcknowledgedEventId = 0;
 
 
 	/**
@@ -95,9 +105,9 @@ public class Urbit {
 	/**
 	 * Constructs a new Urbit connection.
 	 *
-	 * @param url  The URL (with protocol and port) of the ship to be accessed
+	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
-	 * @param code The access code for the ship at that address
+	 * @param code     The access code for the ship at that address
 	 */
 	public Urbit(String url, String shipName, String code) {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
@@ -125,9 +135,9 @@ public class Urbit {
 	/**
 	 * Returns the next event ID for the appropriate channel.
 	 */
-	int getEventId() {
-		this.lastEventId++; // todo: Figure out if we should return before incrementing or after
-		return this.lastEventId;
+	private int nextID() {
+		this.requestId++;
+		return this.requestId;
 	}
 
 	/**
@@ -190,24 +200,24 @@ public class Urbit {
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-						assert id != null;
-						int eventID = Integer.parseInt(id); // this thing is kinda useless
-						try {
-							ack(lastEventId); // TODO see if we use this or the provided `id`
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+						//int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
+						//lastSeenEventId = eventID; // todo should this be from eyre payload
+
 
 						EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
-//						if(eyreResponse.id != eventID) {
-//							throw new IllegalStateException("invalid ids or something");
-//						}
-//						System.out.println("raw: " + data);
-						System.out.println("=============Event==============");
-						System.out.println("lastEventId: " + lastEventId);
+						lastSeenEventId = eyreResponse.id;
+
+						System.out.println(",=============Event==============,");
+						System.out.println("raw: " + data);
+						System.out.println("lastEventId: " + lastSeenEventId);
 						System.out.println("got eyre response data");
 						System.out.println(eyreResponse);
-						System.out.println("=============Event==============");
+						System.out.println(".=============Event==============.");
+
+
+						//if (eyreResponse.id != eventD) {
+							//throw new IllegalStateException("invalid ids or something");
+						//}
 
 						switch (eyreResponse.response) {
 							case "poke":
@@ -263,29 +273,16 @@ public class Urbit {
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
 						sseClient = null;
 						uid = Urbit.uid();
-
-						lastEventId = 0;
-						// todo what is request id? it is set to 0 here as well in ursus
+						requestId = 0;
+						lastSeenEventId = 0;
+						lastAcknowledgedEventId = 0;
 						pokeHandlers.clear();
 						subscribeHandlers.clear();
 
 					}
-
 				});
 	}
 
-
-	/**
-	 * Acknowledges an event.
-	 * All events must be acknowledged as per the eyre protocol.
-	 * @param eventId The event to acknowledge.
-	 */
-	public Response ack(int eventId) throws IOException {
-		JsonObject ackObj = new JsonObject();
-		ackObj.addProperty("event-id", eventId);
-
-		return this.sendMessage("ack", ackObj);
-	}
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
@@ -293,21 +290,26 @@ public class Urbit {
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
-	 * @param action   The action to send
 	 * @param jsonData The data to send with the action
 	 */
-	public Response sendMessage(String action, JsonObject jsonData) throws IOException {
+	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
 
-		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
 		JsonArray fullJsonDataArray = new JsonArray();
 		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-
-		// add metadata
-		int nextId = this.getEventId();
-		fullJsonData.addProperty("id", nextId);
-		fullJsonData.addProperty("action", action);
-
+		//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
 		fullJsonDataArray.add(fullJsonData);
+
+		// acknowledge last seen event
+		if (lastAcknowledgedEventId != lastSeenEventId) {
+			JsonObject ackObj = new JsonObject();
+			ackObj.addProperty("action", "ack");
+			ackObj.addProperty("event-id", this.lastSeenEventId);
+			System.out.println("Last acked id: " + lastAcknowledgedEventId);
+			System.out.println("Acking id: " + lastSeenEventId);
+			fullJsonDataArray.add(ackObj);
+		}
+
+		this.lastAcknowledgedEventId = this.lastSeenEventId;
 
 		String jsonString = gson.toJson(fullJsonDataArray);
 
@@ -329,7 +331,7 @@ public class Urbit {
 		}
 
 		System.out.println("=============SendMessage=============");
-		System.out.println("Id: " + nextId);
+		System.out.println("Id: " + jsonData.get("id").getAsInt());
 		System.out.println("Sent message: " + fullJsonDataArray);
 		System.out.println("=============SendMessage=============");
 
@@ -345,7 +347,7 @@ public class Urbit {
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
 	 */
-	public Response poke(
+	public void poke(
 			String ship,
 			@NotNull String app,
 			@NotNull String mark,
@@ -355,79 +357,94 @@ public class Urbit {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
+		// also, urbit-airlock-ts seems to just use the connected ship here
+		// and not really allow for that variation...
+
 		// todo make poke strict to follow above rules
 
 		JsonObject pokeDataObj;
+		int id = nextID();
 		pokeDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "poke",
 				"ship", ship,
 				"app", app,
 				"mark", mark,
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
+		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.isSuccessful()) {
-			pokeHandlers.put(this.lastEventId, pokeHandler); // sendMessage just incremented it.
+			pokeHandlers.put(this.requestId, pokeHandler); // just incremented by sendJSONtoChannel
 		}
-
-		return pokeResponse;
+		pokeResponse.close();
 	}
 
 	/**
 	 * Subscribes to a path on an app on a ship.
 	 *
 	 * @param ship The ship to subscribe to
-	 * @param app  The app to subsribe to
+	 * @param app  The app to subscribe to
 	 * @param path The path to which to subscribe
+	 * @return id of the subscription, which can be used to cancel it
 	 */
-	public Response subscribe(
-			@Nullable String ship,
+	public int subscribe(
+			@NotNull String ship,
 			@NotNull String app,
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
 	) throws IOException {
-		ship = requireNonNullElse(ship, this.shipName); // todo refactor this part of the api to be more clear.
-
+		int id = this.nextID();
 		JsonObject subscribeDataObj;
 		subscribeDataObj = gson.toJsonTree(Map.of(
-			"ship", ship,
-			"app", app,
-			"path", path
+				"id", id,
+				"action", "subscribe",
+				"ship", ship,
+				"app", app,
+				"path", path
 		)).getAsJsonObject();
-		Response subscribeResponse = this.sendMessage("subscribe", subscribeDataObj);
+		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
 
 		if (subscribeResponse.isSuccessful()) {
-			subscribeHandlers.put(this.lastEventId, subscribeHandler);
+			subscribeHandlers.put(this.requestId, subscribeHandler);
 		}
+		subscribeResponse.close();
 
-		return subscribeResponse;
+		return this.requestId;
 	}
 
 	/**
-	 * Unsubscribes to a given subscription.
+	 * Unsubscribes from a given subscription.
 	 *
-	 * @param subscription The subscription to unsubscribe from
+	 * @param subscription The id of the subscription to unsubscribe from
 	 */
-	public Response unsubscribe(String subscription) throws IOException {
-		JsonObject unsubscribeDataObj;
-//		unsubscribeDataObj.addProperty("subscription", subscription);
-		unsubscribeDataObj = gson.toJsonTree(Map.of(
+	public void unsubscribe(int subscription) throws IOException {
+		int id = this.nextID();
+
+		JsonObject unsubscribeDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "unsubscribe",
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		return this.sendMessage("unsubscribe", unsubscribeDataObj);
+		Response res = this.sendJSONtoChannel(unsubscribeDataObj);
+		res.close();
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public Response delete() throws IOException {
-		JsonObject deleteDataObj = new JsonObject();
-		// deleteDataObj is now equivalent to {}
-		// no data is necessary for deletes
+	public void delete() throws IOException {
+		int id = this.nextID();
 
-		return this.sendMessage("delete", deleteDataObj);
+		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "delete"
+		)).getAsJsonObject();
+
+		Response res = this.sendJSONtoChannel(deleteDataObj);
+		res.close();
 	}
 
 
@@ -466,7 +483,7 @@ public class Urbit {
 
 	/**
 	 * Generates a random UID.
-	 *
+	 * <p>
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {

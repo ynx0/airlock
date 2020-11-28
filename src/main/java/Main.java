@@ -23,10 +23,10 @@ public class Main {
 
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
-		Main.test2(ship); // successful but no events back
-		Main.test3(ship); // successful but no events back
+		//Main.test2(ship); // successful but no events back
+		//Main.test3(ship); // successful but no events back
 
-		Main.testChatView(ship);
+		//Main.testChatView(ship);
 
 
 	}
@@ -46,12 +46,10 @@ public class Main {
 	}
 
 	public static void test2(Urbit ship) throws IOException {
-		Response res = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
+		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
 		});
-		String body = Objects.requireNonNull(res.body()).string();
-		System.out.println(body); // should be empty
 	}
 
 	public static void test3(Urbit ship) throws IOException {
@@ -74,7 +72,7 @@ public class Main {
 
 	public static void testChatView(Urbit ship) throws IOException, InterruptedException {
 		List<SubscribeEvent> events = new ArrayList<>();
-		Response res = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
+		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
 			System.out.println("Got Subscribe Event");
 			System.out.println(subscribeEvent);
 			events.add(subscribeEvent);
