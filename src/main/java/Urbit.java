@@ -1,6 +1,4 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -16,7 +14,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -384,7 +381,7 @@ public class Urbit {
 			String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull String json, // todo maybe migrate type to JsonObject
+			@NotNull JsonElement json, // todo maybe migrate type to JsonObject
 			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
