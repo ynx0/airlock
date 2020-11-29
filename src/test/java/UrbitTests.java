@@ -1,11 +1,13 @@
+import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UrbitTests {
@@ -30,22 +32,20 @@ public class UrbitTests {
 
 	@Test
 	@Order(2)
-	public void helmHiSuccessful() throws IOException, InterruptedException {
-//		String json = "Opening airlock :)";
-////		var eventContainer = new Object() {
-////			PokeEvent event = null;
-////		};
-//		ship.poke(ship.getShipName(), "hood", "helm-hi", json, pokeEvent -> {
-//			System.out.println("Got poke event");
-//			System.out.println(pokeEvent);
-////			eventContainer.event = pokeEvent;
-//		});
-//		while (eventContainer.event == null) {
-//			Thread.sleep(100);
-//		}
-
-
-
+	public void helmHiSuccessful() throws IOException {
+		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
+		AtomicBoolean receivedEvent = new AtomicBoolean(false);
+		ship.poke(ship.getShipName(), "hood", "helm-hi", jsonPayload, pokeEvent -> {
+			System.out.println("[Poke Event]");
+			System.out.println(pokeEvent);
+			receivedEvent.set(true);
+		});
+		Assertions.assertTimeout(Duration.ofSeconds(20), () -> {
+			while (!receivedEvent.get()) {
+				Thread.sleep(10);
+			}
+		});
+		assertTrue(receivedEvent.get());
 	}
 
 
