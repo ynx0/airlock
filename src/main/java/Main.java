@@ -1,4 +1,7 @@
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.sse.EventSource;
@@ -13,6 +16,7 @@ public class Main {
 
 	private static final Gson gson = new Gson();
 	private static final List<SubscribeEvent> chatStoreEvents = new ArrayList<>();
+	private static final List<SubscribeEvent> primaryChatViewEvents = new ArrayList<>();
 
 	public static void main(String[] args) throws Exception {
 		String url = "http://localhost:80";
@@ -25,9 +29,9 @@ public class Main {
 		Main.test0(ship); // successful
 		Main.test1(ship); // successful
 		Main.test2(ship); // successful
-		Main.test3(ship); // unsuccessful
+		Main.test3(ship); // successful
 
-		while(chatStoreEvents.size() < 2) {
+		while (chatStoreEvents.size() < 2) {
 			Thread.sleep(50);
 		}
 		System.out.println("finished. got the following events");
@@ -39,8 +43,8 @@ public class Main {
 	}
 
 	public static void test0(Urbit ship) throws IOException {
-		String json = "Opening airlock :)";
-		ship.poke(ship.getShipName(), "hood", "helm-hi", json, pokeEvent -> {
+		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
+		ship.poke(ship.getShipName(), "hood", "helm-hi", jsonPayload, pokeEvent -> {
 			System.out.println("Got poke event");
 			System.out.println(pokeEvent);
 		});
@@ -52,9 +56,9 @@ public class Main {
 		ship.initEventSource();
 	}
 
-	public static void test2(Urbit ship) throws IOException, InterruptedException {
+	public static void test2(Urbit ship) throws IOException {
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
-			System.out.println("Got Subscribe Event");
+			System.out.println("Subscribe Event");
 			System.out.println(subscribeEvent);
 			chatStoreEvents.add(subscribeEvent);
 		});
@@ -67,29 +71,35 @@ public class Main {
 				"message", Map.of(
 						"path", "/~zod/test2",
 						"envelope", Map.of(
-								"uid", Urbit.uid(),
+//								"uid", Urbit.uid(),
+								"uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
 								"number", 1,
 								"author", "~zod",
 								"when", Instant.now().toEpochMilli(),
-								"letter", Map.of("text", "Hello, Mars!")
+								"letter", Map.of("text", "Hello, Mars! It is now " + Instant.now().toString())
 						)
 				)
 		);
 
-		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJson(payload), System.out::println);
+		JsonElement payloadJSON = gson.toJsonTree(payload);
+		ship.poke(ship.getShipName(), "chat-hook", "json", payloadJSON, pokeEvent -> {
+			if (pokeEvent.success) {
+				System.out.println("[PokeHandler]: successfully poked message to mailbox");
+			} else {
+				System.out.println("[PokeHandler]: could not poke message to mailbox");
+				System.out.println("[PokeHandler]: failureMessage: ");
+				System.out.println(pokeEvent.failureMessage);
+			}
+		});
 
 	}
 
-	public static void testChatView(Urbit ship) throws IOException, InterruptedException {
-		List<SubscribeEvent> events = new ArrayList<>();
+	public static void testChatView(Urbit ship) throws IOException {
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
-			System.out.println("Got Subscribe Event");
+			System.out.println("Subscribe Event");
 			System.out.println(subscribeEvent);
-			events.add(subscribeEvent);
+			primaryChatViewEvents.add(subscribeEvent);
 		});
-		while (events.isEmpty()) {
-			Thread.sleep(1);
-		}
 	}
 
 }
