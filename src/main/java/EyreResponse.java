@@ -1,5 +1,9 @@
+import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public class EyreResponse {
-	// todo write custom deserializer that turns the "poke" -> ResponseType.POKE
+	// todo potentially write custom deserializer that turns the "poke" -> ResponseType.POKE
 //	enum ResponseType {
 //		POKE,
 //		SUBSCRIBE,
@@ -8,13 +12,13 @@ public class EyreResponse {
 //	}
 	// adapted from https://github.com/lukechampine/go-urbit/blob/master/airlock/airlock.go#L66
 	public int id;
-	public String ok;
-	public String err;
+	public @Nullable String ok;
+	public @Nullable String err;
 	public String response;
-	public String json;
+	public @Nullable JsonObject json;
 
 	public boolean isOk() {
-		return this.ok.equals("ok");
+		return this.ok != null && this.ok.equals("ok");
 	}
 
 	@Override

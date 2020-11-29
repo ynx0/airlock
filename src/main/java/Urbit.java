@@ -1,6 +1,4 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -15,6 +13,7 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
@@ -45,9 +44,19 @@ public class Urbit {
 	private String uid;
 
 	/**
-	 * An auto-updated index of which events have been sent over this channel
+	 * The ID of the last request we sent to the server
 	 */
-	private int lastEventId = 0;
+	private int requestId = 0;
+
+	/**
+	 * he id of the last event received from the ship
+	 */
+	private int lastSeenEventId = 0;
+
+	/**
+	 * The id of the last event we acked to the server
+	 */
+	private int lastAcknowledgedEventId = 0;
 
 
 	/**
@@ -91,13 +100,15 @@ public class Urbit {
 
 	private final Gson gson;
 
+	private final Object urbitLock = new Object();
+
 
 	/**
 	 * Constructs a new Urbit connection.
 	 *
-	 * @param url  The URL (with protocol and port) of the ship to be accessed
+	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
-	 * @param code The access code for the ship at that address
+	 * @param code     The access code for the ship at that address
 	 */
 	public Urbit(String url, String shipName, String code) {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
@@ -113,6 +124,7 @@ public class Urbit {
 
 		this.client = new OkHttpClient.Builder()
 //				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
+				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
 		gson = new Gson();
@@ -125,9 +137,9 @@ public class Urbit {
 	/**
 	 * Returns the next event ID for the appropriate channel.
 	 */
-	int getEventId() {
-		this.lastEventId++; // todo: Figure out if we should return before incrementing or after
-		return this.lastEventId;
+	private int nextID() {
+		this.requestId++;
+		return this.requestId;
 	}
 
 	/**
@@ -190,62 +202,88 @@ public class Urbit {
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-						assert id != null;
-						int eventID = Integer.parseInt(id); // this thing is kinda useless
-						try {
-							ack(lastEventId); // TODO see if we use this or the provided `id`
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
+						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
+						//lastSeenEventId = eventID; // todo should this be from eyre payload
 
-						EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
-//						if(eyreResponse.id != eventID) {
-//							throw new IllegalStateException("invalid ids or something");
-//						}
-//						System.out.println("raw: " + data);
-						System.out.println("=============Event==============");
-						System.out.println("lastEventId: " + lastEventId);
-						System.out.println("got eyre response data");
-						System.out.println(eyreResponse);
-						System.out.println("=============Event==============");
+						synchronized (urbitLock) {
+							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
 
-						switch (eyreResponse.response) {
-							case "poke":
-								var pokeHandler = pokeHandlers.get(eyreResponse.id);
-								if (eyreResponse.isOk()) {
-									pokeHandler.accept(PokeEvent.SUCCESS);
-								} else {
-									pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
+
+							lastSeenEventId = eyreResponse.id;
+
+							try {
+								if (lastSeenEventId != lastAcknowledgedEventId) {
+									ack(lastSeenEventId);
+									lastAcknowledgedEventId = lastSeenEventId;
 								}
-								pokeHandlers.remove(eyreResponse.id);
-								break;
-							case "subscribe":
-								var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								if (eyreResponse.isOk()) {
-									subscribeHandler.accept(SubscribeEvent.STARTED);
-								} else {
-									subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
-								}
-								subscribeHandlers.remove(eyreResponse.id);
-								break;
-							case "diff":
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
-								break;
-							case "quit":
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.FINISHED);
-								subscribeHandlers.remove(eyreResponse.id);
-								break;
+							} catch (IOException e) {
+								throw new IllegalStateException("could not ack");
+							}
 
-							default:
-								throw new IllegalStateException("Got unknown eyre responseType");
+							System.out.println(",=============Event==============,");
+							System.out.println("raw: " + data);
+							System.out.println("event id from okhttp " + eventID);
+							System.out.println("lastSeenEventId: " + lastSeenEventId);
+							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
+							System.out.println("got eyre response data");
+							System.out.println(eyreResponse);
+							System.out.println(".=============Event==============.");
+
+
+							//if (eyreResponse.id != eventD) {
+							//throw new IllegalStateException("invalid ids or something");
+							//}
+
+							switch (eyreResponse.response) {
+								case "poke":
+									var pokeHandler = pokeHandlers.get(eyreResponse.id);
+									if (eyreResponse.isOk()) {
+										pokeHandler.accept(PokeEvent.SUCCESS);
+									} else {
+										pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
+									}
+									pokeHandlers.remove(eyreResponse.id);
+									break;
+								case "subscribe":
+									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									if (eyreResponse.isOk()) {
+										subscribeHandler.accept(SubscribeEvent.STARTED);
+									} else {
+										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+										subscribeHandlers.remove(eyreResponse.id); // haha whoops :p
+									}
+									break;
+								case "diff":
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
+									break;
+								case "quit":
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.FINISHED);
+									subscribeHandlers.remove(eyreResponse.id);
+									break;
+
+								default:
+									throw new IllegalStateException("Got unknown eyre responseType");
+							}
 						}
-
 					}
 
 					@Override
 					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
+						if (t != null) {
+							System.err.println("Encountered error while doing sse stuff");
+							throw new RuntimeException(t);
+							//							System.out.println(t.getMessage()); // omg im so stupid i should've been printing this earlier
+//							if (response != null) {
+//								System.out.println("response");
+//								try {
+//									System.out.println(requireNonNull(response.body()).string());
+//								} catch (IOException e) {
+//									e.printStackTrace();
+//								}
+//							}
+						}
 						if (response != null && response.code() != 200) {
 							System.err.println("Event Source Error: " + response);
 							return;
@@ -263,29 +301,16 @@ public class Urbit {
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
 						sseClient = null;
 						uid = Urbit.uid();
-
-						lastEventId = 0;
-						// todo what is request id? it is set to 0 here as well in ursus
+						requestId = 0;
+						lastSeenEventId = 0;
+						lastAcknowledgedEventId = 0;
 						pokeHandlers.clear();
 						subscribeHandlers.clear();
 
 					}
-
 				});
 	}
 
-
-	/**
-	 * Acknowledges an event.
-	 * All events must be acknowledged as per the eyre protocol.
-	 * @param eventId The event to acknowledge.
-	 */
-	public Response ack(int eventId) throws IOException {
-		JsonObject ackObj = new JsonObject();
-		ackObj.addProperty("event-id", eventId);
-
-		return this.sendMessage("ack", ackObj);
-	}
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
@@ -293,141 +318,181 @@ public class Urbit {
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
-	 * @param action   The action to send
 	 * @param jsonData The data to send with the action
 	 */
-	public Response sendMessage(String action, JsonObject jsonData) throws IOException {
+	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
+		synchronized (urbitLock) {
+			JsonArray fullJsonDataArray = new JsonArray();
+			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+			//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
+			fullJsonDataArray.add(fullJsonData);
 
-		// MARK - Prepend `id` and `action` metadata to `jsonData` payload
-		JsonArray fullJsonDataArray = new JsonArray();
-		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+//		// acknowledge last seen event
+			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
+		/*if (lastAcknowledgedEventId != lastSeenEventId) {
+			JsonObject ackObj = new JsonObject();
+			ackObj.addProperty("action", "ack");
+			ackObj.addProperty("event-id", this.lastSeenEventId);
+//			System.out.println("Last acked id: " + lastAcknowledgedEventId);
+//			System.out.println("Acking id: " + lastSeenEventId);
+			fullJsonDataArray.add(ackObj);
+			lastAcknowledgedEventId = lastSeenEventId;
+		}*/
 
-		// add metadata
-		int nextId = this.getEventId();
-		fullJsonData.addProperty("id", nextId);
-		fullJsonData.addProperty("action", action);
+			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
-		fullJsonDataArray.add(fullJsonData);
+			String jsonString = gson.toJson(fullJsonDataArray);
 
-		String jsonString = gson.toJson(fullJsonDataArray);
+			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
-		RequestBody requestBody = RequestBody.create(jsonString, JSON);
+			Request request = new Request.Builder()
+					.url(this.getChannelUrl())
+					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
+					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
+					.header("Content-Type", "application/json")
+					.put(requestBody)
+					.build();
 
-		Request request = new Request.Builder()
-				.url(this.getChannelUrl())
-				.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
-				.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
-				.header("Content-Type", "application/json")
-				.put(requestBody)
-				.build();
+			Response response = client.newCall(request).execute();
 
-		Response response = client.newCall(request).execute();
+			if (!response.isSuccessful()) {
+				System.err.println(requireNonNull(response.body()).string());
+				throw new IOException("Error: " + response);
+			}
 
-		if (!response.isSuccessful()) {
-			System.err.println(requireNonNull(response.body()).string());
-			throw new IOException("Error: " + response);
+			System.out.println("=============SendMessage=============");
+			System.out.println("Id: " + jsonData.get("id").getAsInt());
+			System.out.println("Sent message: " + fullJsonDataArray);
+			System.out.println("=============SendMessage=============");
+
+			return response; // TODO Address possible memory leak with returning unclosed response object
 		}
-
-		System.out.println("=============SendMessage=============");
-		System.out.println("Id: " + nextId);
-		System.out.println("Sent message: " + fullJsonDataArray);
-		System.out.println("=============SendMessage=============");
-
-		return response; // TODO Address possible memory leak with returning unclosed response object
-
 	}
 
 	/**
 	 * Pokes a ship with data.
-	 *
 	 * @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
 	 */
-	public Response poke(
+	public void poke(
 			String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull String json, // todo maybe migrate type to JsonObject
+			@NotNull JsonElement json, // todo maybe migrate type to JsonObject
 			@NotNull Consumer<PokeEvent> pokeHandler
 	) throws IOException {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
+		// also, urbit-airlock-ts seems to just use the connected ship here
+		// and not really allow for that variation...
+
 		// todo make poke strict to follow above rules
 
 		JsonObject pokeDataObj;
+		int id = nextID();
 		pokeDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "poke",
 				"ship", ship,
 				"app", app,
 				"mark", mark,
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		Response pokeResponse = this.sendMessage("poke", pokeDataObj);
+		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.isSuccessful()) {
-			pokeHandlers.put(this.lastEventId, pokeHandler); // sendMessage just incremented it.
+			System.out.println("registering poke handler for id: " + id);
+			pokeHandlers.put(id, pokeHandler); // just incremented by sendJSONtoChannel
 		}
-
-		return pokeResponse;
+		pokeResponse.close();
 	}
 
 	/**
 	 * Subscribes to a path on an app on a ship.
 	 *
 	 * @param ship The ship to subscribe to
-	 * @param app  The app to subsribe to
+	 * @param app  The app to subscribe to
 	 * @param path The path to which to subscribe
+	 * @return id of the subscription, which can be used to cancel it
 	 */
-	public Response subscribe(
-			@Nullable String ship,
+	public int subscribe(
+			@NotNull String ship,
 			@NotNull String app,
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
 	) throws IOException {
-		ship = requireNonNullElse(ship, this.shipName); // todo refactor this part of the api to be more clear.
-
+		int id = this.nextID();
 		JsonObject subscribeDataObj;
 		subscribeDataObj = gson.toJsonTree(Map.of(
-			"ship", ship,
-			"app", app,
-			"path", path
+				"id", id,
+				"action", "subscribe",
+				"ship", ship,
+				"app", app,
+				"path", path
 		)).getAsJsonObject();
-		Response subscribeResponse = this.sendMessage("subscribe", subscribeDataObj);
-
+		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
+//		System.out.println("subscribe response is succcesful");
+//		System.out.println(subscribeResponse.isSuccessful());
 		if (subscribeResponse.isSuccessful()) {
-			subscribeHandlers.put(this.lastEventId, subscribeHandler);
+//			System.out.println("registering handler for id: " + id);
+			subscribeHandlers.put(id, subscribeHandler);
 		}
+		subscribeResponse.close();
 
-		return subscribeResponse;
+		return this.requestId;
 	}
 
 	/**
-	 * Unsubscribes to a given subscription.
+	 * Unsubscribes from a given subscription.
 	 *
-	 * @param subscription The subscription to unsubscribe from
+	 * @param subscription The id of the subscription to unsubscribe from
 	 */
-	public Response unsubscribe(String subscription) throws IOException {
-		JsonObject unsubscribeDataObj;
-//		unsubscribeDataObj.addProperty("subscription", subscription);
-		unsubscribeDataObj = gson.toJsonTree(Map.of(
+	public void unsubscribe(int subscription) throws IOException {
+		int id = this.nextID();
+
+		JsonObject unsubscribeDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "unsubscribe",
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		return this.sendMessage("unsubscribe", unsubscribeDataObj);
+		Response res = this.sendJSONtoChannel(unsubscribeDataObj);
+		res.close();
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public Response delete() throws IOException {
-		JsonObject deleteDataObj = new JsonObject();
-		// deleteDataObj is now equivalent to {}
-		// no data is necessary for deletes
+	public void delete() throws IOException {
+		int id = this.nextID();
 
-		return this.sendMessage("delete", deleteDataObj);
+		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "delete"
+		)).getAsJsonObject();
+
+		Response res = this.sendJSONtoChannel(deleteDataObj);
+		res.close();
+	}
+
+	/**
+	 * Deletes the connection to a channel.
+	 */
+	public void ack(int eventID) throws IOException {
+		int id = this.nextID();
+
+		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+				"id", id,
+				"action", "ack",
+				"event-id", eventID
+		)).getAsJsonObject();
+
+		Response res = this.sendJSONtoChannel(deleteDataObj);
+		res.close();
 	}
 
 
@@ -466,10 +531,14 @@ public class Urbit {
 
 	/**
 	 * Generates a random UID.
-	 *
+	 * <p>
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {
+		// todo fix bug with implementation
+		//  right now, the uid always has the first chunk as `0`, i.e. as in 0v1.0.3eolm.59lvl.7n9ht.2mokl.51js7
+		//  also need to check for impl equivalence
+		// (this is causing a hoon error when used)
 		StringBuilder str = new StringBuilder("0v");
 		str.append(Math.ceil(Math.random() * 8)).append('.');
 		for (int i = 0; i < 5; i++) {

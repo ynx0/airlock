@@ -31,15 +31,15 @@ public class UrbitTests {
 	@Test
 	@Order(2)
 	public void helmHiSuccessful() throws IOException, InterruptedException {
-		String json = "Opening airlock :)";
-//		var eventContainer = new Object() {
-//			PokeEvent event = null;
-//		};
-		ship.poke(ship.getShipName(), "hood", "helm-hi", json, pokeEvent -> {
-			System.out.println("Got poke event");
-			System.out.println(pokeEvent);
-//			eventContainer.event = pokeEvent;
-		});
+//		String json = "Opening airlock :)";
+////		var eventContainer = new Object() {
+////			PokeEvent event = null;
+////		};
+//		ship.poke(ship.getShipName(), "hood", "helm-hi", json, pokeEvent -> {
+//			System.out.println("Got poke event");
+//			System.out.println(pokeEvent);
+////			eventContainer.event = pokeEvent;
+//		});
 //		while (eventContainer.event == null) {
 //			Thread.sleep(100);
 //		}
