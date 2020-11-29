@@ -1,6 +1,6 @@
 public class PokeEvent {
 	public final boolean success;
-	String failureMessage;
+	final String failureMessage;
 	public static final PokeEvent SUCCESS = new PokeEvent(true, null);
 
 	private PokeEvent(boolean success, String failureMessage) {

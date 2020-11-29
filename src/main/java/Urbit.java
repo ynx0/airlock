@@ -1,4 +1,7 @@
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -31,12 +34,12 @@ public class Urbit {
 	 * Code is the deterministic password used to authenticate with an Urbit ship
 	 * It can be obtained by running `+code` in the dojo.
 	 */
-	private String code;
+	private final String code;
 
 	/**
 	 * The location of the ship
 	 */
-	private String url;
+	private final String url;
 
 	/**
 	 * Used to generate a unique channel name. A channel name is typically the current unix time plus a random hex string
@@ -63,11 +66,6 @@ public class Urbit {
 	 * The SSE Client responsible for receiving events from the ship.  Starts off as null and is initialized later; we don't want to start polling until it the channel exists
 	 */
 	private EventSource sseClient;
-
-	public EventSource getSseClient() {
-		// todo: evaluate if this is necessary because the object doesn't seem all that useful
-		return sseClient;
-	}
 
 	/**
 	 * The authentication cookie given to us after logging in with the {@link Urbit#code}.
@@ -129,7 +127,7 @@ public class Urbit {
 
 		gson = new Gson();
 
-		// TODO: Instead of returning the response object, which is kind of useless, return a {Completeable}Future<T> for pokes at least, not valid for subscribes
+		// TODO: Instead of returning the response object, which is kind of useless, return a {Completable}Future<T> for pokes at least, not valid for subscribes
 		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 	}
@@ -314,17 +312,17 @@ public class Urbit {
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
-	 *
+	 * <p>
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
-	 *
+	 * </p>
 	 * @param jsonData The data to send with the action
 	 */
 	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-			//  if we make this method private then we ca avoid this because we are the only ones ever calling the method so we can bascially ejust make sure that we never call it with anything that we use later on that would be affected by the mutablity of the jsonobject
+			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 			fullJsonDataArray.add(fullJsonData);
 
 //		// acknowledge last seen event
@@ -334,7 +332,7 @@ public class Urbit {
 			ackObj.addProperty("action", "ack");
 			ackObj.addProperty("event-id", this.lastSeenEventId);
 //			System.out.println("Last acked id: " + lastAcknowledgedEventId);
-//			System.out.println("Acking id: " + lastSeenEventId);
+//			System.out.println("acking id: " + lastSeenEventId);
 			fullJsonDataArray.add(ackObj);
 			lastAcknowledgedEventId = lastSeenEventId;
 		}*/
@@ -371,6 +369,7 @@ public class Urbit {
 
 	/**
 	 * Pokes a ship with data.
+	 *
 	 * @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
@@ -435,7 +434,7 @@ public class Urbit {
 				"path", path
 		)).getAsJsonObject();
 		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
-//		System.out.println("subscribe response is succcesful");
+//		System.out.println("subscribe response is successful");
 //		System.out.println(subscribeResponse.isSuccessful());
 		if (subscribeResponse.isSuccessful()) {
 //			System.out.println("registering handler for id: " + id);

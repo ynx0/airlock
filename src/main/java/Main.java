@@ -59,8 +59,7 @@ public class Main {
 			System.out.println(subscribeEvent);
 			chatStoreEvents.add(subscribeEvent);
 		});
-
-
+		System.out.println("Chat Store Subscription ID: " + subscriptionID);
 	}
 
 	public static void test3(Urbit ship) throws IOException {
@@ -97,6 +96,7 @@ public class Main {
 			System.out.println(subscribeEvent);
 			primaryChatViewEvents.add(subscribeEvent);
 		});
+		System.out.println("Chat View Subscription ID: " + subscriptionID);
 	}
 
 }
