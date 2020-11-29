@@ -3,7 +3,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class EyreResponse {
-	// todo write custom deserializer that turns the "poke" -> ResponseType.POKE
+	// todo potentially write custom deserializer that turns the "poke" -> ResponseType.POKE
 //	enum ResponseType {
 //		POKE,
 //		SUBSCRIBE,
