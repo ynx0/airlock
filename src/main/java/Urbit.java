@@ -15,6 +15,7 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
@@ -126,6 +127,7 @@ public class Urbit {
 
 		this.client = new OkHttpClient.Builder()
 //				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
+				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731)
 				.build();
 
 		gson = new Gson();
