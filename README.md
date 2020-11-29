@@ -67,23 +67,23 @@ public class Main {
 
 ## Development Checklist
 
-- [ x ] Minimum viable product
-- [  ] Basic integration tests
-- [  ] Basic documentation
-- [  ] Create build process (i.e. publishing artifacts to a repository)
-- [  ] Examples based off of integration tests
-- [  ] Create example application that uses basic functionality
-- [  ] Implementation of surrounding libraries (e.g. `urbit-ob`)
-- [  ] Soundness tests for `urbit-ob`
-- [  ] Implementation of `scry` and `spider` request types
+- [x] Minimum viable product
+- [ ] Basic integration tests
+- [ ] Basic documentation
+- [ ] Create build process (i.e. publishing artifacts to a repository)
+- [ ] Examples based off of integration tests
+- [ ] Create example application that uses basic functionality
+- [ ] Implementation of surrounding libraries (e.g. `urbit-ob`)
+- [ ] Soundness tests for `urbit-ob`
+- [ ] Implementation of `scry` and `spider` request types
 
-- [  ] `graph-store`
-    - [  ] Initial functional implementation of interface to `graph-store` 
-    - [  ] Graph store tests
-    - [  ] Graph store documentation
-    - [  ] Graph store examples 
+- [ ] `graph-store`
+    - [ ] Initial functional implementation of interface to `graph-store` 
+    - [ ] Graph store tests
+    - [ ] Graph store documentation
+    - [ ] Graph store examples 
 
-- [  ] Other gall agent interface
+- [ ] Other gall agent interface
 
 
 
