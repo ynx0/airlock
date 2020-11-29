@@ -409,7 +409,8 @@ public class Urbit {
 		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.isSuccessful()) {
-			pokeHandlers.put(this.requestId, pokeHandler); // just incremented by sendJSONtoChannel
+			System.out.println("registering poke handler for id: " + id);
+			pokeHandlers.put(id, pokeHandler); // just incremented by sendJSONtoChannel
 		}
 		pokeResponse.close();
 	}
@@ -438,11 +439,11 @@ public class Urbit {
 				"path", path
 		)).getAsJsonObject();
 		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
-		System.out.println("subscribe response is succcesful");
-		System.out.println(subscribeResponse.isSuccessful());
+//		System.out.println("subscribe response is succcesful");
+//		System.out.println(subscribeResponse.isSuccessful());
 		if (subscribeResponse.isSuccessful()) {
-			System.out.println("registering handler for id: " + this.requestId);
-			subscribeHandlers.put(this.requestId, subscribeHandler);
+//			System.out.println("registering handler for id: " + id);
+			subscribeHandlers.put(id, subscribeHandler);
 			System.out.println(subscribeHandlers);
 		}
 		subscribeResponse.close();
