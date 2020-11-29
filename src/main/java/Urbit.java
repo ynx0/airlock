@@ -124,7 +124,7 @@ public class Urbit {
 
 		this.client = new OkHttpClient.Builder()
 //				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
-				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731)
+				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
 		gson = new Gson();
@@ -535,6 +535,10 @@ public class Urbit {
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {
+		// todo fix bug with implementation
+		//  right now, the uid always has the first chunk as `0`, i.e. as in 0v1.0.3eolm.59lvl.7n9ht.2mokl.51js7
+		//  also need to check for impl equivalence
+		// (this is causing a hoon error when used)
 		StringBuilder str = new StringBuilder("0v");
 		str.append(Math.ceil(Math.random() * 8)).append('.');
 		for (int i = 0; i < 5; i++) {
