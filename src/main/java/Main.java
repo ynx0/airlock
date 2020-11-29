@@ -1,16 +1,12 @@
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.sse.EventSource;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
-
-import static java.util.Map.entry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
 
@@ -38,6 +34,7 @@ public class Main {
 		System.out.println(chatStoreEvents);
 
 		//Main.testChatView(ship);
+		// todo possibly test manually canceling event source / deleting channel
 
 
 	}
