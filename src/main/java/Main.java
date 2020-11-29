@@ -45,7 +45,7 @@ public class Main {
 	public static void test0(Urbit ship) throws IOException {
 		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
 		ship.poke(ship.getShipName(), "hood", "helm-hi", jsonPayload, pokeEvent -> {
-			System.out.println("Got poke event");
+			System.out.println("[Poke Event]");
 			System.out.println(pokeEvent);
 		});
 	}
@@ -58,7 +58,7 @@ public class Main {
 
 	public static void test2(Urbit ship) throws IOException {
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
-			System.out.println("Subscribe Event");
+			System.out.println("[Subscribe Event]");
 			System.out.println(subscribeEvent);
 			chatStoreEvents.add(subscribeEvent);
 		});
@@ -96,7 +96,7 @@ public class Main {
 
 	public static void testChatView(Urbit ship) throws IOException {
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
-			System.out.println("Subscribe Event");
+			System.out.println("[Subscribe Event]");
 			System.out.println(subscribeEvent);
 			primaryChatViewEvents.add(subscribeEvent);
 		});
