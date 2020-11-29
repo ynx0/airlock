@@ -314,7 +314,7 @@ public class Urbit {
 
 	/**
 	 * This is a wrapper method that can be used to send any action with data.
-	 * <p>
+	 *
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 *
@@ -371,7 +371,6 @@ public class Urbit {
 
 	/**
 	 * Pokes a ship with data.
-	 *
 	 * @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
@@ -441,7 +440,6 @@ public class Urbit {
 		if (subscribeResponse.isSuccessful()) {
 //			System.out.println("registering handler for id: " + id);
 			subscribeHandlers.put(id, subscribeHandler);
-			System.out.println(subscribeHandlers);
 		}
 		subscribeResponse.close();
 
