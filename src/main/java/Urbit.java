@@ -1,7 +1,4 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
@@ -20,15 +17,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
-import static java.util.Objects.requireNonNullElse;
 
 public class Urbit {
-
-	public static final MediaType JSON
-			= MediaType.get("application/json; charset=utf-8");
-
-
-	private final OkHttpClient client;
 
 	/**
 	 * Code is the deterministic password used to authenticate with an Urbit ship
@@ -40,6 +30,7 @@ public class Urbit {
 	 * The location of the ship
 	 */
 	private final String url;
+
 
 	/**
 	 * Used to generate a unique channel name. A channel name is typically the current unix time plus a random hex string
@@ -69,35 +60,71 @@ public class Urbit {
 
 	/**
 	 * The authentication cookie given to us after logging in with the {@link Urbit#code}.
-	 * Note: it is possible to authenticate with an incorrect +code and still get an authcookie.
+	 * Note: it is possible to authenticate with an incorrect +code and still get an auth cookie.
 	 * Only after sending the first real request will it fail.
 	 */
 	private String cookie;
+
+	private boolean authenticated;
+
+	/**
+	 *  The authentication status of the ship
+	 *  <p>
+	 * N.B: This does not imply a "successful" authentication, because eyre gives you an auth cookie whether you use the correct password or not.
+	 * Only when you actually go to make a request will it fail with a 401 or something of the like.
+	 * // TODO possibly improve the api here
+	 * </p>
+	 * @return whether or not we have authenticated with the ship.
+	 */
+	public boolean isAuthenticated() {
+		return authenticated;
+	}
+
+	/**
+	 * Get the connection status of the ship
+	 *
+	 * @return whether or not the ship is connected
+	 */
+	public boolean isConnected() {
+		return this.isAuthenticated() && this.sseClient != null;
+	}
+
+
 
 	/**
 	 * The name of the ship that we are connecting to. (the @p without '~')
 	 */
 	private final String shipName;
 
+	/**
+	 * @return the name of the ship that we are connecting to
+	 */
 	public String getShipName() {
 		return shipName;
 	}
 
 	/**
 	 * This is a Map between event-id of a poke request and the respective handler function.
-	 * When the sseClient receives an {@link EyreResponse}, it propagates the data in the form of a {@link PokeEvent}
+	 * When the sseClient receives an {@link EyreResponse}, it propagates the data in the form of a {@link PokeResponse}
 	 * to the correct handler function.
 	 */
-	private final Map<Integer, Consumer<PokeEvent>> pokeHandlers;
+	private final Map<Integer, Consumer<PokeResponse>> pokeHandlers;
 
 	/**
 	 * This is the equivalent mapping for subscription handlers. See {@link Urbit#pokeHandlers}.
 	 */
 	private final Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
 
+	public static final MediaType JSON
+			= MediaType.get("application/json; charset=utf-8");
+
+	private final OkHttpClient client;
 
 	private final Gson gson;
 
+	/**
+	 * Synchronization object used to prevent multithreading errors and incorrectly ordered network calls
+	 */
 	private final Object urbitLock = new Object();
 
 
@@ -112,9 +139,10 @@ public class Urbit {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
+		this.authenticated = false;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
-		this.shipName = requireNonNullElse(shipName, "");
+		this.shipName = requireNonNull(shipName);
 
 		// init cookie manager
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -156,7 +184,7 @@ public class Urbit {
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
 	 */
-	public Response connect() throws IOException {
+	public Response authenticate() throws IOException {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -178,35 +206,53 @@ public class Urbit {
 		Cookie cookie = Cookie.parse(request.url(), cookieString);
 		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
 		this.cookie = cookie.name() + "=" + cookie.value();
+		this.authenticated = true;
 
 		return response; // TODO Address possible memory leak with returning unclosed response object
 	}
 
 
 	/**
-	 * Initializes the SSE pipe for the appropriate channel (if necessary)
+	 * Creates the channel on which the sseClient will be instantiated on
+	 * This must be done in the same breath as creating the sseClient (i.e. in {@link Urbit#connect()},
+	 * otherwise we will never be able to create a connection to the ship.
+	 * @throws IOException when the poke network request fails
 	 */
-	void initEventSource() {
+	private void createChannel() throws IOException {
+		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
+		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload, pokeResponse -> {});
+	}
+
+	/**
+	 * Initializes the SSE pipe for the appropriate channel (if necessary). Must be called after authenticating
+	 */
+	public void connect() throws IOException {
 		if (this.sseClient != null) {
 			return;
 		}
+		if (!this.authenticated) {
+			throw new IllegalStateException("Cannot connect to ship without being authenticated");
+		}
+
+		this.createChannel(); // We MUST create the channel before sending the sseRequest. Only after doing both will we get a response from the ship.
+							  // That is, we cannot wait for a poke response back because before creating the sseClient because we'll never have established one in the first place
+
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
 				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
 
+
+
 		this.sseClient = EventSources.createFactory(this.client)
 				.newEventSource(sseRequest, new EventSourceListener() {
 					@Override
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
-						//lastSeenEventId = eventID; // todo should this be from eyre payload
 
 						synchronized (urbitLock) {
 							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
-
-
 							lastSeenEventId = eyreResponse.id;
 
 							try {
@@ -272,15 +318,6 @@ public class Urbit {
 						if (t != null) {
 							System.err.println("Encountered error while doing sse stuff");
 							throw new RuntimeException(t);
-							//							System.out.println(t.getMessage()); // omg im so stupid i should've been printing this earlier
-//							if (response != null) {
-//								System.out.println("response");
-//								try {
-//									System.out.println(requireNonNull(response.body()).string());
-//								} catch (IOException e) {
-//									e.printStackTrace();
-//								}
-//							}
 						}
 						if (response != null && response.code() != 200) {
 							System.err.println("Event Source Error: " + response);
@@ -304,7 +341,6 @@ public class Urbit {
 						lastAcknowledgedEventId = 0;
 						pokeHandlers.clear();
 						subscribeHandlers.clear();
-
 					}
 				});
 	}
@@ -316,6 +352,7 @@ public class Urbit {
 	 * Every message sent has some common parameters, like method, headers, and data
 	 * structure, so this method exists to prevent duplication.
 	 * </p>
+	 *
 	 * @param jsonData The data to send with the action
 	 */
 	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
