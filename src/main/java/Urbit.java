@@ -236,9 +236,9 @@ public class Urbit {
 								case "poke":
 									var pokeHandler = pokeHandlers.get(eyreResponse.id);
 									if (eyreResponse.isOk()) {
-										pokeHandler.accept(PokeEvent.SUCCESS);
+										pokeHandler.accept(PokeResponse.SUCCESS);
 									} else {
-										pokeHandler.accept(PokeEvent.fromFailure(eyreResponse.err));
+										pokeHandler.accept(PokeResponse.fromFailure(eyreResponse.err));
 									}
 									pokeHandlers.remove(eyreResponse.id);
 									break;
@@ -380,7 +380,7 @@ public class Urbit {
 			@NotNull String app,
 			@NotNull String mark,
 			@NotNull JsonElement json, // todo maybe migrate type to JsonObject
-			@NotNull Consumer<PokeEvent> pokeHandler
+			@NotNull Consumer<PokeResponse> pokeHandler
 	) throws IOException {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201

@@ -25,9 +25,9 @@ public class Main {
 
         // MARK - Perform a `helm-hi`        
         JsonPrimitive helmHiPayload = new JsonPrimitive("Opening Airlock :)");
-        ship.poke(ship.getShipName(), "hood", "helm-hi", helmHiPayload, pokeEvent -> {
+        ship.poke(ship.getShipName(), "hood", "helm-hi", helmHiPayload, pokeResponse -> {
             System.out.println("[Poke Event]");
-            System.out.println(pokeEvent);
+            System.out.println(pokeResponse);
         });
         
         // MARK - initialize the SSE event source
@@ -55,9 +55,9 @@ public class Main {
         
         // MARK - send a message on the 'test2' channel
         JsonElement messagePayloadJSON = gson.toJsonTree(message);
-        ship.poke(ship.getShipName(), "chat-hook", "json", messagePayloadJSON, pokeEvent -> {
+        ship.poke(ship.getShipName(), "chat-hook", "json", messagePayloadJSON, pokeResponse -> {
             System.out.println("[Poke Event]");
-            System.out.println(pokeEvent);
+            System.out.println(pokeResponse);
         });
 	}
 }
@@ -68,7 +68,7 @@ public class Main {
 ## Development Checklist
 
 - [x] Minimum viable product
-- [ ] Basic integration tests
+- [x] Basic integration tests
 - [ ] Basic documentation
 - [ ] Create build process (i.e. publishing artifacts to a repository)
 - [ ] Examples based off of integration tests
