@@ -21,13 +21,13 @@ import static java.util.Objects.requireNonNull;
 public class Urbit {
 
 	/**
-	 * Code is the deterministic password used to authenticate with an Urbit ship
+	 * The code is the deterministic password used to authenticate with an Urbit ship
 	 * It can be obtained by running `+code` in the dojo.
 	 */
 	private final String code;
 
 	/**
-	 * The location of the ship
+	 * The URL representing the location where eyre is listening for requests on the ship
 	 */
 	private final String url;
 
@@ -68,12 +68,13 @@ public class Urbit {
 	private boolean authenticated;
 
 	/**
-	 *  The authentication status of the ship
-	 *  <p>
+	 * The authentication status of the ship
+	 * <p>
 	 * N.B: This does not imply a "successful" authentication, because eyre gives you an auth cookie whether you use the correct password or not.
 	 * Only when you actually go to make a request will it fail with a 401 or something of the like.
 	 * // TODO possibly improve the api here
 	 * </p>
+	 *
 	 * @return whether or not we have authenticated with the ship.
 	 */
 	public boolean isAuthenticated() {
@@ -88,7 +89,6 @@ public class Urbit {
 	public boolean isConnected() {
 		return this.isAuthenticated() && this.sseClient != null;
 	}
-
 
 
 	/**
@@ -144,7 +144,7 @@ public class Urbit {
 		this.subscribeHandlers = new HashMap<>();
 		this.shipName = requireNonNull(shipName);
 
-		// init cookie manager
+		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
 
 
@@ -158,6 +158,8 @@ public class Urbit {
 		// TODO: Instead of returning the response object, which is kind of useless, return a {Completable}Future<T> for pokes at least, not valid for subscribes
 		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
+		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
+		//  cause there is no clean way to access nested values with a raw gson object
 	}
 
 	/**
@@ -216,11 +218,13 @@ public class Urbit {
 	 * Creates the channel on which the sseClient will be instantiated on
 	 * This must be done in the same breath as creating the sseClient (i.e. in {@link Urbit#connect()},
 	 * otherwise we will never be able to create a connection to the ship.
+	 *
 	 * @throws IOException when the poke network request fails
 	 */
 	private void createChannel() throws IOException {
 		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
-		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload, pokeResponse -> {});
+		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload, pokeResponse -> {
+		});
 	}
 
 	/**
@@ -235,14 +239,13 @@ public class Urbit {
 		}
 
 		this.createChannel(); // We MUST create the channel before sending the sseRequest. Only after doing both will we get a response from the ship.
-							  // That is, we cannot wait for a poke response back because before creating the sseClient because we'll never have established one in the first place
+		// That is, we cannot wait for a poke response back because before creating the sseClient because we'll never have established one in the first place
 
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
 				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
-
 
 
 		this.sseClient = EventSources.createFactory(this.client)
@@ -294,7 +297,7 @@ public class Urbit {
 										subscribeHandler.accept(SubscribeEvent.STARTED);
 									} else {
 										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
-										subscribeHandlers.remove(eyreResponse.id); // haha whoops :p
+										subscribeHandlers.remove(eyreResponse.id);
 									}
 									break;
 								case "diff":
@@ -363,7 +366,7 @@ public class Urbit {
 			fullJsonDataArray.add(fullJsonData);
 
 //		// acknowledge last seen event
-			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
+//			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
 		/*if (lastAcknowledgedEventId != lastSeenEventId) {
 			JsonObject ackObj = new JsonObject();
 			ackObj.addProperty("action", "ack");
@@ -395,10 +398,10 @@ public class Urbit {
 				throw new IOException("Error: " + response);
 			}
 
-			System.out.println("=============SendMessage=============");
+			System.out.println(",============SendMessage============,");
 			System.out.println("Id: " + jsonData.get("id").getAsInt());
 			System.out.println("Sent message: " + fullJsonDataArray);
-			System.out.println("=============SendMessage=============");
+			System.out.println(".============SendMessage============.");
 
 			return response; // TODO Address possible memory leak with returning unclosed response object
 		}
@@ -419,6 +422,9 @@ public class Urbit {
 			@NotNull JsonElement json, // todo maybe migrate type to JsonObject
 			@NotNull Consumer<PokeResponse> pokeHandler
 	) throws IOException {
+
+		// todo i think poke needs to return a completable future cause that seems to make more sense rather than taking in a pokeHandler...
+		//  however, since this is working for now, we shouldn't do this until much later
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
@@ -441,7 +447,7 @@ public class Urbit {
 		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.isSuccessful()) {
-			System.out.println("registering poke handler for id: " + id);
+//			System.out.println("registering poke handler for id: " + id);
 			pokeHandlers.put(id, pokeHandler); // just incremented by sendJSONtoChannel
 		}
 		pokeResponse.close();
@@ -471,10 +477,8 @@ public class Urbit {
 				"path", path
 		)).getAsJsonObject();
 		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
-//		System.out.println("subscribe response is successful");
-//		System.out.println(subscribeResponse.isSuccessful());
+
 		if (subscribeResponse.isSuccessful()) {
-//			System.out.println("registering handler for id: " + id);
 			subscribeHandlers.put(id, subscribeHandler);
 		}
 		subscribeResponse.close();
@@ -541,7 +545,7 @@ public class Urbit {
 	 * @param code Code to log in
 	 */
 	@NotNull
-	static Urbit onArvoNetwork(String name, String code) {
+	public static Urbit onArvoNetwork(String name, String code) {
 		return new Urbit("https://" + name + ".arvo.network", name, code);
 	}
 
@@ -552,7 +556,7 @@ public class Urbit {
 	 *
 	 * @param len Length of hex string to return.
 	 */
-	static String hexString(int len) {
+	private static String hexString(int len) {
 		final int maxlen = 8;
 		final double min = Math.pow(16, Math.min(len, maxlen) - 1);
 		final double max = Math.pow(16, Math.min(len, maxlen)) - 1;
@@ -566,7 +570,7 @@ public class Urbit {
 	}
 
 	/**
-	 * Generates a random UID.
+	 * Generates a random UID, urbit style
 	 * <p>
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
