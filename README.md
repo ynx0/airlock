@@ -64,12 +64,16 @@ public class Main {
 
 ```
 
+## Examples
+
+For the most up to date usage examples, see either `src/main/java/Main.java` or `src/test/java/UrbitIntegrationTests.java`.
+
 
 ## Development Checklist
 
 - [x] Minimum viable product
 - [x] Basic integration tests
-- [ ] Basic documentation
+- [x] Basic documentation
 - [ ] Create build process (i.e. publishing artifacts to a repository)
 - [ ] Examples based off of integration tests
 - [ ] Create example application that uses basic functionality
