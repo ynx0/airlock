@@ -1,5 +1,5 @@
 # TODO
-...
+- move towards stable master
 
 # Ideas
 - possibly make custom exceptions that wrap around known failure modes
