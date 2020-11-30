@@ -1,0 +1,16 @@
+http://fastutil.di.unimi.it/docs/
+https://labs.carrotsearch.com/hppc.html
+https://www.baeldung.com/java-treemap
+https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/TreeMap.html
+https://www.baeldung.com/java-common-concurrency-pitfalls
+https://stackoverflow.com/questions/416183/in-java-critical-sections-what-should-i-synchronize-on
+
+
+
+https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
+https://alexkudlick.com/blog/building-modular-java-applications-with-gradle
+https://www.baeldung.com/java-9-modularity
+https://docs.gradle.org/current/userguide/build_lifecycle.html
+https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
+
+
