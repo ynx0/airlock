@@ -1,3 +1,5 @@
+package airlock;
+
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -638,7 +640,7 @@ public class Urbit {
 	 * <p>
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
-	static String uid() {
+	public static String uid() {
 		// (this is causing a hoon error when used)
 		StringBuilder str = new StringBuilder("0v");
 		str.append((int) Math.ceil(Math.random() * 8)).append('.');

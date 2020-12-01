@@ -1,4 +1,11 @@
+import airlock.InMemoryResponseWrapper;
+import airlock.PokeResponse;
+import airlock.SubscribeEvent;
+import airlock.Urbit;
+import airlock.app.chat.ChatUpdate;
+import airlock.app.chat.ChatUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -6,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
@@ -131,7 +139,6 @@ public class UrbitIntegrationTests {
 						"path", "/~zod/test", // different chat
 						"envelope", Map.of(
 								"uid", Urbit.uid(),
-//								"uid", "0v1.00001.3eolm.59lvl.7n9ht.2mokl.51js7",
 								"number", 1,
 								"author", "~zod",
 								"when", Instant.now().toEpochMilli(),
@@ -140,7 +147,9 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
+//		JsonElement json = gson.toJsonTree(payload);
+		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
 
@@ -154,14 +163,11 @@ public class UrbitIntegrationTests {
 				filter(onlyPrimaryChatUpdate)
 				.findFirst()
 				.ifPresentOrElse(subscribeEvent -> {
-					String message = subscribeEvent.updateJson
-							.getAsJsonObject("chat-update")
-							.getAsJsonObject("message")
-							.getAsJsonObject("envelope")
-							.getAsJsonObject("letter")
-							.get("text")
-							.getAsString();
-					assertEquals(primaryChatViewTestMessage, message);
+					ChatUpdate chatUpdate = gson.fromJson(subscribeEvent.updateJson.get("chat-update"), ChatUpdate.class);
+					System.out.println("Got chat update");
+					System.out.println(chatUpdate);
+					Objects.requireNonNull(chatUpdate.message);
+					assertEquals(primaryChatViewTestMessage, chatUpdate.message.envelope.letter.text);
 				}, () -> fail("Chat message received was not the same as the one sent"));
 
 	}
