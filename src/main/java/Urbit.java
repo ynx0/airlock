@@ -13,6 +13,7 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -108,7 +109,7 @@ public class Urbit {
 	 * When the sseClient receives an {@link EyreResponse}, it propagates the data in the form of a {@link PokeResponse}
 	 * to the correct handler function.
 	 */
-	private final Map<Integer, Consumer<PokeResponse>> pokeHandlers;
+	private final Map<Integer, CompletableFuture<PokeResponse>> pokeHandlers;
 
 	/**
 	 * This is the equivalent mapping for subscription handlers. See {@link Urbit#pokeHandlers}.
@@ -160,6 +161,8 @@ public class Urbit {
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
 		//  cause there is no clean way to access nested values with a raw gson object
+
+		// todo what about different marks. so far I've only ever encountered helm-hi or json, but the api only really accepts `JsonElement`s
 	}
 
 	/**
@@ -223,8 +226,7 @@ public class Urbit {
 	 */
 	private void createChannel() throws IOException {
 		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
-		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload, pokeResponse -> {
-		});
+		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload);
 	}
 
 	/**
@@ -285,9 +287,9 @@ public class Urbit {
 								case "poke":
 									var pokeHandler = pokeHandlers.get(eyreResponse.id);
 									if (eyreResponse.isOk()) {
-										pokeHandler.accept(PokeResponse.SUCCESS);
+										pokeHandler.complete(PokeResponse.SUCCESS);
 									} else {
-										pokeHandler.accept(PokeResponse.fromFailure(eyreResponse.err));
+										pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
 									}
 									pokeHandlers.remove(eyreResponse.id);
 									break;
@@ -409,18 +411,17 @@ public class Urbit {
 
 	/**
 	 * Pokes a ship with data.
-	 *
-	 * @param ship The ship to poke
+	 *  @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
+	 * @return
 	 */
-	public void poke(
+	public CompletableFuture<PokeResponse> poke(
 			String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull JsonElement json, // todo maybe migrate type to JsonObject
-			@NotNull Consumer<PokeResponse> pokeHandler
+			@NotNull JsonElement json // todo maybe migrate type to JsonObject
 	) throws IOException {
 
 		// todo i think poke needs to return a completable future cause that seems to make more sense rather than taking in a pokeHandler...
@@ -433,9 +434,9 @@ public class Urbit {
 
 		// todo make poke strict to follow above rules
 
-		JsonObject pokeDataObj;
+		CompletableFuture<PokeResponse> pokeFuture = new CompletableFuture<>();
 		int id = nextID();
-		pokeDataObj = gson.toJsonTree(Map.of(
+		JsonObject pokeDataObj = gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "poke",
 				"ship", ship,
@@ -448,9 +449,11 @@ public class Urbit {
 
 		if (pokeResponse.isSuccessful()) {
 //			System.out.println("registering poke handler for id: " + id);
-			pokeHandlers.put(id, pokeHandler); // just incremented by sendJSONtoChannel
+			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
 		pokeResponse.close();
+
+		return pokeFuture;
 	}
 
 	/**
