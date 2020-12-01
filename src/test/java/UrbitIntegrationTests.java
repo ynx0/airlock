@@ -98,8 +98,8 @@ public class UrbitIntegrationTests {
 				"message", Map.of(
 						"path", "/~zod/test",
 						"envelope", Map.of(
-//								"uid", Urbit.uid(),
-								"uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
+								"uid", Urbit.uid(),
+//								"uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
 								"number", 1,
 								"author", "~zod",
 								"when", Instant.now().toEpochMilli(),
@@ -130,8 +130,8 @@ public class UrbitIntegrationTests {
 				"message", Map.of(
 						"path", "/~zod/test", // different chat
 						"envelope", Map.of(
-//								"uid", Urbit.uid(),
-								"uid", "0v1.00001.3eolm.59lvl.7n9ht.2mokl.51js7",
+								"uid", Urbit.uid(),
+//								"uid", "0v1.00001.3eolm.59lvl.7n9ht.2mokl.51js7",
 								"number", 1,
 								"author", "~zod",
 								"when", Instant.now().toEpochMilli(),
