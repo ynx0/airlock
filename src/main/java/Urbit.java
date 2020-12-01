@@ -543,8 +543,62 @@ public class Urbit {
 	}
 
 
-	public void scryRequest(String app, String path, String mark) {
-		// todo impl alternative to sendJSONtoChannel
+	// todo deduplicate
+	@SuppressWarnings("DuplicatedCode")
+	public InMemoryResponseWrapper scryRequest(String app, String path, String mark) throws IOException {
+		String scryUrl = this.getScryUrl(app, path, mark);
+		Request request = new Request.Builder()
+				.url(scryUrl)
+				.header("Content-Type", "application/json")
+				.get()
+				.build();
+
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) {
+			System.err.println(requireNonNull(response.body()).string());
+			throw new IOException("Error: " + response);
+		}
+		System.out.println(",============ScryRequest============,");
+		System.out.println("Request: " + scryUrl);
+		System.out.println(".============ScryRequest============.");
+
+		return new InMemoryResponseWrapper(response);
+
+	}
+
+	@SuppressWarnings("DuplicatedCode")
+	public InMemoryResponseWrapper spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
+
+		// copied from sendJSONtoChannel
+		JsonArray fullJsonDataArray = new JsonArray();
+		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
+		fullJsonDataArray.add(fullJsonData);
+
+		String jsonString = gson.toJson(fullJsonDataArray);
+
+		RequestBody requestBody = RequestBody.create(jsonString, JSON);
+
+
+		String spiderUrl = this.getSpiderUrl(inputMark, threadName, outputMark);
+
+		Request request = new Request.Builder()
+				.url(spiderUrl)
+				.header("Content-Type", "application/json")
+				.post(requestBody)
+				.build();
+
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) {
+			System.err.println(requireNonNull(response.body()).string());
+			throw new IOException("Error: " + response);
+		}
+		System.out.println(",============SpiderRequest============,");
+		System.out.println("Request: " + spiderUrl);
+		System.out.println(".============SpiderRequest============.");
+
+		return new InMemoryResponseWrapper(response);
+
 	}
 
 
