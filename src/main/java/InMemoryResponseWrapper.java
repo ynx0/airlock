@@ -22,6 +22,7 @@ public class InMemoryResponseWrapper {
 
 	public InMemoryResponseWrapper(Response response) throws IOException {
 		this.closedResponse = response;
+		// taken from https://github.com/square/okhttp/issues/2869
 		BufferedSource source = Objects.requireNonNull(response.body()).source();
 		source.request(Integer.MAX_VALUE);
 		this.inMemoryResponseBody = source.getBuffer().snapshot();
