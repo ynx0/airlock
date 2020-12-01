@@ -22,9 +22,7 @@ public class InMemoryResponseWrapper {
 		BufferedSource source = Objects.requireNonNull(response.body()).source();
 		source.request(Integer.MAX_VALUE);
 		this.inMemoryResponseBody = source.getBuffer().snapshot();
-		// todo figure out what we gotta do to properly close everything here
 		response.close();
-		System.out.println("body source closed?: " + !source.isOpen()); // true, so we don't need to manually close the source
 	}
 
 	public Response getClosedResponse() {
