@@ -207,7 +207,7 @@ public class Urbit {
 				.build();
 
 		Request request = new Request.Builder()
-				.header("connection", "keep-alive")
+//				.header("connection", "keep-alive")
 				.url(this.getLoginUrl())
 				.post(formBody)
 				.build();
@@ -393,7 +393,6 @@ public class Urbit {
 
 			Request request = new Request.Builder()
 					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
-//					.header("Connection", "keep-alive")
 					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
 					.put(requestBody)
 					.build();
