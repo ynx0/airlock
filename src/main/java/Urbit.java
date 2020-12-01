@@ -13,7 +13,6 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -197,8 +196,9 @@ public class Urbit {
 
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
+	 * @return Returns an immutable wrapper around a response body object
 	 */
-	public Response authenticate() throws IOException {
+	public InMemoryResponseWrapper authenticate() throws IOException {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -224,8 +224,7 @@ public class Urbit {
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
-
-		return response; // TODO Address possible memory leak with returning unclosed response object
+		return new InMemoryResponseWrapper(response);
 	}
 
 
@@ -371,15 +370,19 @@ public class Urbit {
 	 * </p>
 	 *
 	 * @param jsonData The data to send with the action
+	 * @return
 	 */
-	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
+	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws IOException {
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
 			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 			fullJsonDataArray.add(fullJsonData);
 
-			this.lastAcknowledgedEventId = this.lastSeenEventId; // todo is this correct behavior??
+			// todo is this correct behavior??
+			// commenting it out seems to not have an effect, i.e. tests still pass,
+			// but that could simply be because we are not testing rigorously enough. it remains to be seen
+			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
 			String jsonString = gson.toJson(fullJsonDataArray);
 
@@ -404,7 +407,7 @@ public class Urbit {
 			System.out.println("Sent message: " + fullJsonDataArray);
 			System.out.println(".============SendMessage============.");
 
-			return response; // TODO Address possible memory leak with returning unclosed response object
+			return new InMemoryResponseWrapper(response);
 		}
 	}
 
@@ -445,12 +448,12 @@ public class Urbit {
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
+		InMemoryResponseWrapper pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
-		if (pokeResponse.isSuccessful()) {
+		if (pokeResponse.getClosedResponse().isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
-		pokeResponse.close();
+//		pokeResponse.close();
 
 		return pokeFuture;
 	}
@@ -478,12 +481,12 @@ public class Urbit {
 				"app", app,
 				"path", path
 		)).getAsJsonObject();
-		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
+		InMemoryResponseWrapper subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
 
-		if (subscribeResponse.isSuccessful()) {
+		if (subscribeResponse.getClosedResponse().isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
 		}
-		subscribeResponse.close();
+//		subscribeResponse.close();
 
 		return this.requestId;
 	}
@@ -502,8 +505,8 @@ public class Urbit {
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(unsubscribeDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(unsubscribeDataObj);
+//		res.close();
 	}
 
 	/**
@@ -517,8 +520,8 @@ public class Urbit {
 				"action", "delete"
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(deleteDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+//		res.close();
 	}
 
 	/**
@@ -533,8 +536,8 @@ public class Urbit {
 				"event-id", eventID
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(deleteDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+//		res.close();
 	}
 
 
