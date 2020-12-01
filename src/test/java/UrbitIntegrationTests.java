@@ -109,8 +109,7 @@ public class UrbitIntegrationTests {
 	@Order(5)
 	public void testChatView() throws IOException, ExecutionException, InterruptedException {
 		await().until(ship::isConnected);
-		await().atLeast(Duration.ofMillis(500))
-				.until(chatPokeResponse1::isDone);
+		await().until(chatPokeResponse1::isDone);
 
 
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
@@ -132,8 +131,7 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		CompletableFuture<PokeResponse> pokeFuture = new CompletableFuture<>();
-		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
 
