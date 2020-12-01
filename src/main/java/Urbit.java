@@ -73,7 +73,7 @@ public class Urbit {
 	 * <p>
 	 * N.B: This does not imply a "successful" authentication, because eyre gives you an auth cookie whether you use the correct password or not.
 	 * Only when you actually go to make a request will it fail with a 401 or something of the like.
-	 * // TODO possibly improve the api here
+	 *
 	 * </p>
 	 *
 	 * @return whether or not we have authenticated with the ship.
@@ -133,7 +133,7 @@ public class Urbit {
 	 * Constructs a new Urbit connection.
 	 *
 	 * <p>
-	 *     Please note that the connection times out after 1 day of not having received any events from a ship
+	 * Please note that the connection times out after 1 day of not having received any events from a ship
 	 * </p>
 	 *
 	 * @param url      The URL (with protocol and port) of the ship to be accessed
@@ -160,8 +160,6 @@ public class Urbit {
 
 		gson = new Gson();
 
-		// TODO: Instead of returning the response object, which is kind of useless, return a {Completable}Future<T> for pokes at least, not valid for subscribes
-		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
 		//  cause there is no clean way to access nested values with a raw gson object
@@ -190,7 +188,7 @@ public class Urbit {
 	}
 
 	public String getScryUrl(String app, String path, String mark) {
-		return this.url + "/~/scry" +  app + "/" + path + "." + mark;
+		return this.url + "/~/scry" + app + "/" + path + "." + mark;
 	}
 
 	public String getSpiderUrl(String inputMark, String threadName, String outputMark) {
@@ -218,9 +216,6 @@ public class Urbit {
 		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
 		// we can't call it multiple times
 
-//		String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
-//		Cookie cookie = Cookie.parse(request.url(), cookieString);
-//		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
 
 		// after we made the request, here we extract the cookie. its quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.parse(this.getChannelUrl())))
@@ -229,9 +224,6 @@ public class Urbit {
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
-//		System.out.println("Cookie in jar: ");
-//		System.out.println(this.cookie);
-//		this.authenticated = true;
 
 		return response; // TODO Address possible memory leak with returning unclosed response object
 	}
@@ -265,7 +257,6 @@ public class Urbit {
 
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
-//				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
 
@@ -387,27 +378,14 @@ public class Urbit {
 			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 			fullJsonDataArray.add(fullJsonData);
 
-//		// acknowledge last seen event
-//			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
-		/*if (lastAcknowledgedEventId != lastSeenEventId) {
-			JsonObject ackObj = new JsonObject();
-			ackObj.addProperty("action", "ack");
-			ackObj.addProperty("event-id", this.lastSeenEventId);
-//			System.out.println("Last acked id: " + lastAcknowledgedEventId);
-//			System.out.println("acking id: " + lastSeenEventId);
-			fullJsonDataArray.add(ackObj);
-			lastAcknowledgedEventId = lastSeenEventId;
-		}*/
-
-			this.lastAcknowledgedEventId = this.lastSeenEventId;
+			this.lastAcknowledgedEventId = this.lastSeenEventId; // todo is this correct behavior??
 
 			String jsonString = gson.toJson(fullJsonDataArray);
 
 			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 			Request request = new Request.Builder()
-					.url(this.getChannelUrl())
-//					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
+					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
 					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
 					.header("Content-Type", "application/json")
 					.put(requestBody)
@@ -431,11 +409,12 @@ public class Urbit {
 
 	/**
 	 * Pokes a ship with data.
-	 *  @param ship The ship to poke
+	 *
+	 * @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
-	 * @return
+	 * @return a future poke response to the request
 	 */
 	public CompletableFuture<PokeResponse> poke(
 			String ship,
@@ -468,7 +447,6 @@ public class Urbit {
 		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.isSuccessful()) {
-//			System.out.println("registering poke handler for id: " + id);
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
 		pokeResponse.close();
@@ -562,7 +540,6 @@ public class Urbit {
 	public void scryRequest(String app, String path, String mark) {
 		// todo impl alternative to sendJSONtoChannel
 	}
-
 
 
 	/**
