@@ -48,6 +48,9 @@ public class UrbitIntegrationTests {
 		subscribeToMailboxEvents = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
 		gson = new Gson();
+
+		// Assumes chat channel called 'test' is created
+
 	}
 
 	@Test
@@ -69,7 +72,7 @@ public class UrbitIntegrationTests {
 	public void canSubscribeToTestChat() throws IOException {
 		await().until(ship::isConnected);
 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test2", subscribeEvent -> {
+		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
 			subscribeToMailboxEvents.add(subscribeEvent);
 		});
 
@@ -87,7 +90,7 @@ public class UrbitIntegrationTests {
 
 		Map<String, Object> payload = Map.of(
 				"message", Map.of(
-						"path", "/~zod/test2",
+						"path", "/~zod/test",
 						"envelope", Map.of(
 //								"uid", Urbit.uid(),
 								"uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
