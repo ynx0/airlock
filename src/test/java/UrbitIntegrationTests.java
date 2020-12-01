@@ -1,8 +1,8 @@
 import com.google.gson.Gson;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,14 +19,21 @@ public class UrbitIntegrationTests {
 
 	private static Gson gson;
 	private static Urbit ship;
-	private static List<PokeResponse> sendChatMessageResponses;
+	private static CompletableFuture<PokeResponse> chatPokeResponse1;
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
 	private static List<SubscribeEvent> primaryChatSubscriptionEvents;
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
+	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->
+			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // are an update event
+					&& subscribeEvent.updateJson.has("chat-update")                 // and the update json contains a "chat-update" object
+					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
+
+
 	/* TODOs
-	* TODO add tests for subscription canceling and various other parts of the existing api
+	 * TODO add tests for subscription canceling
+	 * TODO test manually canceling eventsource / deleting channel
 	 */
 
 
@@ -39,7 +46,6 @@ public class UrbitIntegrationTests {
 
 		ship = new Urbit(url, shipName, code);
 		subscribeToMailboxEvents = new ArrayList<>();
-		sendChatMessageResponses = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
 		gson = new Gson();
 	}
@@ -75,7 +81,7 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(4)
-	public void canSendChatMessage() throws IOException {
+	public void canSendChatMessage() throws IOException, ExecutionException, InterruptedException {
 		await().until(ship::isConnected);
 		await().until(() -> !subscribeToMailboxEvents.isEmpty());
 
@@ -93,17 +99,19 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload), pokeResponse -> sendChatMessageResponses.add(pokeResponse));
+		chatPokeResponse1 = ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		await().until(chatPokeResponse1::isDone);
 
-		await().until(() -> !sendChatMessageResponses.isEmpty());
-
-		assertTrue(sendChatMessageResponses.get(0).success);
+		assertTrue(chatPokeResponse1.get().success);
 	}
 
 	@Test
 	@Order(5)
 	public void testChatView() throws IOException, ExecutionException, InterruptedException {
 		await().until(ship::isConnected);
+		await().atLeast(Duration.ofMillis(500))
+				.until(chatPokeResponse1::isDone);
+
 
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
 			primaryChatSubscriptionEvents.add(subscribeEvent);
@@ -125,7 +133,7 @@ public class UrbitIntegrationTests {
 		);
 
 		CompletableFuture<PokeResponse> pokeFuture = new CompletableFuture<>();
-		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload), pokeFuture::complete);
+		ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
 
@@ -133,10 +141,10 @@ public class UrbitIntegrationTests {
 		await().until(
 				() -> primaryChatSubscriptionEvents
 						.stream()
-						.anyMatch(onlyPrimaryChatUpdate())
+						.anyMatch(onlyPrimaryChatUpdate)
 		);
 		primaryChatSubscriptionEvents.stream().
-				filter(onlyPrimaryChatUpdate())
+				filter(onlyPrimaryChatUpdate)
 				.findFirst()
 				.ifPresentOrElse(subscribeEvent -> {
 					String message = subscribeEvent.updateJson
@@ -151,11 +159,5 @@ public class UrbitIntegrationTests {
 
 	}
 
-	@NotNull
-	public Predicate<SubscribeEvent> onlyPrimaryChatUpdate() {
-		return subscribeEvent -> subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // are an update event
-				&& subscribeEvent.updateJson.has("chat-update")                 // and the update json contains a "chat-update" object
-				&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
-	}
 
 }
