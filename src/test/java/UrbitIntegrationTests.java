@@ -124,7 +124,6 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(5)
-	@Disabled
 	public void testChatView() throws IOException, ExecutionException, InterruptedException {
 		await().until(ship::isConnected);
 		await().until(chatPokeResponse1::isDone);
