@@ -185,6 +185,13 @@ public class Urbit {
 		return this.url + "/~/login";
 	}
 
+	public String getScryUrl(String app, String path, String mark) {
+		return this.url + "/~/scry" +  app + "/" + path + "." + mark;
+	}
+
+	public String getSpiderUrl(String inputMark, String threadName, String outputMark) {
+		return this.url + "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json";
+	}
 
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
@@ -539,7 +546,11 @@ public class Urbit {
 	}
 
 
-	// TODO add scry and spider requests
+	public void scryRequest(String app, String path, String mark) {
+		// todo impl alternative to sendJSONtoChannel
+	}
+
+
 
 	/**
 	 * Utility function to connect to a ship that has its *.arvo.network domain configured.
