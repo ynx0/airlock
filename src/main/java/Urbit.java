@@ -68,8 +68,6 @@ public class Urbit {
 	private Cookie cookie;
 
 
-	private boolean authenticated;
-
 	/**
 	 * The authentication status of the ship
 	 * <p>
@@ -146,7 +144,6 @@ public class Urbit {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
-		this.authenticated = false;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.shipName = requireNonNull(shipName);
@@ -259,7 +256,7 @@ public class Urbit {
 		if (this.sseClient != null) {
 			return;
 		}
-		if (!this.authenticated) {
+		if (!this.isAuthenticated()) {
 			throw new IllegalStateException("Cannot connect to ship without being authenticated");
 		}
 
