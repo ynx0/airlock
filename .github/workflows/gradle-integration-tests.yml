@@ -24,5 +24,7 @@ jobs:
         java-version: 11
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+    - name: Setup test environment
+      run: ./setup_fakezod.sh
     - name: Test with Gradle
       run: ./gradlew test
