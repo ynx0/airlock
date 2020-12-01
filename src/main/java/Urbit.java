@@ -393,8 +393,8 @@ public class Urbit {
 
 			Request request = new Request.Builder()
 					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
-					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
-					.header("Content-Type", "application/json")
+//					.header("Connection", "keep-alive")
+					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
 					.put(requestBody)
 					.build();
 
