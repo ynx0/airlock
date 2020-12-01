@@ -21,52 +21,20 @@ public class Main {
 
         // MARK - connect to the ship
 		Urbit ship = new Urbit(url, shipName, code);
+        ship.authenticate();
 		ship.connect();
-
-        // MARK - Perform a `helm-hi`        
-        JsonPrimitive helmHiPayload = new JsonPrimitive("Opening Airlock :)");
-        ship.poke(ship.getShipName(), "hood", "helm-hi", helmHiPayload, pokeResponse -> {
-            System.out.println("[Poke Event]");
-            System.out.println(pokeResponse);
-        });
         
-        // MARK - initialize the SSE event source
-        ship.initEventSource();
-
         // MARK - create a mailbox subscription on a channel named 'test' 
 		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
 			System.out.println("[Subscribe Event]");
 			System.out.println(subscribeEvent);
 		});
-
-        // MARK - create message payload
-		Map<String, Object> message = Map.of(
-                "message", Map.of(
-                        "path", "/~zod/test2",
-                        "envelope", Map.of(
-                                "uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
-                                "number", 1,
-                                "author", "~zod",
-                                "when", Instant.now().toEpochMilli(),
-                                "letter", Map.of("text", "Hello, Mars! It is now " + Instant.now().toString())
-                        )
-                )
-        );
-        
-        // MARK - send a message on the 'test2' channel
-        JsonElement messagePayloadJSON = gson.toJsonTree(message);
-        ship.poke(ship.getShipName(), "chat-hook", "json", messagePayloadJSON, pokeResponse -> {
-            System.out.println("[Poke Event]");
-            System.out.println(pokeResponse);
-        });
 	}
 }
 
 ```
 
-## Examples
-
-For the most up to date usage examples, see either `src/main/java/Main.java` or `src/test/java/UrbitIntegrationTests.java`.
+For the most up to date usage examples, see `src/main/java/Main.java` and `src/test/java/UrbitIntegrationTests.java`.
 
 
 ## Development Checklist
