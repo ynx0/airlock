@@ -27,4 +27,4 @@ jobs:
     - name: Setup test environment
       run: ./setup_fakezod.sh
     - name: Test with Gradle
-      run: ./gradlew test
+      run: ./gradlew test --info --stacktrace
