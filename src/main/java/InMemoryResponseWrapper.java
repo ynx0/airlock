@@ -7,7 +7,10 @@ import java.util.Objects;
 
 
 /**
- * This class wraps around an {@link okhttp3.Response} object providing
+ * This class wraps around an {@link okhttp3.Response} object providing an immutable version of it
+ * <p>
+ *     Specifically, it makes generates an immutable "copy" of the response body.
+ * </p>
  */
 public class InMemoryResponseWrapper {
 	// todo, maybe we don't need to keep around this data and the class is useless
@@ -25,11 +28,21 @@ public class InMemoryResponseWrapper {
 		response.close();
 	}
 
+	/**
+	 * Get the underlying response object
+	 * @return the underlying response object
+	 */
 	public Response getClosedResponse() {
 		return this.closedResponse;
 	}
 
+	/**
+	 * Get the immutable copy of the response body as a {@link ByteString}
+	 * @return the response body
+	 */
 	public ByteString getBody() {
+		// todo, returning a OkHttp.ByteString requires the outside user to also depend on okhttp
+		//  which may be bad as it is leaking unneeded apis. so, maybe we should return a ByteBuffer (native java thingy) instead
 		return this.inMemoryResponseBody;
 	}
 

@@ -13,24 +13,24 @@ public class SubscribeEvent {
 	public final String failureMessage;
 
 	/**
-	 * This enum contains possible event types
-	 * <ul>
-	 *  <li><b>STARTED</b> - indicates that the subscription has been started</li>
-	 * </ul>
-	 * <ul>
-	 *  <li><b>FAILURE</b> - indicates that there was a failure while trying to subscribe. The associated event handler is removed after handling this event. </li>
-	 * </ul>
-	 * <ul>
-	 *  <li><b>UPDATE</b> - event carries new data from the subscription</li>
-	 * </ul>
-	 * <ul>
-	 *  <li><b>FINISHED</b> - indicates that the subscription has been terminated from the ship. The associated event handler is removed after handling this event</li>
-	 * </ul>
+	 * This enum represents all possible types of events that one can receive in a subscription
 	 */
 	public enum EventType {
+		/**
+		 * Indicates that the subscription has been started
+		 */
 		STARTED,
+		/**
+		 * Indicates that there was a failure while trying to subscribe. The associated event handler is removed after handling this event.
+		 */
 		FAILURE,
+		/**
+		 * Indicates that the event carries new data from the subscription
+		 */
 		UPDATE,
+		/**
+		 * Indicates that the subscription has been terminated from the ship. The associated event handler is removed after handling this event
+		 */
 		FINISHED
 	}
 

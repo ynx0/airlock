@@ -1,7 +1,7 @@
 /**
  * This class represents poke events that are sent by eyre in response to a poke request.
  */
-public class PokeResponse {
+public final class PokeResponse {
 	/**
 	 * Whether or not the poke was successful
 	 */
@@ -13,7 +13,7 @@ public class PokeResponse {
 	final String failureMessage;
 
 	/**
-	 * A poke response stating that the poke request was successful
+	 * Static instance of a poke response representing a successful poke request
 	 */
 	public static final PokeResponse SUCCESS = new PokeResponse(true, null);
 
@@ -21,6 +21,7 @@ public class PokeResponse {
 		this.success = success;
 		this.failureMessage = failureMessage;
 	}
+
 
 	public static PokeResponse fromFailure(String failureMessage) {
 		return new PokeResponse(false, failureMessage);

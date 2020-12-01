@@ -19,6 +19,9 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * This class represents a connection to an urbit ship. It can be used to send messages to a respective ship over the eyre protocol.
+ */
 public class Urbit {
 
 	/**
