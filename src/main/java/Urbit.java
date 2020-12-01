@@ -259,7 +259,7 @@ public class Urbit {
 
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
-				.header("connection", "keep-alive")
+				.header("connection", "keep-alive") // todo why do i still have to manually set timeout to 1 day when connection is keep-alive
 				.build();
 
 
@@ -382,7 +382,7 @@ public class Urbit {
 			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 			fullJsonDataArray.add(fullJsonData);
 
-			// todo is this correct behavior??
+			// todo is this correct behavior?? I just adapted it blindly-ish
 			// commenting it out seems to not have an effect, i.e. tests still pass,
 			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
