@@ -1,7 +1,9 @@
-package airlock.app.chathook;
-
-import airlock.Path;
+package airlock.app.chat;
 
 public class ChatReadMarker {
-	public Path path
+	public String path;
+
+	public ChatReadMarker(String path) {
+		this.path = path;
+	}
 }

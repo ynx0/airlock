@@ -1,4 +1,4 @@
-package airlock.app.chathook;
+package airlock.app.chat;
 
 public class Envelope {
 	/**
@@ -16,9 +16,17 @@ public class Envelope {
 	/**
 	 * Unix timestamp of when the message was sent
 	 */
-	public int when;
+	public long when;
 	/**
 	 * Content of the message
 	 */
 	public Letter letter;
+
+	public Envelope(String uid, int number, String author, long when, Letter letter) {
+		this.uid = uid;
+		this.number = number;
+		this.author = author;
+		this.when = when;
+		this.letter = letter;
+	}
 }

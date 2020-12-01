@@ -1,3 +1,5 @@
+package airlock;
+
 import com.google.gson.JsonObject;
 
 /**

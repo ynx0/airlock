@@ -1,3 +1,5 @@
+package airlock;
+
 /**
  * This class represents poke events that are sent by eyre in response to a poke request.
  */
