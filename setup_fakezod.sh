@@ -8,7 +8,7 @@ cd ./urbit-v0.10.8-linux64/ || exit
 
 #PATP=${1:-"zod"}
 #PATP="zod"
-
+screen -v # sanity check
 screen -d -m -S fakeship -L -Logfile "./fakeship_output.log" ./urbit -F zod
 # shellcheck disable=SC2076
 until [[ "$(tail -n1 fakeship_output.log)" =~ "~zod:dojo>" ]]; do
