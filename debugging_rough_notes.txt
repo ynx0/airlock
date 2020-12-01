@@ -1,0 +1,61 @@
+list of shared data between threads
+
+onevent
+- lastseeneevntid
+- Urbit.ack
+- lastackced id
+- pokeHandlers
+- subscribeHandlers
+
+okay so i narrowed down the problem to 
+$BEGIN objec thing
+the stack trace was confusing becasue it didn't really show where the original error was coming frmo
+
+
+the original error is actually from the `onEvent`, specifically the 
+eyreresponse = gson.fromJson(data).
+
+the error was the tried to find string but found begin object
+
+this is because the type of `json` object on the dataclass EyreResponse was string
+but in the response from eyre it actually returns a json object
+which is what BEGIN_OJBECT means
+so i had to update the type and hopefully that would fix evrything
+
+
+heres the payload that i found in the debugger that helped me figure this out
+{"json":{"chat-update":{"create":{"path":"/~zod/test2"}}},"id":2,"response":"diff"}
+
+
+-----------
+then i hit another bagu: the subscribeHanler for the id was null :(
+
+
+---------------------------------
+now everything works, but test3 is failing with a hoon error
+i was sending json as a string, but it expects it as a raw object
+
+----------------
+json parsing error
+the following json is generated and sent:
+
+{"message":{"path":"/~zod/test2","envelope":{"when":1606628870671,"author":"~zod","number":1,"uid":"0v1.0.3eolm.59lvl.7n9ht.2mokl.51js7","letter":{"text":"Hello, Mars!"}}}}
+
+
+this is what you get if the uid is invalid
+EyreResponseData{id=3, ok='null', err='[%key 'uid']
+[%key 'envelope']
+[%key 'message']
+/lib/chat-store/hoon:<[117 9].[117 25]>
+/lib/chat-store/hoon:<[117 5].[201 7]>
+/lib/chat-store/hoon:<[116 5].[201 7]>
+/app/chat-hook/hoon:<[593 21].[593 44]>
+/app/chat-hook/hoon:<[593 3].[593 45]>
+/app/chat-hook/hoon:<[592 3].[593 45]>
+/app/chat-hook/hoon:<[365 25].[365 53]>
+/app/chat-hook/hoon:<[364 7].[372 9]>
+/app/chat-hook/hoon:<[363 5].[373 17]>
+/app/chat-hook/hoon:<[362 5].[373 17]>
+', response='poke', json='null'}
+
+
