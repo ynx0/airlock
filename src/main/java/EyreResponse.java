@@ -15,7 +15,12 @@ public class EyreResponse {
 //	}
 	// adapted from https://github.com/lukechampine/go-urbit/blob/master/airlock/airlock.go#L66
 	/**
-	 * The id of the response. This is different from our request ids
+	 * The id of the response. This is different from our request ids.
+	 * The ids returned from eyre are not necessarily increasing such as ours.
+	 * They are instead used as ways to refer to our transactions.
+	 * So, if we make 10 requests, and have the latest request id be 10, eyre will still (by design)
+	 * send back a subscription event with id 2 if that's the id of the request that wanted the subscription
+	 * // todo move this documentation to somewhere more appropriate
 	 */
 	public int id;
 	/**
