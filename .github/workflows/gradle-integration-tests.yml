@@ -27,3 +27,9 @@ jobs:
       run: ./setup_fakezod.sh
     - name: Test with Gradle
       run: ./gradlew test --info --stacktrace
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v1.6
+      if: always()
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        files: work/urbit/urbit/build/test-results/**/*.xml
