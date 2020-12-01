@@ -33,6 +33,19 @@ javadoc {
     source = sourceSets.main.allJava
 }
 
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': archiveVersion
+
+//               'Main-Class': 'com.mkyong.DateUtils'// no main class b/c this is a library
+    }
+    archivesBaseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+
 /*
 publishing {
     publications {
