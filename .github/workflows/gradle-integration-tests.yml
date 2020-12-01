@@ -1,4 +1,3 @@
-# TODO this will fail because we need to create a test environment
 
 name: Run junit tests
 
@@ -27,4 +26,4 @@ jobs:
     - name: Setup test environment
       run: ./setup_fakezod.sh
     - name: Test with Gradle
-      run: ./gradlew test
+      run: ./gradlew test --info --stacktrace
