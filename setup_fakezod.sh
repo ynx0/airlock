@@ -19,6 +19,6 @@ done
 # from https://raymii.org/s/snippets/Sending_commands_or_input_to_a_screen_session.html
 # https://urbit.org/using/operations/using-your-ship/#chat-management
 screen -S fakeship -p 0 -X stuff "^X"
-screen -S fakeship -p 0 -X stuff ";create channel /test"
+screen -S fakeship -p 0 -X stuff ";create channel /test^M"
 # assuming eyre will be live on 8080
 # todo use urbit/herb
