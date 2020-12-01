@@ -2,7 +2,6 @@ import com.google.gson.Gson;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +54,15 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(1)
-	public void successfulAuthentication() {
-		assertDoesNotThrow(() -> ship.authenticate());
+	public void successfulAuthentication() throws ExecutionException, InterruptedException {
+		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
+		assertDoesNotThrow(() -> {
+			InMemoryResponseWrapper res = ship.authenticate();
+//			System.out.println("String resp body of auth");
+			futureResponseString.complete(res.getBody().utf8());
+		});
+		await().until(futureResponseString::isDone);
+		assertEquals("", futureResponseString.get());
 	}
 
 	@Test
@@ -155,7 +161,7 @@ public class UrbitIntegrationTests {
 							.getAsJsonObject("letter")
 							.get("text")
 							.getAsString();
-					assertEquals(message, primaryChatViewTestMessage);
+					assertEquals(primaryChatViewTestMessage, message);
 				}, () -> fail("Chat message received was not the same as the one sent"));
 
 	}

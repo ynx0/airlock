@@ -41,6 +41,7 @@ For the most up to date usage examples, see `src/main/java/Main.java` and `src/t
 
 - [x] Minimum viable product
 - [x] Basic integration tests
+    - [x] Github Actions automatically tests on push/pr to `master`
 - [x] Basic documentation
 - [ ] Create build process (i.e. publishing artifacts to a repository)
 - [ ] Examples based off of integration tests

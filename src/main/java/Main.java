@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class is used to test out various functionality of the library and serve as an example
+ */
 @SuppressWarnings("BusyWait")
 public class Main {
 

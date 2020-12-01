@@ -19,6 +19,9 @@ import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * This class represents a connection to an urbit ship. It can be used to send messages to a respective ship over the eyre protocol.
+ */
 public class Urbit {
 
 	/**
@@ -64,22 +67,21 @@ public class Urbit {
 	 * Note: it is possible to authenticate with an incorrect +code and still get an auth cookie.
 	 * Only after sending the first real request will it fail.
 	 */
-	private String cookie;
+	private Cookie cookie;
 
-	private boolean authenticated;
 
 	/**
 	 * The authentication status of the ship
 	 * <p>
 	 * N.B: This does not imply a "successful" authentication, because eyre gives you an auth cookie whether you use the correct password or not.
 	 * Only when you actually go to make a request will it fail with a 401 or something of the like.
-	 * // TODO possibly improve the api here
+	 *
 	 * </p>
 	 *
 	 * @return whether or not we have authenticated with the ship.
 	 */
 	public boolean isAuthenticated() {
-		return authenticated;
+		return this.cookie != null;
 	}
 
 	/**
@@ -132,6 +134,10 @@ public class Urbit {
 	/**
 	 * Constructs a new Urbit connection.
 	 *
+	 * <p>
+	 * Please note that the connection times out after 1 day of not having received any events from a ship
+	 * </p>
+	 *
 	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
@@ -140,24 +146,22 @@ public class Urbit {
 		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
 		this.code = code;
 		this.url = url;
-		this.authenticated = false;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.shipName = requireNonNull(shipName);
+		this.cookie = null;
 
 		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
 
 
 		this.client = new OkHttpClient.Builder()
-//				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
+				.cookieJar(new JavaNetCookieJar(cookieHandler))
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
 		gson = new Gson();
 
-		// TODO: Instead of returning the response object, which is kind of useless, return a {Completable}Future<T> for pokes at least, not valid for subscribes
-		// todo, use `Cookie` and CookieJar and stuff if necessary in the future. for now it's an overkill
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
 		//  cause there is no clean way to access nested values with a raw gson object
@@ -185,35 +189,45 @@ public class Urbit {
 		return this.url + "/~/login";
 	}
 
+	public String getScryUrl(String app, String path, String mark) {
+		return this.url + "/~/scry" + app + "/" + path + "." + mark;
+	}
+
+	public String getSpiderUrl(String inputMark, String threadName, String outputMark) {
+		return this.url + "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json";
+	}
 
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
+	 * @return Returns an immutable wrapper around a response body object
 	 */
-	public Response authenticate() throws IOException {
+	public InMemoryResponseWrapper authenticate() throws IOException {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
 
 		Request request = new Request.Builder()
-				.header("connection", "keep-alive")
+//				.header("connection", "keep-alive")
 				.url(this.getLoginUrl())
 				.post(formBody)
 				.build();
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) throw new IOException("Error: " + response);
-		// todo figure out best way to return an immutable responsebody obj or something
+		// todo figure out best way to return an immutable response body obj or something
 		//  or design api around it or use different library.
 		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
 		// we can't call it multiple times
 
-		String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
-		Cookie cookie = Cookie.parse(request.url(), cookieString);
-		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
-		this.cookie = cookie.name() + "=" + cookie.value();
-		this.authenticated = true;
 
-		return response; // TODO Address possible memory leak with returning unclosed response object
+		// after we made the request, here we extract the cookie. its quite ceremonial
+		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.parse(this.getChannelUrl())))
+				.stream()
+				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
+				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
+		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
+
+		return new InMemoryResponseWrapper(response);
 	}
 
 
@@ -236,7 +250,7 @@ public class Urbit {
 		if (this.sseClient != null) {
 			return;
 		}
-		if (!this.authenticated) {
+		if (!this.isAuthenticated()) {
 			throw new IllegalStateException("Cannot connect to ship without being authenticated");
 		}
 
@@ -245,8 +259,7 @@ public class Urbit {
 
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
-				.header("Cookie", this.cookie)
-				.header("connection", "keep-alive")
+				.header("connection", "keep-alive") // todo why do i still have to manually set timeout to 1 day when connection is keep-alive
 				.build();
 
 
@@ -260,6 +273,15 @@ public class Urbit {
 							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
 							lastSeenEventId = eyreResponse.id;
 
+							System.out.println(",=============Event==============,");
+							System.out.println("raw: " + data);
+							System.out.println("event id from okhttp " + eventID);
+							System.out.println("lastSeenEventId: " + lastSeenEventId);
+							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
+							System.out.println("got eyre response data");
+							System.out.println(eyreResponse);
+							System.out.println(".=============Event==============.");
+
 							try {
 								if (lastSeenEventId != lastAcknowledgedEventId) {
 									ack(lastSeenEventId);
@@ -269,14 +291,6 @@ public class Urbit {
 								throw new IllegalStateException("could not ack");
 							}
 
-							System.out.println(",=============Event==============,");
-							System.out.println("raw: " + data);
-							System.out.println("event id from okhttp " + eventID);
-							System.out.println("lastSeenEventId: " + lastSeenEventId);
-							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
-							System.out.println("got eyre response data");
-							System.out.println(eyreResponse);
-							System.out.println(".=============Event==============.");
 
 
 							//if (eyreResponse.id != eventD) {
@@ -359,26 +373,18 @@ public class Urbit {
 	 * </p>
 	 *
 	 * @param jsonData The data to send with the action
+	 * @return
 	 */
-	public Response sendJSONtoChannel(JsonObject jsonData) throws IOException {
+	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws IOException {
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
 			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 			fullJsonDataArray.add(fullJsonData);
 
-//		// acknowledge last seen event
-//			System.out.println("last ack != last seen: " + (lastAcknowledgedEventId != lastSeenEventId));
-		/*if (lastAcknowledgedEventId != lastSeenEventId) {
-			JsonObject ackObj = new JsonObject();
-			ackObj.addProperty("action", "ack");
-			ackObj.addProperty("event-id", this.lastSeenEventId);
-//			System.out.println("Last acked id: " + lastAcknowledgedEventId);
-//			System.out.println("acking id: " + lastSeenEventId);
-			fullJsonDataArray.add(ackObj);
-			lastAcknowledgedEventId = lastSeenEventId;
-		}*/
-
+			// todo is this correct behavior?? I just adapted it blindly-ish
+			// commenting it out seems to not have an effect, i.e. tests still pass,
+			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
 			String jsonString = gson.toJson(fullJsonDataArray);
@@ -386,10 +392,8 @@ public class Urbit {
 			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 			Request request = new Request.Builder()
-					.url(this.getChannelUrl())
-					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
-					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
-					.header("Content-Type", "application/json")
+					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
+					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
 					.put(requestBody)
 					.build();
 
@@ -405,17 +409,18 @@ public class Urbit {
 			System.out.println("Sent message: " + fullJsonDataArray);
 			System.out.println(".============SendMessage============.");
 
-			return response; // TODO Address possible memory leak with returning unclosed response object
+			return new InMemoryResponseWrapper(response);
 		}
 	}
 
 	/**
 	 * Pokes a ship with data.
-	 *  @param ship The ship to poke
+	 *
+	 * @param ship The ship to poke
 	 * @param app  The app to poke
 	 * @param mark The mark of the data being sent
 	 * @param json The data to send
-	 * @return
+	 * @return a future poke response to the request
 	 */
 	public CompletableFuture<PokeResponse> poke(
 			String ship,
@@ -445,13 +450,12 @@ public class Urbit {
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		Response pokeResponse = this.sendJSONtoChannel(pokeDataObj);
+		InMemoryResponseWrapper pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
-		if (pokeResponse.isSuccessful()) {
-//			System.out.println("registering poke handler for id: " + id);
+		if (pokeResponse.getClosedResponse().isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
-		pokeResponse.close();
+//		pokeResponse.close();
 
 		return pokeFuture;
 	}
@@ -479,12 +483,12 @@ public class Urbit {
 				"app", app,
 				"path", path
 		)).getAsJsonObject();
-		Response subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
+		InMemoryResponseWrapper subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
 
-		if (subscribeResponse.isSuccessful()) {
+		if (subscribeResponse.getClosedResponse().isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
 		}
-		subscribeResponse.close();
+//		subscribeResponse.close();
 
 		return this.requestId;
 	}
@@ -503,8 +507,8 @@ public class Urbit {
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(unsubscribeDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(unsubscribeDataObj);
+//		res.close();
 	}
 
 	/**
@@ -518,8 +522,8 @@ public class Urbit {
 				"action", "delete"
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(deleteDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+//		res.close();
 	}
 
 	/**
@@ -534,12 +538,69 @@ public class Urbit {
 				"event-id", eventID
 		)).getAsJsonObject();
 
-		Response res = this.sendJSONtoChannel(deleteDataObj);
-		res.close();
+		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+//		res.close();
 	}
 
 
-	// TODO add scry and spider requests
+	// todo deduplicate
+	@SuppressWarnings("DuplicatedCode")
+	public InMemoryResponseWrapper scryRequest(String app, String path, String mark) throws IOException {
+		String scryUrl = this.getScryUrl(app, path, mark);
+		Request request = new Request.Builder()
+				.url(scryUrl)
+				.header("Content-Type", "application/json")
+				.get()
+				.build();
+
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) {
+			System.err.println(requireNonNull(response.body()).string());
+			throw new IOException("Error: " + response);
+		}
+		System.out.println(",============ScryRequest============,");
+		System.out.println("Request: " + scryUrl);
+		System.out.println(".============ScryRequest============.");
+
+		return new InMemoryResponseWrapper(response);
+
+	}
+
+	@SuppressWarnings("DuplicatedCode")
+	public InMemoryResponseWrapper spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
+
+		// copied from sendJSONtoChannel
+		JsonArray fullJsonDataArray = new JsonArray();
+		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
+		fullJsonDataArray.add(fullJsonData);
+
+		String jsonString = gson.toJson(fullJsonDataArray);
+
+		RequestBody requestBody = RequestBody.create(jsonString, JSON);
+
+
+		String spiderUrl = this.getSpiderUrl(inputMark, threadName, outputMark);
+
+		Request request = new Request.Builder()
+				.url(spiderUrl)
+				.header("Content-Type", "application/json")
+				.post(requestBody)
+				.build();
+
+		Response response = client.newCall(request).execute();
+		if (!response.isSuccessful()) {
+			System.err.println(requireNonNull(response.body()).string());
+			throw new IOException("Error: " + response);
+		}
+		System.out.println(",============SpiderRequest============,");
+		System.out.println("Request: " + spiderUrl);
+		System.out.println(".============SpiderRequest============.");
+
+		return new InMemoryResponseWrapper(response);
+
+	}
+
 
 	/**
 	 * Utility function to connect to a ship that has its *.arvo.network domain configured.

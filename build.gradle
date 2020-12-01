@@ -1,28 +1,56 @@
 plugins {
-	id 'java'
+    id 'java-library'
+    id 'maven-publish'
 }
 
 group "xyz.yaseen"
 version "1.0-SNAPSHOT"
 
 repositories {
-	mavenCentral()
-	maven { url "https://jitpack.io" }
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
+
 dependencies {
-	implementation "com.squareup.okhttp3:okhttp:4.9.0"
-	implementation "com.squareup.okhttp3:okhttp-sse:4.9.0"
-	implementation "com.squareup.okhttp3:okhttp-urlconnection:4.5.0"
-	implementation 'com.google.code.gson:gson:2.8.6'
-	implementation 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
-	implementation 'com.google.code.gson:gson:2.8.6'
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-	testImplementation 'org.awaitility:awaitility:4.0.3'
+    implementation "com.squareup.okhttp3:okhttp:4.9.0"
+    implementation "com.squareup.okhttp3:okhttp-sse:4.9.0"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:4.5.0"
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.github.franmontiel:PersistentCookieJar:v1.0.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.awaitility:awaitility:4.0.3'
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
+
+
+javadoc {
+    source = sourceSets.main.allJava
+}
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = "OSSRH"
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+        }
+
+    }
+*/
+
 
