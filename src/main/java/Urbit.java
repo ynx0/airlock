@@ -643,15 +643,28 @@ public class Urbit {
 		//  right now, the uid always has the first chunk as `0`, i.e. as in 0v1.0.3eolm.59lvl.7n9ht.2mokl.51js7
 		//  also need to check for impl equivalence
 		// (this is causing a hoon error when used)
-		StringBuilder str = new StringBuilder("0v");
-		str.append(Math.ceil(Math.random() * 8)).append('.');
+		StringBuilder str = new StringBuilder("0v"); // checked for equiv
+		str.append((int) Math.ceil(Math.random() * 8)).append('.'); // checked
+
+		System.out.println("Stage 0: " + str.toString());
+
 		for (int i = 0; i < 5; i++) {
-			String entropy = Integer.toString((int) Math.round(Math.ceil(Math.random() * 10000000)), 32); // todo check to see if this is equivalent with js number behaviours
+			String entropy = Integer.toString((int) Math.round(Math.ceil(Math.random() * 10000000)), 32); // checked
+			System.out.println("Stage " + (i + 1) + "a: " + entropy);
 			// pad entropy with zeroes
 			entropy = "00000" + entropy;
+			System.out.println("Stage " + (i + 1) + "b: " + entropy);
+
 			entropy = entropy.substring(entropy.length() - 5);
+			System.out.println("Stage " + (i + 1) + "c: " + entropy);
+
 			str.append(entropy).append('.');
+			System.out.println("Stage " + (i + 1) + "d: " + entropy);
+
 		}
-		return str.substring(0, str.length() - 1);
+		String retval = str.substring(0, str.length() - 1);
+		System.out.println("Stage Final: " + retval);
+
+		return retval;
 	}
 }

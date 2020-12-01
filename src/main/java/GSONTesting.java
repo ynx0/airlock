@@ -25,6 +25,8 @@ public class GSONTesting {
 //		System.out.println("Resulting json:");
 //		System.out.println(json);
 
+		System.out.println(Urbit.uid());
+
 
 
 	}
