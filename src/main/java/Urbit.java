@@ -639,32 +639,21 @@ public class Urbit {
 	 * Copied from https://github.com/urbit/urbit/blob/137e4428f617c13f28ed31e520eff98d251ed3e9/pkg/interface/src/lib/util.js#L3
 	 */
 	static String uid() {
-		// todo fix bug with implementation
-		//  right now, the uid always has the first chunk as `0`, i.e. as in 0v1.0.3eolm.59lvl.7n9ht.2mokl.51js7
-		//  also need to check for impl equivalence
 		// (this is causing a hoon error when used)
-		StringBuilder str = new StringBuilder("0v"); // checked for equiv
-		str.append((int) Math.ceil(Math.random() * 8)).append('.'); // checked
-
-		System.out.println("Stage 0: " + str.toString());
+		StringBuilder str = new StringBuilder("0v");
+		str.append((int) Math.ceil(Math.random() * 8)).append('.');
 
 		for (int i = 0; i < 5; i++) {
 			String entropy = Integer.toString((int) Math.round(Math.ceil(Math.random() * 10000000)), 32); // checked
-			System.out.println("Stage " + (i + 1) + "a: " + entropy);
 			// pad entropy with zeroes
 			entropy = "00000" + entropy;
-			System.out.println("Stage " + (i + 1) + "b: " + entropy);
 
 			entropy = entropy.substring(entropy.length() - 5);
-			System.out.println("Stage " + (i + 1) + "c: " + entropy);
 
 			str.append(entropy).append('.');
-			System.out.println("Stage " + (i + 1) + "d: " + entropy);
 
 		}
-		String retval = str.substring(0, str.length() - 1);
-		System.out.println("Stage Final: " + retval);
 
-		return retval;
+		return str.substring(0, str.length() - 1);
 	}
 }
