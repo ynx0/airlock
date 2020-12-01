@@ -271,6 +271,15 @@ public class Urbit {
 							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
 							lastSeenEventId = eyreResponse.id;
 
+							System.out.println(",=============Event==============,");
+							System.out.println("raw: " + data);
+							System.out.println("event id from okhttp " + eventID);
+							System.out.println("lastSeenEventId: " + lastSeenEventId);
+							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
+							System.out.println("got eyre response data");
+							System.out.println(eyreResponse);
+							System.out.println(".=============Event==============.");
+
 							try {
 								if (lastSeenEventId != lastAcknowledgedEventId) {
 									ack(lastSeenEventId);
@@ -280,14 +289,6 @@ public class Urbit {
 								throw new IllegalStateException("could not ack");
 							}
 
-							System.out.println(",=============Event==============,");
-							System.out.println("raw: " + data);
-							System.out.println("event id from okhttp " + eventID);
-							System.out.println("lastSeenEventId: " + lastSeenEventId);
-							System.out.println("lastAckedEventId: " + lastAcknowledgedEventId);
-							System.out.println("got eyre response data");
-							System.out.println(eyreResponse);
-							System.out.println(".=============Event==============.");
 
 
 							//if (eyreResponse.id != eventD) {
