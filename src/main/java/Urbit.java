@@ -13,6 +13,7 @@ import java.net.CookiePolicy;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -64,7 +65,8 @@ public class Urbit {
 	 * Note: it is possible to authenticate with an incorrect +code and still get an auth cookie.
 	 * Only after sending the first real request will it fail.
 	 */
-	private String cookie;
+	private Cookie cookie;
+
 
 	private boolean authenticated;
 
@@ -79,7 +81,7 @@ public class Urbit {
 	 * @return whether or not we have authenticated with the ship.
 	 */
 	public boolean isAuthenticated() {
-		return authenticated;
+		return this.cookie != null;
 	}
 
 	/**
@@ -132,6 +134,10 @@ public class Urbit {
 	/**
 	 * Constructs a new Urbit connection.
 	 *
+	 * <p>
+	 *     Please note that the connection times out after 1 day of not having received any events from a ship
+	 * </p>
+	 *
 	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
@@ -144,13 +150,14 @@ public class Urbit {
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.shipName = requireNonNull(shipName);
+		this.cookie = null;
 
 		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
 
 
 		this.client = new OkHttpClient.Builder()
-//				.cookieJar(new JavaNetCookieJar(cookieHandler)) // TODO enable and test this with next iteration
+				.cookieJar(new JavaNetCookieJar(cookieHandler))
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
@@ -209,16 +216,25 @@ public class Urbit {
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) throw new IOException("Error: " + response);
-		// todo figure out best way to return an immutable responsebody obj or something
+		// todo figure out best way to return an immutable response body obj or something
 		//  or design api around it or use different library.
 		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
 		// we can't call it multiple times
 
-		String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
-		Cookie cookie = Cookie.parse(request.url(), cookieString);
-		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
-		this.cookie = cookie.name() + "=" + cookie.value();
-		this.authenticated = true;
+//		String cookieString = requireNonNull(response.header("set-cookie"), "No cookie given");
+//		Cookie cookie = Cookie.parse(request.url(), cookieString);
+//		requireNonNull(cookie, "Unable to parse cookie from string:" + cookieString);
+
+		// after we made the request, here we extract the cookie. its quite ceremonial
+		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.parse(this.getChannelUrl())))
+				.stream()
+				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
+				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
+		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
+
+//		System.out.println("Cookie in jar: ");
+//		System.out.println(this.cookie);
+//		this.authenticated = true;
 
 		return response; // TODO Address possible memory leak with returning unclosed response object
 	}
@@ -252,7 +268,7 @@ public class Urbit {
 
 		Request sseRequest = new Request.Builder()
 				.url(this.getChannelUrl())
-				.header("Cookie", this.cookie)
+//				.header("Cookie", this.cookie)
 				.header("connection", "keep-alive")
 				.build();
 
@@ -394,7 +410,7 @@ public class Urbit {
 
 			Request request = new Request.Builder()
 					.url(this.getChannelUrl())
-					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
+//					.header("Cookie", this.cookie) // todo maybe move to using `Headers` object
 					.header("Connection", "keep-alive") // todo see what the difference between header and addHeader is
 					.header("Content-Type", "application/json")
 					.put(requestBody)
