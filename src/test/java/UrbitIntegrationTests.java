@@ -134,6 +134,7 @@ public class UrbitIntegrationTests {
 		});
 
 		// send a message to a chat that we haven't subscribed to already
+		// the specification of this payload is at lib/chat-store.hoon#L119...
 		Map<String, Object> payload = Map.of(
 				"message", Map.of(
 						"path", "/~zod/test", // different chat
