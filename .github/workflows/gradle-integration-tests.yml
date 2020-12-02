@@ -32,4 +32,5 @@ jobs:
       if: always()
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        files: work/urbit/urbit/build/test-results/**/*.xml
+        # todo figure out the correct relative path
+        files: /home/runner/work/urbit/urbit/build/test-results/**/*.xml
