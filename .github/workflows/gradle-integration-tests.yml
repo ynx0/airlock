@@ -13,7 +13,7 @@ on:
 defaults:
   run:
     shell: bash
-    working-directory: ${{ github.workspace }}
+    working-directory: ${{ env.GITHUB_WORKSPACE }}
 
 jobs:
   intergration-tests:
