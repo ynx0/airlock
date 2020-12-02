@@ -29,3 +29,4 @@ jobs:
       with:
         name: all-jars
         path: build/libs/*.jar
+        retention-days: 30
