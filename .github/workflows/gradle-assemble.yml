@@ -24,3 +24,9 @@ jobs:
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew assemble
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: all-jars
+        path: build/libs/*.jar
+        retention-days: 30
