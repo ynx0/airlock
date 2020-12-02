@@ -31,11 +31,11 @@ jobs:
       run: |
           pwd
           ls -la
-    - name: Publish Unit Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v1.6
-      if: always()
-      with:
-        working-directory: ${{ github.workspace }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        # todo figure out the correct relative path
-        files: build/test-results/**/*.xml
+#     - name: Publish Unit Test Results
+#       uses: EnricoMi/publish-unit-test-result-action@v1.6
+#       if: always()
+#       with:
+#         working-directory: ${{ github.workspace }}
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         # todo figure out the correct relative path
+#         files: build/test-results/**/*.xml
