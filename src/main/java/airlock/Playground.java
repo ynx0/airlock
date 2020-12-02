@@ -1,34 +1,19 @@
 package airlock;
 
-import com.google.gson.Gson;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 public class Playground {
 
-	public static void main(String[] args) {
-		Map<String, Object> data = new HashMap<>();
-		data.put("ship", "~sipfyn-pidmex");
-		data.put("app", "hood");
-		data.put("mark", "helm-hi");
-		data.put("json", "Opening airlock");
+	public static void main(String[] args) throws MalformedURLException, URISyntaxException {
 
+		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
+		System.out.println(baseURL);
+		System.out.println(baseURL.toURI().resolve("/scry//" + "app/" + "/"));
+		System.out.println(baseURL.toURI().resolve("/~/channel/" + Urbit.generateChannelID()));
 
-		Map<String, Object> payload = new HashMap<>();
-		payload.put("id", 1);
-		payload.put("action", "poke");
-
-		payload.putAll(data);
-
-
-		Gson gson = new Gson();
-		String json = gson.toJson(payload);
-//		System.out.println("Resulting json:");
-//		System.out.println(json);
-
-		System.out.println(Urbit.uid());
-
+//				+ app + "/" + path + "." + mark;
 
 
 	}
