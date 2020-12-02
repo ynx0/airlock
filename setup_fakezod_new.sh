@@ -2,6 +2,8 @@
 
 source ./setup_env.sh
 
+cd test_environment || exit
+
 # this script is responsible for setting up specific things on the ship itself
 
 send2ship "^X"
