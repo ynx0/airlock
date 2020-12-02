@@ -27,10 +27,15 @@ jobs:
       run: ./setup_fakezod.sh
     - name: Test with Gradle
       run: ./gradlew test --info --stacktrace
+    - name: List working directory
+#    working-directory: ${{ github.workspace }} # todo use this?
+       run: |
+           pwd
+           ls -la
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v1.6
       if: always()
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         # todo figure out the correct relative path
-        files: /home/runner/work/urbit/urbit/build/test-results/**/*.xml
+        files: build/test-results/**/*.xml
