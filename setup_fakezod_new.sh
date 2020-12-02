@@ -9,7 +9,3 @@ send2ship "^X"
 send2ship ";create channel /test^M"
 echo "$(getLastNLines 5)"
 send2ship "^X"
-send2ship "^D"
-sleep 3s
-
-cleanup
