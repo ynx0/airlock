@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
+REBUILD=false
 source ./setup_env_lib.sh
 
 # this script sets up a pristine fakezod
-if [ ! -d ./$URBIT_VERSION/ ]; then
+if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
 fi
 

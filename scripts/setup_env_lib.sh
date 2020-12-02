@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-REBUILD=false
 URBIT_VERSION=urbit-v0.10.8-linux64
 FAKEZOD_TAR=fakezod-init.tar.gz
 LOGFILE=fakeship_output.log
