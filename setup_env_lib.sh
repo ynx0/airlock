@@ -3,6 +3,8 @@
 REBUILD=false
 URBIT_VERSION=urbit-v0.10.8-linux64
 FAKEZOD_TAR=fakezod-init.tar.gz
+LOGFILE=fakeship_output.log
+
 
 cd test_environment || exit
 
@@ -15,7 +17,7 @@ function downloadUrbitRuntime() {
 
 # MARK - live ship management
 function start_ship() {
-  screen -d -m -S fakeship -L -Logfile "./fakeship_output.log" ./$URBIT_VERSION/urbit zod
+  screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit zod
 }
 
 function send2ship() {
@@ -44,7 +46,7 @@ function killShip() {
 function make_fakezod() {
   rm -rf ./zod  # remove if existing fakezod
   echo "Creating fakezod"
-  screen -d -m -S fakeship -L -Logfile "./fakeship_output.log" ./$URBIT_VERSION/urbit -F zod # https://stackoverflow.com/a/15026227
+  screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod # https://stackoverflow.com/a/15026227
   wait4boot
   echo "Fakezod created"
   send2ship "^D"
@@ -76,7 +78,9 @@ function untar_fakezod_state() {
 
 function cleanup() {
   killShip
-  rm -rf ./zod 2>/dev/null
+  mkdir -p ./old_logs
+  mv "$LOGFILE" "./old_logs/{$LOGFILE}_$(date -Iminutes).old.log"
+  rm -rf ./zod >> /dev/null 2>&1
   rm -f $URBIT_VERSION.tgz
 }
 
