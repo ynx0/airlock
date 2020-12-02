@@ -6,9 +6,12 @@ import airlock.app.chat.ChatUpdate;
 import airlock.app.chat.ChatUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +35,9 @@ public class UrbitIntegrationTests {
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
-	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->
-			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // are an update event
-					&& subscribeEvent.updateJson.has("chat-update")                 // and the update json contains a "chat-update" object
+	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
+			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // an update event
+					&& subscribeEvent.updateJson.has("chat-update")  // and the update json contains a "chat-update" object
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
 
 
@@ -45,9 +48,9 @@ public class UrbitIntegrationTests {
 
 
 	@BeforeAll
-	public static void setup() {
+	public static void setup() throws MalformedURLException {
 		int port = 8080;
-		String url = "http://localhost:" + port;
+		URL url = new URL("http://localhost:" + port);
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
@@ -67,7 +70,6 @@ public class UrbitIntegrationTests {
 		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
 		assertDoesNotThrow(() -> {
 			InMemoryResponseWrapper res = ship.authenticate();
-//			System.out.println("String resp body of auth");
 			futureResponseString.complete(res.getBody().utf8());
 		});
 		await().until(futureResponseString::isDone);

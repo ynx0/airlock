@@ -9,10 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.net.SocketException;
+import java.net.*;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +33,13 @@ public class Urbit {
 	/**
 	 * The URL representing the location where eyre is listening for requests on the ship
 	 */
-	private final String url;
+	private final URL url;
 
 
 	/**
-	 * Used to generate a unique channel name. A channel name is typically the current unix time plus a random hex string
+	 * A unique channel name. A channel name is typically the current unix time plus a random hex string
 	 */
-	private String uid;
+	private String channelID;
 
 	/**
 	 * The ID of the last request we sent to the server
@@ -140,19 +137,18 @@ public class Urbit {
 	 * <p>
 	 * Please note that the connection times out after 1 day of not having received any events from a ship
 	 * </p>
-	 *
-	 * @param url      The URL (with protocol and port) of the ship to be accessed
+	 *  @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
 	 */
-	public Urbit(String url, String shipName, String code) {
-		this.uid = Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
+	public Urbit(URL url, String shipName, String code) {
+		this.channelID = generateChannelID();
 		this.code = code;
-		this.url = url;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.shipName = requireNonNull(shipName);
 		this.cookie = null;
+		this.url = normalizeOrBust(url);
 
 		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -180,24 +176,43 @@ public class Urbit {
 		return this.requestId;
 	}
 
+	// todo maybe extract orbust methods to a utility class
+	private static URL normalizeOrBust(URL url) {
+		try {
+			return url.toURI().normalize().toURL();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new IllegalStateException("Unable to normalize url: " + url);
+		}
+	}
+
+	private static URL resolveOrBust(URL url, String resolve) {
+		try {
+			return url.toURI().resolve(resolve).normalize().toURL();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new IllegalStateException("Unable to resolve url: " + url);
+		}
+	}
+
 	/**
 	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
+	 *
+	 * @return
 	 */
-	public String getChannelUrl() {
-		return this.url + "/~/channel/" + this.uid;
+	public URL getChannelUrl() {
+		return resolveOrBust(this.url, "/~/channel/" + this.channelID);
 	}
 
 	@NotNull
-	public String getLoginUrl() {
-		return this.url + "/~/login";
+	public URL getLoginUrl() {
+		return resolveOrBust(this.url, ("/~/login"));
 	}
 
-	public String getScryUrl(String app, String path, String mark) {
-		return this.url + "/~/scry" + app + "/" + path + "." + mark;
+	public URL getScryUrl(String app, String path, String mark) {
+		return resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
 	}
 
-	public String getSpiderUrl(String inputMark, String threadName, String outputMark) {
-		return this.url + "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json";
+	public URL getSpiderUrl(String inputMark, String threadName, String outputMark) {
+		return resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
 	}
 
 	/**
@@ -225,7 +240,7 @@ public class Urbit {
 
 
 		// after we made the request, here we extract the cookie. its quite ceremonial
-		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.parse(this.getChannelUrl())))
+		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
 				.stream()
 				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
@@ -371,7 +386,7 @@ public class Urbit {
 		this.sseClient.cancel();
 //		this.client.dispatcher().cancelAll(); // todo see if we need this
 		sseClient = null;
-		uid = Urbit.uid();
+		channelID = Urbit.uid();
 		requestId = 0;
 		lastSeenEventId = 0;
 		lastAcknowledgedEventId = 0;
@@ -561,7 +576,9 @@ public class Urbit {
 	// todo deduplicate
 	@SuppressWarnings("DuplicatedCode")
 	public InMemoryResponseWrapper scryRequest(String app, String path, String mark) throws IOException {
-		String scryUrl = this.getScryUrl(app, path, mark);
+		// todo should this method return a json payload or scryresponse instead?
+		URL scryUrl = this.getScryUrl(app, path, mark);
+
 		Request request = new Request.Builder()
 				.url(scryUrl)
 				.header("Content-Type", "application/json")
@@ -595,7 +612,7 @@ public class Urbit {
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 
-		String spiderUrl = this.getSpiderUrl(inputMark, threadName, outputMark);
+		URL spiderUrl = this.getSpiderUrl(inputMark, threadName, outputMark);
 
 		Request request = new Request.Builder()
 				.url(spiderUrl)
@@ -625,7 +642,11 @@ public class Urbit {
 	 */
 	@NotNull
 	public static Urbit onArvoNetwork(String name, String code) {
-		return new Urbit("https://" + name + ".arvo.network", name, code);
+		try {
+			return new Urbit(URI.create("https://" + name + ".arvo.network").toURL(), name, code);
+		} catch (MalformedURLException e) {
+			throw new IllegalStateException("Unable to create proper url from arvo.network");
+		}
 	}
 
 	/**
@@ -671,4 +692,11 @@ public class Urbit {
 
 		return str.substring(0, str.length() - 1);
 	}
+
+	@NotNull
+	public static String generateChannelID() {
+		return Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
+	}
+
+
 }

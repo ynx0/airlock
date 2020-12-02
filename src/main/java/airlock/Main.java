@@ -3,6 +3,7 @@ package airlock;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ public class Main {
 	private static final List<SubscribeEvent> chatViewEvents = new ArrayList<>();
 
 	public static void main(String[] args) throws Exception {
-		String url = "http://localhost:8080";
+		URL url = new URL("http://localhost:8080");
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
