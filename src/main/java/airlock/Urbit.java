@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.net.SocketException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -201,6 +202,7 @@ public class Urbit {
 
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
+	 *
 	 * @return Returns an immutable wrapper around a response body object
 	 */
 	public InMemoryResponseWrapper authenticate() throws IOException {
@@ -294,7 +296,6 @@ public class Urbit {
 							}
 
 
-
 							//if (eyreResponse.id != eventD) {
 							//throw new IllegalStateException("invalid ids or something");
 							//}
@@ -336,7 +337,10 @@ public class Urbit {
 
 					@Override
 					public void onFailure(@NotNull EventSource eventSource, @Nullable Throwable t, @Nullable Response response) {
-						if (t != null) {
+						// todo better error handling
+						//  right now, if I try to
+
+						if (t != null && !(t instanceof SocketException)) {
 							System.err.println("Encountered error while doing sse stuff");
 							throw new RuntimeException(t);
 						}
@@ -355,15 +359,24 @@ public class Urbit {
 
 						// todo possibly extract this code out to main class
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
-						sseClient = null;
-						uid = Urbit.uid();
-						requestId = 0;
-						lastSeenEventId = 0;
-						lastAcknowledgedEventId = 0;
-						pokeHandlers.clear();
-						subscribeHandlers.clear();
+						tearDown();
 					}
 				});
+	}
+
+	// todo changeup api. this is temporary
+	public void tearDown() {
+
+
+		this.sseClient.cancel();
+//		this.client.dispatcher().cancelAll(); // todo see if we need this
+		sseClient = null;
+		uid = Urbit.uid();
+		requestId = 0;
+		lastSeenEventId = 0;
+		lastAcknowledgedEventId = 0;
+		pokeHandlers.clear();
+		subscribeHandlers.clear();
 	}
 
 

@@ -91,8 +91,14 @@ public class Main {
 		while (chatViewEvents.size() < 2) {
 			Thread.sleep(50);
 		}
-		System.out.println("go the following events from chat-store, with subscription id: " + chatViewSubscriptionID);
+		System.out.println("got the following events from chat-store, with subscription id: " + chatViewSubscriptionID);
 		chatViewEvents.forEach(System.out::println);
+
+		ship.delete();  // not strictly necessary
+		System.out.println("tearing down");
+		ship.tearDown();
+
+		System.exit(0); // FIXME for now you need this otherwise it takes like 30 seconds longer to exit
 
 	}
 
