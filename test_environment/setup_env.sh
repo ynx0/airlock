@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+
+# shellcheck disable=SC2164
+cd "$(dirname "$0")"
+
+
 REBUILD=false
 source ./setup_env_lib.sh
 
