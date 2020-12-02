@@ -35,12 +35,4 @@ jobs:
       with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
-# ok so that actually worked but I'm gonna try smtn else
-#    - name: Publish Unit Test Results
-#       uses: EnricoMi/publish-unit-test-result-action@v1.6
-#       if: always()
-#       with:
-#         working-directory: ${{ github.workspace }}
-#         github_token: ${{ secrets.GITHUB_TOKEN }}
-#         # todo figure out the correct relative path
-#         files: build/test-results/**/*.xml
+
