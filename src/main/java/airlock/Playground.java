@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GSONTesting {
+public class Playground {
 
 	public static void main(String[] args) {
 		Map<String, Object> data = new HashMap<>();

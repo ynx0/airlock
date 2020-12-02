@@ -134,24 +134,12 @@ public class UrbitIntegrationTests {
 		});
 
 		// send a message to a chat that we haven't subscribed to already
-		// todo reimpl above behavior. it will fail on ci because integration test does not create it
-		Map<String, Object> payload = Map.of(
-				"message", Map.of(
-						"path", "/~zod/test", // different chat
-						"envelope", Map.of(
-								"uid", Urbit.uid(),
-								"number", 1,
-								"author", "~zod",
-								"when", Instant.now().toEpochMilli(),
-								"letter", Map.of("text", primaryChatViewTestMessage)
-						)
-				)
-		);
+		// todo reimpl above behavior. it will fail on ci because integration test setup does not create it
+
 
 		// the specification of this payload is at lib/chat-store.hoon#L119...
 
 		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
-//		JsonElement json = gson.toJsonTree(payload);
 		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
