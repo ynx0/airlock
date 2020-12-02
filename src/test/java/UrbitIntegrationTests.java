@@ -56,6 +56,7 @@ public class UrbitIntegrationTests {
 		primaryChatSubscriptionEvents = new ArrayList<>();
 		gson = new Gson();
 
+		// Assumes fake ship zod is booted and running
 		// Assumes chat channel called 'test' is created
 
 	}
@@ -107,7 +108,6 @@ public class UrbitIntegrationTests {
 						"path", "/~zod/test",
 						"envelope", Map.of(
 								"uid", Urbit.uid(),
-//								"uid", "0v1.00000.3eolm.59lvl.7n9ht.2mokl.51js7",
 								"number", 1,
 								"author", "~zod",
 								"when", Instant.now().toEpochMilli(),
@@ -134,7 +134,7 @@ public class UrbitIntegrationTests {
 		});
 
 		// send a message to a chat that we haven't subscribed to already
-		// the specification of this payload is at lib/chat-store.hoon#L119...
+		// todo reimpl above behavior. it will fail on ci because integration test does not create it
 		Map<String, Object> payload = Map.of(
 				"message", Map.of(
 						"path", "/~zod/test", // different chat
@@ -147,6 +147,8 @@ public class UrbitIntegrationTests {
 						)
 				)
 		);
+
+		// the specification of this payload is at lib/chat-store.hoon#L119...
 
 		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
 //		JsonElement json = gson.toJsonTree(payload);
