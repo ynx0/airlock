@@ -33,8 +33,9 @@ jobs:
     - name: Test with Gradle
       run: ./gradlew test --info --stacktrace
     - name: List working directory
-      run: pwd
-      run: ls -la
+      run: |
+          pwd
+          ls -la
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action@v1.6
       if: always()
