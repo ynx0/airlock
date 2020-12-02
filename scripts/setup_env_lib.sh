@@ -6,7 +6,7 @@ FAKEZOD_TAR=fakezod-init.tar.gz
 LOGFILE=fakeship_output.log
 
 
-cd test_environment || exit
+#cd test_environment || exit
 
 function downloadUrbitRuntime() {
   echo "Downloading Urbit Runtime"
