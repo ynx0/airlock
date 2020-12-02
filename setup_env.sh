@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source ./setup_env_lib.sh
-cd test_environment || exit
 
 # this script sets up a pristine fakezod
 if [ ! -d ./$URBIT_VERSION/ ]; then
