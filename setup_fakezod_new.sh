@@ -7,5 +7,5 @@ source ./setup_env.sh
 
 send2ship "^X"
 send2ship ";create channel /test^M"
-echo "$(getLastNLines 5)"
 send2ship "^X"
+getLastNLines 5
