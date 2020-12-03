@@ -8,6 +8,17 @@ Herb requires cloning in the urbit repository and building the tool from nix, wh
 The process I will describe is a lightweight alternative to that.   
 
 
+## Table of Contents
+1. [Rationale](#rationale)
+2. [Methods](#overview-of-methods)
+3. [Implementation](#implementation)
+    - [Core](#core)
+    - [Boot From Scratch](#method-1---boot-from-scratch)
+    - [Boot From Cache](#method-2---boot-from-cache)
+4. [Usage](#using-the-scripts---integrating-with-github-actions)
+5. [Wrapping Up](#wrapping-up)
+
+
 ## Rationale 
 
 (Feel free to skip this section if you simply want to get started)
@@ -49,7 +60,7 @@ but generally speaking, the two general ideas I had in mind were:
 
 In this guide, I'll focus instead on the shared aspect, which is setting up the testing environment. 
 
-## Methods
+## Overview of Methods
 
 There are two methods to setting up the environment that I found to work.
  **Boot from Scratch** and **Boot from Cache**
@@ -275,7 +286,7 @@ The script:
 This script is handy for when you run the `setup_fakezod.sh` script in a local environment and don't want to leave your fakezod running.
 
 
-## Integrating with GitHub Actions
+## Using the Scripts - Integrating with GitHub Actions
 
 Once you have chosen which a method, you will want to actually integrate it with a CI/CD runner. 
 In this section, we will demonstrate the steps required to set up the scripts using GitHub Actions, 
