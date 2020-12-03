@@ -34,10 +34,36 @@ public class Main {
 
 ```
 
-For the most up to date usage examples, see `src/main/java/Main.java` and `src/test/java/UrbitIntegrationTests.java`.
+For the most up to date usage examples, see `src/test/java/UrbitIntegrationTests.java` or `src/main/java/Main.java`.
 
 
-## Development Checklist
+
+
+## Using
+
+**WARNING: The library is currently in alpha and does not really have a stable api yet. Expect things to break and change**
+
+Currently, the simplest way to play around with the library is to download the source and edit the `Main.java` file yourself.
+
+### Running From Source
+1. Clone the repository: `git clone https://github.com/ynx0/urbit`
+2. In the cloned repository, run `./gradlew run`. This will run the `Main.java` class.
+3. Edit `Main.java` to experiment
+
+### Jar
+If the code is alpha, using the jar is the greek letter before that. It most likely doesn't work.
+To generate a jar from the source, all you have to do is run `./gradlew jar`.
+
+However, if you want to try it out, you can download the jar without actually downloading the repository:
+1. Go to the [Github Actions](https://github.com/ynx0/urbit/actions) workflows page
+2. Find a commit with `Java CI with gradle` underneath that has is passing (has green checkmark).
+3. Under the **Artifacts** heading, click on `all-jars`. This will download the jar that was generated from the aforementioned task.
+
+
+
+
+
+## Roadmap
 
 - [x] Minimum viable product
 - [x] Basic integration tests
@@ -46,12 +72,14 @@ For the most up to date usage examples, see `src/main/java/Main.java` and `src/t
     - [x] Build javadocs
 - [x] Implementation of `scry` and `spider` request types
 - [ ] Integration for `scry` and `spider`
+    - [x] `scry`
+    - [ ] `spider`
 - [ ] Implementation of surrounding libraries
     - [ ] atom manipulation
     - [ ] related urbit types
 
 - [ ] Implementation of `chat-store`/`chat-view`
-    - [ ] Initial functional implementation of interface to agents 
+    - [ ] Initial functional implementation of interface to agents
     - [ ] Graph store tests
     - [ ] Graph store documentation
     - [ ] Graph store examples

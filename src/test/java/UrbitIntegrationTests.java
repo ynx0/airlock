@@ -6,9 +6,12 @@ import airlock.app.chat.ChatUpdate;
 import airlock.app.chat.ChatUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +35,9 @@ public class UrbitIntegrationTests {
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
-	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->
-			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // are an update event
-					&& subscribeEvent.updateJson.has("chat-update")                 // and the update json contains a "chat-update" object
+	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
+			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // an update event
+					&& subscribeEvent.updateJson.has("chat-update")  // and the update json contains a "chat-update" object
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
 
 
@@ -45,9 +48,9 @@ public class UrbitIntegrationTests {
 
 
 	@BeforeAll
-	public static void setup() {
+	public static void setup() throws MalformedURLException {
 		int port = 8080;
-		String url = "http://localhost:" + port;
+		URL url = new URL("http://localhost:" + port);
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
@@ -67,7 +70,6 @@ public class UrbitIntegrationTests {
 		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
 		assertDoesNotThrow(() -> {
 			InMemoryResponseWrapper res = ship.authenticate();
-//			System.out.println("String resp body of auth");
 			futureResponseString.complete(res.getBody().utf8());
 		});
 		await().until(futureResponseString::isDone);
@@ -134,24 +136,12 @@ public class UrbitIntegrationTests {
 		});
 
 		// send a message to a chat that we haven't subscribed to already
-		// todo reimpl above behavior. it will fail on ci because integration test does not create it
-		Map<String, Object> payload = Map.of(
-				"message", Map.of(
-						"path", "/~zod/test", // different chat
-						"envelope", Map.of(
-								"uid", Urbit.uid(),
-								"number", 1,
-								"author", "~zod",
-								"when", Instant.now().toEpochMilli(),
-								"letter", Map.of("text", primaryChatViewTestMessage)
-						)
-				)
-		);
+		// todo reimpl above behavior. it will fail on ci because integration test setup does not create it
+
 
 		// the specification of this payload is at lib/chat-store.hoon#L119...
 
 		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
-//		JsonElement json = gson.toJsonTree(payload);
 		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
@@ -175,5 +165,27 @@ public class UrbitIntegrationTests {
 
 	}
 
+	@Test
+	@Order(6)
+	public void canScry() throws IOException {
+		await().until(ship::isConnected);
+		InMemoryResponseWrapper responseWrapper = ship.scryRequest("file-server", "/clay/base/hash", "json");
+		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
+		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+	}
+
+
+	@Test
+	@Order(7)
+	@Disabled("throws 500")
+	public void canSpider() throws IOException {
+		await().until(ship::isConnected);
+		// todo write a working version of the test
+		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
+		JsonObject payload = gson.toJsonTree(Map.of("foo", "bar")).getAsJsonObject();
+		InMemoryResponseWrapper responseWrapper = ship.spiderRequest("graph-view-action", "graph-create", "json", payload);
+		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
+		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+	}
 
 }
