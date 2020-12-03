@@ -165,5 +165,27 @@ public class UrbitIntegrationTests {
 
 	}
 
+	@Test
+	@Order(6)
+	public void canScry() throws IOException {
+		await().until(ship::isConnected);
+		InMemoryResponseWrapper responseWrapper = ship.scryRequest("file-server", "/clay/base/hash", "json");
+		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
+		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+	}
+
+
+	@Test
+	@Order(7)
+	@Disabled("throws 500")
+	public void canSpider() throws IOException {
+		await().until(ship::isConnected);
+		// todo write a working version of the test
+		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
+		JsonObject payload = gson.toJsonTree(Map.of("foo", "bar")).getAsJsonObject();
+		InMemoryResponseWrapper responseWrapper = ship.spiderRequest("graph-view-action", "graph-create", "json", payload);
+		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
+		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+	}
 
 }
