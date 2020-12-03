@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2164
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" # ensure that the current directory is the location of the script
 
 source ./setup_env.sh
 

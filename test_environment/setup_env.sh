@@ -2,7 +2,7 @@
 
 
 # shellcheck disable=SC2164
-cd "$(dirname "$0")"
+cd "$(dirname "$0")"  # ensure that the current directory is where the script is located
 
 
 REBUILD=false
