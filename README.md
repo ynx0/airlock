@@ -72,6 +72,8 @@ However, if you want to try it out, you can download the jar without actually do
     - [x] Build javadocs
 - [x] Implementation of `scry` and `spider` request types
 - [ ] Integration for `scry` and `spider`
+    - [x] `scry`
+    - [ ] `spider`
 - [ ] Implementation of surrounding libraries
     - [ ] atom manipulation
     - [ ] related urbit types
