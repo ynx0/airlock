@@ -109,6 +109,7 @@ We also enable dumping to a log `-L` and specify the `-Logfile` to be `"./fakesh
 
 `./urbit -F zod` is the command we would like to run in our detached screen.
 
+<br/>
 
 In line 2, we send input to the dojo by first specifying the session `-S fakeship`, 
 choosing the default "screen window" `-p 0`, sending the "stuff" command `-X stuff` 
@@ -120,11 +121,12 @@ In general, it uses the caret notation to represent control characters, and you 
 In particular, take good note of the `^M`. This part of the string is necessary to send an "enter" key press.
 It is the escape sequence that represents carriage return on linux. Likewise, the string `"^X"`, would be equivalent to sending `Control-x`.
 
+<br/>
 
 Line 3 and onward is how we consume the output log, which is what the ship prints to stdout. 
 The tail command gets the last `n` lines from `fakeship_output.log`, `n` being `1` in this case, and is compared to a known value, `"\~zod:dojo>"`, which confirms that we've booted successfully.
 
-
+<br/>
 
 ### Method 1 - Boot From Scratch
 
