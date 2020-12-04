@@ -205,15 +205,10 @@ https://github.com/ynx0/urbit/blob/master/test_environment/setup_env.sh
 REBUILD=false
 source ./setup_env_lib.sh  # import the functions from the library file
 
-
-
 # 1: Download Urbit Runtime
 if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
 fi
-
-
-
 				# 2: Caching Logic
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
 				# 2a: build fakezod
