@@ -376,4 +376,4 @@ In summary, here are the steps:
 3. Call the scripts in your CI/CD pipeline
 4. If using Method 2, make sure to generate and commit the pristine fakezod to your repository
 
-Hoon safely!
+Happy Hooning!
