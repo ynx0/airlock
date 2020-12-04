@@ -313,7 +313,7 @@ When writing your workflow, you should:
 4. Run the setup script
 5. Run your tests
 6. [Optional] Run the teardown script
-	a. This is not strictly necessary with GitHub Actions because the platform tears down the whole machine anyway.
+	* This is not strictly necessary with GitHub Actions because the platform tears down the whole machine anyway.
 
 
 Here is an example of a fully filled out workflow:
