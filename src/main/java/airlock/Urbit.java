@@ -159,7 +159,10 @@ public class Urbit {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
-		gson = new Gson();
+		gson = new GsonBuilder()
+				.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
+				.create();
+
 
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
 		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
@@ -316,29 +319,29 @@ public class Urbit {
 							//}
 
 							switch (eyreResponse.response) {
-								case "poke":
+								case POKE:
 									var pokeHandler = pokeHandlers.get(eyreResponse.id);
-									if (eyreResponse.isOk()) {
+									if (eyreResponse.ok) {
 										pokeHandler.complete(PokeResponse.SUCCESS);
 									} else {
 										pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
 									}
 									pokeHandlers.remove(eyreResponse.id);
 									break;
-								case "subscribe":
+								case SUBSCRIBE:
 									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-									if (eyreResponse.isOk()) {
+									if (eyreResponse.ok) {
 										subscribeHandler.accept(SubscribeEvent.STARTED);
 									} else {
 										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
 										subscribeHandlers.remove(eyreResponse.id);
 									}
 									break;
-								case "diff":
+								case DIFF:
 									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
 									break;
-								case "quit":
+								case QUIT:
 									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 									subscribeHandler.accept(SubscribeEvent.FINISHED);
 									subscribeHandlers.remove(eyreResponse.id);
