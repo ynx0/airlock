@@ -1,0 +1,92 @@
+# Round 1
+
+class Post {
+  Ship author
+  List<Atom> index;
+  Time time-sent
+  List<Content> contents
+  Optional<Hash> hash; // or nullable whatever
+  Set<Signature> signatures;
+}
+typedef Ship Auras.P
+typedef Time Auras.DA
+typedef Hash Auras.UX
+
+
+abstract class Content {
+	enum Type {
+		TEXT,
+		URL,
+		CODE,
+		REFERENCE
+	}
+	// thought: or static classes instead of enum
+
+  @Nullable Cord text
+  @Nullable Cord url;
+  // [expression=cord output=(list tank)]
+  @Nullable Pair<Cord, List<Tank>> code;
+  @Nullable UID uid; // reference
+}
+typedef Cord Auras.T
+
+
+class UID {
+	Resource resource; 
+	Index index;
+}
+
+class Resource {
+	Entity entity;
+	Term name;
+}
+typedef Term %tas
+typedef Resources Set<Resource>
+
+// ok seriously wtf is an entity
+class Entity {
+	Ship ship;
+
+	+$  entity
+	  $@  ship
+	  $%  !!
+	  ==
+	--
+}
+
+
+
+
+
+
+
+abstract class Tank {
+	private Tank() {}
+}
+
+
+class Leaf extends Tank{
+	Tape p;
+}
+
+class Palm extends Tank {
+	Tape[] p = new Tape[4]; // p q r s are all `tape`s
+	List<Tank> q;
+}
+
+
+class Rose extends Tank {
+	Tape[] p = new Tape[3]; // p q r are all `tape`s
+	List<Tank> q;
+}
+typedef Tape List<Auras.TD>
+
+
+
+class Signature{
+	Atom.UX p; // probably hash/sham?
+	Ship q
+	Life r
+}
+
+typedef Life Auras.UD
