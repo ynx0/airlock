@@ -228,12 +228,23 @@ boot_fakezod			# 3.  boot from the pristine fakezod state
 ```
 
 The steps are as follows:
-1. Download the urbit runtime if it doesn't exist
-2a. If we want to rebuild manually, or we do not have an existing archive
-	* Build fakezod from scratch
-	* Archive the pristine fakezod state
-2b. Otherwise, use the existing pristine fakezod and unarchive it
-3. Boot from the pristine fakezod
+
+<ol>
+	<li>Download the urbit runtime if it doesn't exist</li>
+	<li>Caching logic
+		<ol type="a">
+			<li>Rebuild or non-existent cache
+				<ul>
+					<li>Build fakezod from scratch</li>
+					<li>Archive the pristine fakezod state</li>
+				</ul>
+			</li>
+			<li>Otherwise, use the existing pristine fakezod and unarchive it</li>
+		</ol>
+	</li>
+	<li>Boot from the pristine fakezod</li>
+</ol>
+
 
 
 
