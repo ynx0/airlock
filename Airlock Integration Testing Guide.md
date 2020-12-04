@@ -27,7 +27,7 @@ Recently, I started work on an Airlock implementation in Java.
 I've been lurking around on Urbit for a while, but I still don't have a great grasp of 
 the Hoon language and the internals of the operating system.
  
-So, trying to write software that interfaces with it becomes a quite tricky, 
+So, trying to write software that interfaces with it becomes quite tricky, 
 because I'm essentially working blindly and treating the ship as a black box.
 
 To address this, I decided to write integration tests in lockstep with any new functionality that I would introduce,
