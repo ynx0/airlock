@@ -30,7 +30,6 @@ public class EyreResponse {
 
 	/**
 	 * The success of the request
-	 * @return whether or not the request was successful
 	 */
 	public final boolean ok;
 
@@ -58,9 +57,6 @@ public class EyreResponse {
 	}
 
 
-
-
-
 	@Override
 	public String toString() {
 		return "EyreResponseData{" +
@@ -72,7 +68,7 @@ public class EyreResponse {
 				'}';
 	}
 
-	static class Adapter implements JsonSerializer<EyreResponse>, JsonDeserializer<EyreResponse> {
+	static class Adapter implements JsonDeserializer<EyreResponse> {
 
 		@Override
 		public EyreResponse deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -81,7 +77,7 @@ public class EyreResponse {
 			// todo throw proper exceptions at different failure modes
 
 			int id = responseObject.get("id").getAsInt();
-			boolean ok = responseObject.has("ok");
+			boolean ok = responseObject.has("ok"); // right now, when response is ok, the property looks like "ok"="ok". this could change in the future
 			String responseString = responseObject.get("response").getAsString();
 
 			String err = null;
@@ -95,7 +91,6 @@ public class EyreResponse {
 			}
 
 			ResponseType responseType;
-			System.out.println("response string");
 			switch (responseString) {
 				case "poke":
 					responseType = ResponseType.POKE;
@@ -116,10 +111,8 @@ public class EyreResponse {
 			return new EyreResponse(id, ok, err, responseType, jsonData);
 		}
 
-		@Override
-		public JsonElement serialize(EyreResponse src, Type typeOfSrc, JsonSerializationContext context) {
-			return null;
-		}
+		// no serializer implemented because we will never send an EyreResponse back to the ship
+
 	}
 
 	public static final Adapter ADAPTER = new Adapter();

@@ -161,7 +161,7 @@ public class Urbit {
 
 		gson = new GsonBuilder()
 				.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
-				.create();
+				.create(); // todo should there be a getter for our decoder so that others can de/serialize without having to register this stuff themselves
 
 
 		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
