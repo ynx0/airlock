@@ -207,21 +207,21 @@ https://github.com/ynx0/urbit/blob/master/test_environment/setup_env.sh
 REBUILD=false
 source ./setup_env_lib.sh  # import the functions from the library file
 
-				# 1: Download Urbit Runtime
+								# 1: Download Urbit Runtime
 if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
 fi
-				# 2: Caching Logic
+								# 2: Caching Logic
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
-				# 2a: build fakezod
+								# 2a: build fakezod
   echo "REBUILD: $REBUILD"
   make_fakezod
   tar_fakezod_state          
 else
-  untar_fakezod_state		# 2b. unarchive the existing pristine fakezod state
+  untar_fakezod_state						# 2b. unarchive the existing pristine fakezod state
 fi
 
-boot_fakezod			# 3.  boot from the pristine fakezod state
+boot_fakezod							# 3.  boot from the pristine fakezod state
 ```
 
 The steps are as follows:
