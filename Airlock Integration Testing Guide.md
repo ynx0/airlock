@@ -369,7 +369,7 @@ A general reference for the syntax of this file can be found [here](https://docs
 ### Notes
 * I keep the scripts in a separate directory called `test_environment` to keep the rest of my repository clean.
 * To force a rebuild of the cached fakezod state, simply delete the cached file or set the `REBUILD` variable in the file `setup_env.sh` to true.
-* **Important:** When running the `setup_fakezod` script, the cached version is saved as a `.tar.gz` file in the same directory. 
+* **IMPORTANT:** When running the `setup_fakezod` script, the cached version is saved as a `.tar.gz` file in the same directory. 
     -  You **must** add and commit this file so that it is uploaded to the repository as well, 
        otherwise the script will simply start from scratch when running in the CI runner (and will take forever).
 
