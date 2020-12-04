@@ -1,4 +1,4 @@
-package airlock.app.chat;
+package airlock.agent.chat;
 
 public class ChatConfig {
 	public int length;
