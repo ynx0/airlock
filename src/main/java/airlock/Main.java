@@ -32,12 +32,12 @@ public class Main {
 
 
 		// MARK - ship setup
-		Urbit ship = new Urbit(url, shipName, code);
-		ship.authenticate(); // submit the code to the ship for authentication. must be done before anything else
-		ship.connect();      // establishes the ServerSideEvent (SSE) client. this is what is used to receive all responses from the ship
+		Urbit urbit = new Urbit(url, shipName, code);
+		urbit.authenticate(); // submit the code to the ship for authentication. must be done before anything else
+		urbit.connect();      // establishes the ServerSideEvent (SSE) client. this is what is used to receive all responses from the ship
 
 		// MARK - create a 'mailbox' subscription on the chat-store gall agent
-		int chatStoreSubscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
+		int chatStoreSubscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
 			System.out.println("[Subscribe Event]");
 			System.out.println(subscribeEvent);
 			// store each event to a list
@@ -65,7 +65,7 @@ public class Main {
 		JsonElement payloadJSON = gson.toJsonTree(payload);
 
 		// make a poke request to the "chat-hook" app with the message as the payload, "json" being the payload type
-		ship.poke(ship.getShipName(), "chat-hook", "json", payloadJSON).whenComplete(
+		urbit.poke(urbit.getShipName(), "chat-hook", "json", payloadJSON).whenComplete(
 				(pokeResponse, throwable) -> {
 					if (pokeResponse.success) {
 						System.out.println("[PokeHandler]: successfully poked message to mailbox");
@@ -83,7 +83,7 @@ public class Main {
 		chatStoreEvents.forEach(System.out::println);
 
 		// MARK - create a subscription on the path "/primary" on the chat-view gall agent
-		int chatViewSubscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
+		int chatViewSubscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> {
 			System.out.println("[Primary Subscribe Event]");
 			System.out.println(subscribeEvent);
 			chatViewEvents.add(subscribeEvent);
@@ -95,9 +95,9 @@ public class Main {
 		System.out.println("got the following events from chat-store, with subscription id: " + chatViewSubscriptionID);
 		chatViewEvents.forEach(System.out::println);
 
-		ship.delete();  // not strictly necessary
+		urbit.delete();  // not strictly necessary
 		System.out.println("tearing down");
-		ship.tearDown();
+		urbit.tearDown();
 
 		System.exit(0); // FIXME for now you need this otherwise it takes like 30 seconds longer to exit
 

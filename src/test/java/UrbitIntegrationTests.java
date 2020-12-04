@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UrbitIntegrationTests {
 
 	private static Gson gson;
-	private static Urbit ship;
+	private static Urbit urbit;
 	private static CompletableFuture<PokeResponse> chatPokeResponse1;
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
 	private static List<SubscribeEvent> primaryChatSubscriptionEvents;
@@ -54,7 +54,7 @@ public class UrbitIntegrationTests {
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
-		ship = new Urbit(url, shipName, code);
+		urbit = new Urbit(url, shipName, code);
 		subscribeToMailboxEvents = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
 		gson = new Gson();
@@ -69,7 +69,7 @@ public class UrbitIntegrationTests {
 	public void successfulAuthentication() throws ExecutionException, InterruptedException {
 		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
 		assertDoesNotThrow(() -> {
-			InMemoryResponseWrapper res = ship.authenticate();
+			InMemoryResponseWrapper res = urbit.authenticate();
 			futureResponseString.complete(res.getBody().utf8());
 		});
 		await().until(futureResponseString::isDone);
@@ -79,17 +79,17 @@ public class UrbitIntegrationTests {
 	@Test
 	@Order(2)
 	public void successfullyConnectToShip() {
-		await().until(ship::isAuthenticated);
-		assertDoesNotThrow(() -> ship.connect());
+		await().until(urbit::isAuthenticated);
+		assertDoesNotThrow(() -> urbit.connect());
 	}
 
 
 	@Test
 	@Order(3)
 	public void canSubscribeToTestChat() throws IOException {
-		await().until(ship::isConnected);
+		await().until(urbit::isConnected);
 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
 			subscribeToMailboxEvents.add(subscribeEvent);
 		});
 
@@ -102,7 +102,7 @@ public class UrbitIntegrationTests {
 	@Test
 	@Order(4)
 	public void canSendChatMessage() throws IOException, ExecutionException, InterruptedException {
-		await().until(ship::isConnected);
+		await().until(urbit::isConnected);
 		await().until(() -> !subscribeToMailboxEvents.isEmpty());
 
 		Map<String, Object> payload = Map.of(
@@ -118,7 +118,7 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		chatPokeResponse1 = ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		chatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
 		await().until(chatPokeResponse1::isDone);
 
 		assertTrue(chatPokeResponse1.get().success);
@@ -127,11 +127,11 @@ public class UrbitIntegrationTests {
 	@Test
 	@Order(5)
 	public void testChatView() throws IOException, ExecutionException, InterruptedException {
-		await().until(ship::isConnected);
+		await().until(urbit::isConnected);
 		await().until(chatPokeResponse1::isDone);
 
 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> {
 			primaryChatSubscriptionEvents.add(subscribeEvent);
 		});
 
@@ -142,7 +142,7 @@ public class UrbitIntegrationTests {
 		// the specification of this payload is at lib/chat-store.hoon#L119...
 
 		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
-		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", json);
+		CompletableFuture<PokeResponse> pokeFuture = urbit.poke(urbit.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
 
@@ -168,8 +168,8 @@ public class UrbitIntegrationTests {
 	@Test
 	@Order(6)
 	public void canScry() throws IOException {
-		await().until(ship::isConnected);
-		InMemoryResponseWrapper responseWrapper = ship.scryRequest("file-server", "/clay/base/hash", "json");
+		await().until(urbit::isConnected);
+		InMemoryResponseWrapper responseWrapper = urbit.scryRequest("file-server", "/clay/base/hash", "json");
 		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
 		assertEquals("\"0\"", responseWrapper.getBody().utf8());
 	}
@@ -179,11 +179,11 @@ public class UrbitIntegrationTests {
 	@Order(7)
 	@Disabled("throws 500")
 	public void canSpider() throws IOException {
-		await().until(ship::isConnected);
+		await().until(urbit::isConnected);
 		// todo write a working version of the test
 		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
 		JsonObject payload = gson.toJsonTree(Map.of("foo", "bar")).getAsJsonObject();
-		InMemoryResponseWrapper responseWrapper = ship.spiderRequest("graph-view-action", "graph-create", "json", payload);
+		InMemoryResponseWrapper responseWrapper = urbit.spiderRequest("graph-view-action", "graph-create", "json", payload);
 		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
 		assertEquals("\"0\"", responseWrapper.getBody().utf8());
 	}

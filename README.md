@@ -20,12 +20,12 @@ public class Main {
 
 
         // MARK - connect to the ship
-		Urbit ship = new Urbit(url, shipName, code);
-        ship.authenticate();
-		ship.connect();
+		Urbit urbit = new Urbit(url, shipName, code);
+        urbit.authenticate();
+		urbit.connect();
         
         // MARK - create a mailbox subscription on a channel named 'test' 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
 			System.out.println("[Subscribe Event]");
 			System.out.println(subscribeEvent);
 		});
