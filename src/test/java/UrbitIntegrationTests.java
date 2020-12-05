@@ -169,9 +169,8 @@ public class UrbitIntegrationTests {
 	@Order(6)
 	public void canScry() throws IOException {
 		await().until(urbit::isConnected);
-		InMemoryResponseWrapper responseWrapper = urbit.scryRequest("file-server", "/clay/base/hash", "json");
-		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+		JsonElement responseJson = urbit.scryRequest("file-server", "/clay/base/hash");
+		assertEquals(responseJson.getAsInt(), 0);
 	}
 
 

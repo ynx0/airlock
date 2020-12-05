@@ -562,7 +562,7 @@ public class Urbit {
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public void ack(int eventID) throws IOException {
+	private void ack(int eventID) throws IOException {
 		int id = this.nextID();
 
 		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
@@ -578,9 +578,10 @@ public class Urbit {
 
 	// todo deduplicate
 	@SuppressWarnings("DuplicatedCode")
-	public InMemoryResponseWrapper scryRequest(String app, String path, String mark) throws IOException {
-		// todo should this method return a json payload or scryresponse instead?
-		URL scryUrl = this.getScryUrl(app, path, mark);
+	public JsonElement scryRequest(String app, String path) throws IOException {
+		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
+		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
+		URL scryUrl = this.getScryUrl(app, path, "json");
 
 		Request request = new Request.Builder()
 				.url(scryUrl)
@@ -596,9 +597,10 @@ public class Urbit {
 		System.out.println(",============ScryRequest============,");
 		System.out.println("Request: " + scryUrl);
 		System.out.println(".============ScryRequest============.");
-
-		return new InMemoryResponseWrapper(response);
-
+		ResponseBody body = response.body();
+		requireNonNull(body);
+		//		return new InMemoryResponseWrapper(response);
+		return JsonParser.parseString(body.string());
 	}
 
 	@SuppressWarnings("DuplicatedCode")
