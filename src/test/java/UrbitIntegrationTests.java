@@ -29,9 +29,12 @@ public class UrbitIntegrationTests {
 
 	private static Gson gson;
 	private static Urbit urbit;
-	private static CompletableFuture<PokeResponse> chatPokeResponse1;
+
+	private static CompletableFuture<PokeResponse> futureChatPokeResponse1;
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
+
 	private static List<SubscribeEvent> primaryChatSubscriptionEvents;
+	private final CompletableFuture<String> futurePrimaryChatMessage = new CompletableFuture<>();
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
@@ -118,17 +121,17 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		chatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
-		await().until(chatPokeResponse1::isDone);
+		futureChatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		await().until(futureChatPokeResponse1::isDone);
 
-		assertTrue(chatPokeResponse1.get().success);
+		assertTrue(futureChatPokeResponse1.get().success);
 	}
 
 	@Test
 	@Order(5)
 	public void testChatView() throws IOException, ExecutionException, InterruptedException {
 		await().until(urbit::isConnected);
-		await().until(chatPokeResponse1::isDone);
+		await().until(futureChatPokeResponse1::isDone);
 
 
 		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> {
@@ -161,6 +164,7 @@ public class UrbitIntegrationTests {
 					System.out.println(chatUpdate);
 					Objects.requireNonNull(chatUpdate.message);
 					assertEquals(primaryChatViewTestMessage, chatUpdate.message.envelope.letter.text);
+					futurePrimaryChatMessage.complete(chatUpdate.message.envelope.letter.text);
 				}, () -> fail("Chat message received was not the same as the one sent"));
 
 	}
@@ -173,9 +177,27 @@ public class UrbitIntegrationTests {
 		assertEquals(responseJson.getAsInt(), 0);
 	}
 
-
 	@Test
 	@Order(7)
+	public void scryGraph() throws IOException {
+		await().until(urbit::isConnected);
+		JsonElement keyScry = urbit.scryRequest("graph-store", "/keys");
+		JsonElement tagScry = urbit.scryRequest("graph-store", "/tags");
+		JsonElement tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries");
+		System.out.println("graph scry: /keys response");
+		System.out.println(keyScry);
+
+		System.out.println("graph scry: /tags response");
+		System.out.println(tagScry);
+
+
+		System.out.println("graph scry: /tag-queries response");
+		System.out.println(tagQueriesScry);
+	}
+
+
+	@Test
+//	@Order(7)
 	@Disabled("throws 500")
 	public void canSpider() throws IOException {
 		await().until(urbit::isConnected);
@@ -186,5 +208,6 @@ public class UrbitIntegrationTests {
 		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
 		assertEquals("\"0\"", responseWrapper.getBody().utf8());
 	}
+
 
 }
