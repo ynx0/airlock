@@ -162,6 +162,7 @@ public class Urbit {
 				.build();
 
 		gson = new GsonBuilder()
+				.setPrettyPrinting()  // disable in production
 				.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
 				.create(); // todo should there be a getter for our decoder so that others can de/serialize without having to register this stuff themselves
 
@@ -432,7 +433,7 @@ public class Urbit {
 
 			System.out.println(",============SendMessage============,");
 			System.out.println("Id: " + jsonData.get("id").getAsInt());
-			System.out.println("Sent message: " + fullJsonDataArray);
+			System.out.println("Sent message: " + gson.toJson(fullJsonDataArray));
 			System.out.println(".============SendMessage============.");
 
 			return new InMemoryResponseWrapper(response);
@@ -577,7 +578,7 @@ public class Urbit {
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
-//			this.handleConnectionError(response);
+//			this.throwOnScryFailure(response);
 			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}
@@ -592,7 +593,7 @@ public class Urbit {
 	}
 
 	// improve and de-duplicate code
-	private void handleScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFound {
+	private void throwOnScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFound {
 		// assuming we receive a non-closed response object
 		assert !response.isSuccessful();
 
