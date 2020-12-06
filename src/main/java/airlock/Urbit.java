@@ -137,18 +137,20 @@ public class Urbit {
 	 * <p>
 	 * Please note that the connection times out after 1 day of not having received any events from a ship
 	 * </p>
-	 *  @param url      The URL (with protocol and port) of the ship to be accessed
+	 *
+	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
 	 */
 	public Urbit(URL url, String shipName, String code) {
-		this.channelID = generateChannelID();
-		this.code = code;
+		this.shipName = requireNonNull(shipName);
+		this.code = requireNonNull(code, "Please provide a code");
+		requireNonNull(url, "Please provide a url");
+		this.url = normalizeOrBust(url);
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
-		this.shipName = requireNonNull(shipName);
 		this.cookie = null;
-		this.url = normalizeOrBust(url);
+		this.channelID = generateChannelID();
 
 		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -164,10 +166,6 @@ public class Urbit {
 				.create(); // todo should there be a getter for our decoder so that others can de/serialize without having to register this stuff themselves
 
 
-		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
-		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
-		//  cause there is no clean way to access nested values with a raw gson object
-
 		// todo what about different marks. so far I've only ever encountered helm-hi or json, but the api only really accepts `JsonElement`s
 	}
 
@@ -179,7 +177,7 @@ public class Urbit {
 		return this.requestId;
 	}
 
-	// todo maybe extract orbust methods to a utility class
+	// todo maybe extract or bust methods to a utility class
 	private static URL normalizeOrBust(URL url) {
 		try {
 			return url.toURI().normalize().toURL();
@@ -207,7 +205,7 @@ public class Urbit {
 
 	@NotNull
 	public URL getLoginUrl() {
-		return resolveOrBust(this.url, ("/~/login"));
+		return resolveOrBust(this.url, "/~/login");
 	}
 
 	public URL getScryUrl(String app, String path, String mark) {
@@ -229,20 +227,14 @@ public class Urbit {
 				.build();
 
 		Request request = new Request.Builder()
-//				.header("connection", "keep-alive")
 				.url(this.getLoginUrl())
 				.post(formBody)
 				.build();
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) throw new IOException("Error: " + response);
-		// todo figure out best way to return an immutable response body obj or something
-		//  or design api around it or use different library.
-		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
-		// we can't call it multiple times
 
-
-		// after we made the request, here we extract the cookie. its quite ceremonial
+		// after we made the request, here we extract the cookie. it's quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
 				.stream()
 				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
@@ -462,9 +454,6 @@ public class Urbit {
 			@NotNull JsonElement json // todo maybe migrate type to JsonObject
 	) throws IOException {
 
-		// todo i think poke needs to return a completable future cause that seems to make more sense rather than taking in a pokeHandler...
-		//  however, since this is working for now, we shouldn't do this until much later
-
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
 		// also, urbit-airlock-ts seems to just use the connected ship here
@@ -488,7 +477,6 @@ public class Urbit {
 		if (pokeResponse.getClosedResponse().isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
-//		pokeResponse.close();
 
 		return pokeFuture;
 	}
@@ -521,7 +509,6 @@ public class Urbit {
 		if (subscribeResponse.getClosedResponse().isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
 		}
-//		subscribeResponse.close();
 
 		return this.requestId;
 	}
@@ -541,7 +528,6 @@ public class Urbit {
 		)).getAsJsonObject();
 
 		InMemoryResponseWrapper res = this.sendJSONtoChannel(unsubscribeDataObj);
-//		res.close();
 	}
 
 	/**
@@ -556,7 +542,6 @@ public class Urbit {
 		)).getAsJsonObject();
 
 		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
-//		res.close();
 	}
 
 	/**
@@ -572,7 +557,6 @@ public class Urbit {
 		)).getAsJsonObject();
 
 		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
-//		res.close();
 	}
 
 
