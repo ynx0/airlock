@@ -1,10 +1,7 @@
 package airlock;
 
 import airlock.types.ShipName;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 
 import java.io.IOException;
@@ -58,20 +55,28 @@ public class Playground {
 //		));
 		// okay so we're gonna try to create a graph instead of adding it https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts#L109
 
-		urbit.poke(urbit.getShipName(), "graph-store", "graph-create", gson.toJsonTree(Map.of(
+		long NOW = Instant.now().toEpochMilli();
+		JsonObject graphPayload = gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
 				"create", Map.of(
 						"resource", Map.of(
 								"ship", "~zod",       // =entity
-								"name", "test-graph"    // name=term
+								"name", "test-graph" + NOW    // name=term
 						),
-						"title", "Test Graph!!!",
+						"title", "Test Graph!!!" + NOW,
 						"description", "graph for testing only! having fun strictly prohibited",
-						"associated", Map.of("policy", Map.of("invite", Map.of("pending", "~tun"))), // Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of. The map consumes my soul. There is no mapping. I am the map of. The mapping is of me. I am the mapping. The mapping is between me and myself. Map.of. Map.of
-						"module", "link",
-						"mark", "graph-validator-link"
+						"associated", Map.of(
+								"group", Map.of(
+										"ship", "~zod",
+										"name", "TEST_GROUP" + NOW
+								)
+						),
+						"module", "link"
 				)
-		)));
+		)).getAsJsonObject();
+		JsonElement graphPayload2 = JsonParser.parseString("{\"create\":{\"resource\":{\"ship\":\"~zod\",\"name\":\"aaaaaaaaaaaaa\"},\"title\":\"aaaaaaaaaaa\",\"description\":\"hkjhkjh\",\"associated\":{\"group\":{\"ship\":\"~zod\",\"name\":\"test-group-tres\"}},\"module\":\"link\"}}");
+		System.out.println(graphPayload2);
+		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload2.getAsJsonObject());
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
