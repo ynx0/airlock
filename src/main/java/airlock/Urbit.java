@@ -568,6 +568,7 @@ public class Urbit {
 		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
 		URL scryUrl = this.getScryUrl(app, path, "json");
 
+
 		Request request = new Request.Builder()
 				.url(scryUrl)
 				.header("Content-Type", "application/json")
@@ -576,6 +577,7 @@ public class Urbit {
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
+//			this.handleConnectionError(response);
 			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}
@@ -585,7 +587,22 @@ public class Urbit {
 		ResponseBody body = response.body();
 		requireNonNull(body);
 		//		return new InMemoryResponseWrapper(response);
-		return JsonParser.parseString(body.string());
+		String bodyText = body.string();
+		return JsonParser.parseString(bodyText);
+	}
+
+	// improve and de-duplicate code
+	private void handleScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFound {
+		// assuming we receive a non-closed response object
+		assert !response.isSuccessful();
+
+		if (response.code() == 403) {
+			throw new ShipAuthenticationError("Got 403 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		} else if (response.code() == 404) {
+			throw new ScryDataNotFound("Got 404 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		} else if (response.code() == 500) {
+			throw new ScryFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		}
 	}
 
 	@SuppressWarnings("DuplicatedCode")
