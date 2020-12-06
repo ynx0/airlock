@@ -613,12 +613,9 @@ public class Urbit {
 	public InMemoryResponseWrapper spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
 
 		// copied from sendJSONtoChannel
-		JsonArray fullJsonDataArray = new JsonArray();
-		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
-		fullJsonDataArray.add(fullJsonData);
 
-		String jsonString = gson.toJson(fullJsonDataArray);
+
+		String jsonString = gson.toJson(jsonData.deepCopy()); // todo possible refactor of deepcopy
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
