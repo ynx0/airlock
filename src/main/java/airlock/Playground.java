@@ -1,5 +1,6 @@
 package airlock;
 
+import airlock.agent.graph.Resource;
 import airlock.types.ShipName;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
@@ -60,9 +61,9 @@ public class Playground {
 		JsonObject graphPayload = gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
 				"create", Map.of(
-						"resource", Map.of(
-								"ship", "~zod",       // =entity
-								"name", "test-graph" + NOW    // name=term
+						"resource", new Resource(
+								"~zod",       // =entity
+								"test-graph" + NOW    // name=term
 						),
 						"title", "Test Graph!!!" + NOW,
 						"description", "graph for testing only! having fun strictly prohibited",
@@ -76,6 +77,10 @@ public class Playground {
 				)
 		)).getAsJsonObject();
 		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
+
+
+
+
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
