@@ -614,6 +614,7 @@ public class Urbit {
 
 		// copied from sendJSONtoChannel
 
+		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
 
 		String jsonString = gson.toJson(jsonData.deepCopy()); // todo possible refactor of deepcopy
 
@@ -630,6 +631,8 @@ public class Urbit {
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
+			// 500 means there was an error doing the spider. add to custom errors
+			// for example, trying to create a duplicate graph. in that case it doesn't seem to give a stack trace unlike the other times which was weird
 			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}

@@ -55,6 +55,7 @@ public class Playground {
 //		));
 		// okay so we're gonna try to create a graph instead of adding it https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts#L109
 
+//		long NOW = 0;
 		long NOW = Instant.now().toEpochMilli();
 		JsonObject graphPayload = gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
@@ -74,9 +75,7 @@ public class Playground {
 						"module", "link"
 				)
 		)).getAsJsonObject();
-		JsonElement graphPayload2 = JsonParser.parseString("{\"create\":{\"resource\":{\"ship\":\"~zod\",\"name\":\"aaaaaaaaaaaaa\"},\"title\":\"aaaaaaaaaaa\",\"description\":\"hkjhkjh\",\"associated\":{\"group\":{\"ship\":\"~zod\",\"name\":\"test-group-tres\"}},\"module\":\"link\"}}");
-		System.out.println(graphPayload2);
-		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload2.getAsJsonObject());
+		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
