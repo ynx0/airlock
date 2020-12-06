@@ -52,55 +52,26 @@ public class Playground {
 
 		//https://github.com/dclelland/UrsusAPI/blob/master/Sources/UrsusAPI/APIs/Graph/Agents/GraphStoreAgent.swift
 		// rip
-		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", JsonParser.parseString(
-				// DON'T LOOK AT ME: https://youtu.be/EnBdGTX3vZc?t=136
-			"{\n" +
-					"\t\"add-graph\": {\n" +
-					"\t\t\"graph\": [\n" +
-					"\t\t\t[\"/170141184504732761055236523336101897652\", {\n" +
-					"\t\t\t\t\"children\": [],\n" +
-					"\t\t\t\t\"post\": {\n" +
-					"\t\t\t\t\t\"index\": \"/170141184504732761055236523336101897652\",\n" +
-					"\t\t\t\t\t\"author\": \"littel-wolfur\",\n" +
-					"\t\t\t\t\t\"time-sent\": 1603567164999,\n" +
-					"\t\t\t\t\t\"signatures\": [],\n" +
-					"\t\t\t\t\t\"contents\": []\n" +
-					"\t\t\t\t}\n" +
-					"\t\t\t}]\n" +
-					"\t\t],\n" +
-					"\t\t\"resource\": {\n" +
-					"\t\t\t\"name\": \"collapse-open-blog\",\n" +
-					"\t\t\t\"ship\": \"~timluc-miptev\"\n" +
-					"\t\t},\n" +
-					"\t\t\"mark\": \"graph-validator-publish\",\n" +
-					"\t}\n" +
-					"}"
-		));
-//		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", gson.toJsonTree(Map.of(
-//				"add-graph", Map.of(
-//						"resource", Map.of(
-//								"ship", "~zod",       // =entity
-//								"name", "test-graph"    // name=term
-//						),
-//						"mark", "graph-validator-publish",
-//						"graph", Collections.singletonList(
-//								Arrays.asList(
-//										"/1",
-//										Map.of(
-//												"post", Map.of(
-//														"index", "/1",
-//														"author", "zod",
-//														"time-sent", Instant.now().toEpochMilli(),
-//														"signatures", Collections.emptyList(),
-//														"contents", Collections.singletonList(Map.of("text", "Hello Graph!"))
-//												),
-//												"children", Collections.emptyList()
-//										)
-//								)
+//		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", JsonParser.parseString(
+//				// DON'T LOOK AT ME: https://youtu.be/EnBdGTX3vZc?t=136
 //
-//						)
-//				)
-//		)));
+//		));
+		// okay so we're gonna try to create a graph instead of adding it https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts#L109
+
+		urbit.poke(urbit.getShipName(), "graph-store", "graph-create", gson.toJsonTree(Map.of(
+				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
+				"create", Map.of(
+						"resource", Map.of(
+								"ship", "~zod",       // =entity
+								"name", "test-graph"    // name=term
+						),
+						"title", "Test Graph!!!",
+						"description", "graph for testing only! having fun strictly prohibited",
+						"associated", Map.of("policy", Map.of("invite", Map.of("pending", "~tun"))), // Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of Map.of. The map consumes my soul. There is no mapping. I am the map of. The mapping is of me. I am the mapping. The mapping is between me and myself. Map.of. Map.of
+						"module", "link",
+						"mark", "graph-validator-link"
+				)
+		)));
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
