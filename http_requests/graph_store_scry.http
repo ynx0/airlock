@@ -24,7 +24,11 @@ GET http://localhost:8080/~/scry/graph-store/tags.json
 Content-Type: application/json
 ###
 
+POST http://localhost:8080/spider/graph-view-action/graph-create/json.json
+Content-Type: application/json
 
+{"create":{"resource":{"ship":"~zod","name":"test-graph-nongroup-collection 2"},"title":"test graph nongroup collection 2","description":"","associated":{"policy":{"invite":{"pending":[]}}},"module":"link"}}
+###
 
 
 
