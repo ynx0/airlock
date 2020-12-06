@@ -1,0 +1,41 @@
+# LOGIN
+POST localhost:8080/~/login
+Content-Type: application/x-www-form-urlencoded
+
+password=lidlut-tabwed-pillex-ridrup
+###
+
+# Helm Hi
+PUT http://localhost:8080/~/channel/1601844290-ae45b
+Content-Type: application/json
+
+[{"id":1,"action":"poke","ship":"zod","app":"hood","mark":"helm-hi","json":"Opening airlock"}]
+
+###
+
+
+# Graph store scry
+# /~/scry/{app}{path}.{mark}
+GET http://localhost:8080/~/scry/graph-store/keys.json
+Content-Type: application/json
+###
+
+GET http://localhost:8080/~/scry/graph-store/tags.json
+Content-Type: application/json
+###
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
