@@ -1,5 +1,7 @@
 package airlock;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import java.io.IOException;
@@ -15,8 +17,13 @@ public class Playground {
 //		System.out.println(baseURL.toURI().resolve("/scry//" + "app/" + "/"));
 //		System.out.println(baseURL.toURI().resolve("/~/channel/" + Urbit.generateChannelID()));
 
-		Urbit urbit = new Urbit(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
-		JsonElement responseWrapper = urbit.scryRequest("graph-store", "keys");
+		Urbit urbit = new Urbit(new URL("http://localhost:80"), "zod", "toprus-dopsul-dozmep-hocbep");
+		urbit.authenticate();
+//		JsonElement responseWrapper = urbit.scryRequest("graph-store", "/graph/timluc-miptev/collapse-open-blog"); // causes 404 not found, no scry result
+//		JsonElement responseWrapper = urbit.scryRequest("graph-store", "/graph/timluc-miptev/collapse-open-blog");
+		JsonElement responseWrapper = urbit.scryRequest("graph-store", "/graph/");
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		System.out.println(gson.toJson(responseWrapper));
 
 	}
 
