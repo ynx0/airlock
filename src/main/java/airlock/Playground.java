@@ -36,6 +36,7 @@ public class Playground {
 		https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/charset/CharsetEncoder.html
 		https://urbit.org/docs/reference/library/2i/#tap-by
 		failing to validate key "graph", on line /lib/graph-store/hoon:<[282 26].[282 39]>
+		after reading that line, it seems to me that it is failing to turn everything inside into a node
 		https://github.com/urbit/urbit/blob/5cb6af0433a65fb28b4bc957be10cb436781392d/pkg/arvo/app/graph-store.hoon#L233
 		https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts
 		https://urbit.org/docs/tutorials/ship-troubleshooting/#reset-code lmao
@@ -46,30 +47,29 @@ public class Playground {
 	// so my go to guy apparently hasn't implemented it yet either:
 		//https://github.com/dclelland/UrsusAPI/blob/master/Sources/UrsusAPI/APIs/Graph/Agents/GraphStoreAgent.swift
 		// rip
-//		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", gson.toJsonTree(Map.of(
-//				"add-graph", Map.of(
-//						"overwrite", true,
-//						"resource", Map.of(
-//								"ship", "~zod",       // =entity
-//								"name", "test-graph"    // name=term
-//						),
-//						"mark", "graph-validator-publish",
-//						"graph", Arrays.asList(
-//								"/1",
-//								Map.of(
-//										"post", Map.of(
-//												"index", "/1",
-//												"author", "zod",
-//												"time-sent", Instant.now().toEpochMilli(),
-//												"signatures", Collections.emptyList(),
-//												"contents", Collections.singletonList(Map.of("text", "Hello Graph!"))
-//										),
-//										"children", Collections.emptyList()
-//								)
-//
-//						)
-//				)
-//		)));
+		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", gson.toJsonTree(Map.of(
+				"add-graph", Map.of(
+						"resource", Map.of(
+								"ship", "~zod",       // =entity
+								"name", "test-graph"    // name=term
+						),
+						"mark", "graph-validator-publish",
+						"graph", Arrays.asList(
+								"/1",
+								Map.of(
+										"post", Map.of(
+												"index", "/1",
+												"author", "zod",
+												"time-sent", Instant.now().toEpochMilli(),
+												"signatures", Collections.emptyList(),
+												"contents", Collections.singletonList(Map.of("text", "Hello Graph!"))
+										),
+										"children", Collections.emptyList()
+								)
+
+						)
+				)
+		)));
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));

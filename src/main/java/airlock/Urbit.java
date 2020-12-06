@@ -351,10 +351,13 @@ public class Urbit {
 						// todo better error handling
 						//  right now, if I try to
 
+						// here, we get an EOFException if we have a running connection and then Ctrl-z forcibly close the fakezod
+						// so maybe that's another custom error to make
 						if (t != null && !(t instanceof SocketException)) {
 							System.err.println("Encountered error while doing sse stuff");
 							throw new RuntimeException(t);
 						}
+
 						if (response != null && response.code() != 200) {
 							System.err.println("Event Source Error: " + response);
 							return;
