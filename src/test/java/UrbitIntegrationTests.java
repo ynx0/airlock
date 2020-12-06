@@ -196,7 +196,6 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(8)
-//	@Disabled("throws 500")
 	public void canSpider() throws IOException {
 		await().until(urbit::isConnected);
 
@@ -223,7 +222,7 @@ public class UrbitIntegrationTests {
 		)).getAsJsonObject();
 		InMemoryResponseWrapper responseWrapper = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
 		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertNull(JsonParser.parseString(responseWrapper.getBody().utf8()));
+		assertTrue(JsonParser.parseString(responseWrapper.getBody().utf8()).isJsonNull());
 
 	}
 
