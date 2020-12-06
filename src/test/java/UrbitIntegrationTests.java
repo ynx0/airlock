@@ -201,6 +201,7 @@ public class UrbitIntegrationTests {
 
 		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
 		//  todo maybe make a pull request and put an actual working example in that doc
+		// todo improve this test to verify the creation process better
 		long NOW = Instant.now().toEpochMilli();
 		JsonObject graphPayload = gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98

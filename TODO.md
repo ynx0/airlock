@@ -22,7 +22,7 @@
 
 - misc
 	- split up unit tests by "basic functionality" and by agent (i.e. chat store/graph store etc.) (connect, auth, poke subscribe scry spider)
-	- atom public no aura only bigint, protected access to aura, refactor later to abstractcalss atombase, atom, etc.
+	- atom public no aura only bigint, protected access to aura, refactor later to abstract class AtomBase, atom, etc.
 	- refactor out url stuff to util class
 	- deduplicate code
 	- ignore spider stuff for now
