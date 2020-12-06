@@ -638,6 +638,7 @@ public class Urbit {
 		}
 		System.out.println(",============SpiderRequest============,");
 		System.out.println("Request: " + spiderUrl);
+		System.out.println("Payload: " + jsonString);
 		System.out.println(".============SpiderRequest============.");
 
 		return new InMemoryResponseWrapper(response);
