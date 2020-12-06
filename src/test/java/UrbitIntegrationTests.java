@@ -4,9 +4,7 @@ import airlock.SubscribeEvent;
 import airlock.Urbit;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -197,16 +195,36 @@ public class UrbitIntegrationTests {
 
 
 	@Test
-//	@Order(7)
-	@Disabled("throws 500")
+	@Order(8)
+//	@Disabled("throws 500")
 	public void canSpider() throws IOException {
 		await().until(urbit::isConnected);
-		// todo write a working version of the test
+
 		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
-		JsonObject payload = gson.toJsonTree(Map.of("foo", "bar")).getAsJsonObject();
-		InMemoryResponseWrapper responseWrapper = urbit.spiderRequest("graph-view-action", "graph-create", "json", payload);
+		//  todo maybe make a pull request and put an actual working example in that doc
+		long NOW = Instant.now().toEpochMilli();
+		JsonObject graphPayload = gson.toJsonTree(Map.of(
+				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
+				"create", Map.of(
+						"resource", Map.of(
+								"ship", "~zod",       // =entity
+								"name", "test-graph" + NOW    // name=term
+						),
+						"title", "Test Graph!!!" + NOW,
+						"description", "graph for testing only! having fun strictly prohibited",
+						"associated", Map.of(
+								"group", Map.of(
+										"ship", "~zod",
+										"name", "TEST_GROUP" + NOW
+								)
+						),
+						"module", "link"
+				)
+		)).getAsJsonObject();
+		InMemoryResponseWrapper responseWrapper = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
 		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+		assertNull(JsonParser.parseString(responseWrapper.getBody().utf8()));
+
 	}
 
 
