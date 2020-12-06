@@ -378,13 +378,14 @@ public class Urbit {
 	public void tearDown() {
 
 
-		this.sseClient.cancel();
-//		this.client.dispatcher().cancelAll(); // todo see if we need this
-		sseClient = null;
 		channelID = Urbit.uid();
+		this.sseClient.cancel();
+//		this.client.dispatcher().cancelAll(); // todo see if we need this or if it will cause more problems
+		sseClient = null;
 		requestId = 0;
 		lastSeenEventId = 0;
 		lastAcknowledgedEventId = 0;
+		this.cookie = null;
 		pokeHandlers.clear();
 		subscribeHandlers.clear();
 	}
