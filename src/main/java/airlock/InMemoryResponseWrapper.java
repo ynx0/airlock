@@ -22,6 +22,10 @@ public class InMemoryResponseWrapper {
 	private final Response closedResponse;
 	private final ByteString inMemoryResponseBody;
 
+	// response.body() is a one-shot obj that needs to be copied manually, and we can't call it multiple times to use in multiple places
+	// For example, we cannot inspect the body in one method, then pass the same response object to somewhere else because the buffer will be exhausted
+	// this is why InMemoryResponseWrapper exists
+
 	public InMemoryResponseWrapper(Response response) throws IOException {
 		this.closedResponse = response;
 		// taken from https://github.com/square/okhttp/issues/2869
