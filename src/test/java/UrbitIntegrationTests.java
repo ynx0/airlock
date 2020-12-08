@@ -221,9 +221,8 @@ public class UrbitIntegrationTests {
 						"module", "link"
 				)
 		)).getAsJsonObject();
-		InMemoryResponseWrapper responseWrapper = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
-		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertTrue(JsonParser.parseString(responseWrapper.getBody().utf8()).isJsonNull());
+		JsonElement responseJson = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
+		assertTrue(responseJson.isJsonNull());
 
 	}
 
