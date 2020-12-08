@@ -3,7 +3,7 @@
 This guide will show you how to set up a minimal testing environment in an automated fashion (i.e. in a CI/CD pipeline) 
 using a set of utility scripts which require no outside dependencies, with quick setup process and simple to use interface.
 
-Although tools such as [herb](https://github.com/urbit/urbit/tree/master/pkg/herb) exist, they usually require many extra steps and dependencies which can make the the process cumbersome.
+Although tools such as [herb](https://github.com/urbit/urbit/tree/master/pkg/herb) exist, they usually require many extra steps and dependencies which can make the process cumbersome.
 Herb requires cloning in the urbit repository and building the tool from nix, which makes the build process heavier if the goal is to run it a CI platform.
 The following process exists as a lightweight alternative.
 
@@ -115,7 +115,7 @@ In line 2, we send input to the dojo by first specifying the session `-S fakeshi
 choosing the default "screen window" `-p 0`, sending the "stuff" command `-X stuff` 
 and specifying the input that we want to send `"(add 2 2)^M"`.
 
-The reference for format that the `stuff` command takes should be [in the screen manual](https://www.gnu.org/software/screen/manual/screen.html).
+The reference for the format that the `stuff` command takes should be [in the screen manual](https://www.gnu.org/software/screen/manual/screen.html).
 In general, it uses the caret notation to represent control characters, and you can find a reference for that [on Wikipedia](https://en.wikipedia.org/wiki/ASCII#ASCII_control_code_chart).
 
 In particular, take good note of the `^M`. This part of the string is necessary to send an "enter" key press.
@@ -163,7 +163,7 @@ send2ship ";create channel /test^M"
 
 
 This is all that's necessary to boot a fakezod and perform various setup tasks like creating chats it in an automated fashion. 
-However, it makes no promises in regards to speed—necessarily, it boots up a fakezod from scratch, *every time it runs*. 
+However, it makes no promises with regards to speed—necessarily, it boots up a fakezod from scratch, *every time it runs*. 
 This means that every time the script runs on a CI/CD platform, it will take roughly **5 minutes** just to set up the tests. 
 Not the end of the world, but quite problematic for quickly evaluating and merging pull requests, for example.
 
@@ -268,7 +268,7 @@ The script:
 4. Switches back to the dojo
 5. Prints the last 5 lines of output from the ship
 
-Again, this is where you should put all of your setup code that you want to entered in the dojo.
+Again, this is where you should put all of your setup code that you want entered in the dojo.
 
 
 #### Teardown
@@ -307,8 +307,8 @@ Steps:
 
 When writing your workflow, you should:
 1. Checkout the repository
-2. Setup the language runtime
-3. Setup the test runner for your language
+2. Set up the language runtime
+3. Set up the test runner for your language
 4. Run the setup script
 5. Run your tests
 6. [Optional] Run the teardown script

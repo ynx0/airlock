@@ -9,7 +9,7 @@ public class Main {
 	private static final Gson gson = new Gson();
 
 	public static void main(String[] args) {
-		String url = "http://localhost:80";
+		String url = "http://localhost:8080";
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
@@ -34,7 +34,10 @@ public class Main {
 
 ```
 
-For the most up to date usage examples, see `src/test/java/UrbitIntegrationTests.java` or `src/main/java/Main.java`.
+For the most up to date usage examples, see `src/test/java/UrbitIntegrationTests.java`.
+
+The file `src/main/java/Main.java` serves as a starting point to experiment with the library, 
+but may not showcase all features and functionality of the api. 
 
 
 
@@ -73,16 +76,7 @@ However, if you want to try it out, you can download the jar without actually do
 - [x] Implementation of `scry` and `spider` request types
 - [ ] Integration for `scry` and `spider`
     - [x] `scry`
-    - [ ] `spider`
-- [ ] Implementation of surrounding libraries
-    - [ ] atom manipulation
-    - [ ] related urbit types
-
-- [ ] Implementation of `chat-store`/`chat-view`
-    - [ ] Initial functional implementation of interface to agents
-    - [ ] Graph store tests
-    - [ ] Graph store documentation
-    - [ ] Graph store examples
+    - [x] `spider`
 
 - [ ] `graph-store`
     - [ ] Initial functional implementation of interface 
@@ -91,6 +85,19 @@ However, if you want to try it out, you can download the jar without actually do
     - [ ] Graph store examples
 
 - [ ] Other gall agent interfaces
+
+- [ ] Implementation of surrounding libraries
+  - [ ] atom manipulation
+  - [ ] related urbit types
+
+  ### Deprecated
+- [ ] Implementation of `chat-store`/`chat-view`
+  - [ ] Initial functional implementation of interface to agents
+  - [ ] Graph store tests
+  - [ ] Graph store documentation
+  - [ ] Graph store examples
+
+
 
 ### After Stabilization
 - [ ] Create example application that uses basic functionality
