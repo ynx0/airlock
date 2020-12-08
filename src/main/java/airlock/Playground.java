@@ -22,13 +22,12 @@ public class Playground {
 //		System.out.println(baseURL.toURI().resolve("/scry//" + "app/" + "/"));
 //		System.out.println(baseURL.toURI().resolve("/~/channel/" + Urbit.generateChannelID()));
 
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		//  lidlut-tabwed-pillex-ridrup
 		// "toprus-dopsul-dozmep-hocbep"
 		Urbit urbit = new Urbit(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
 		urbit.authenticate();
 		urbit.connect();
-		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/keys")));
+		System.out.println(AirlockUtils.gson.toJson(urbit.scryRequest("graph-store", "/keys")));
 
 		// notes dump
 		/*
@@ -58,7 +57,7 @@ public class Playground {
 
 //		long NOW = 0;
 		long NOW = Instant.now().toEpochMilli();
-		JsonObject graphPayload = gson.toJsonTree(Map.of(
+		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
 				"create", Map.of(
 						"resource", new Resource(

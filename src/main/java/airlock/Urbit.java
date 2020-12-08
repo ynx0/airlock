@@ -126,8 +126,6 @@ public class Urbit {
 
 	private final OkHttpClient client;
 
-	private final Gson gson;
-
 	/**
 	 * Synchronization object used to prevent multithreading errors and incorrectly ordered network calls
 	 */
@@ -163,12 +161,6 @@ public class Urbit {
 				.cookieJar(new JavaNetCookieJar(cookieHandler))
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
-
-		gson = new GsonBuilder()
-				.setPrettyPrinting()  // disable in production
-				.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
-				.create(); // todo should there be a getter for our decoder so that others can de/serialize without having to register this stuff themselves
-
 
 		// todo what about different marks. so far I've only ever encountered helm-hi or json, but the api only really accepts `JsonElement`s
 	}
@@ -288,7 +280,7 @@ public class Urbit {
 						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
 
 						synchronized (urbitLock) {
-							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
+							EyreResponse eyreResponse = AirlockUtils.gson.fromJson(data, EyreResponse.class);
 							lastSeenEventId = eyreResponse.id;
 
 							System.out.println(",=============Event==============,");
@@ -420,7 +412,7 @@ public class Urbit {
 			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
-			String jsonString = gson.toJson(fullJsonDataArray);
+			String jsonString = AirlockUtils.gson.toJson(fullJsonDataArray);
 
 			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
@@ -471,7 +463,7 @@ public class Urbit {
 
 		CompletableFuture<PokeResponse> pokeFuture = new CompletableFuture<>();
 		int id = nextID();
-		JsonObject pokeDataObj = gson.toJsonTree(Map.of(
+		JsonObject pokeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "poke",
 				"ship", ship,
@@ -505,7 +497,7 @@ public class Urbit {
 	) throws IOException {
 		int id = this.nextID();
 		JsonObject subscribeDataObj;
-		subscribeDataObj = gson.toJsonTree(Map.of(
+		subscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "subscribe",
 				"ship", ship,
@@ -529,7 +521,7 @@ public class Urbit {
 	public void unsubscribe(int subscription) throws IOException {
 		int id = this.nextID();
 
-		JsonObject unsubscribeDataObj = gson.toJsonTree(Map.of(
+		JsonObject unsubscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "unsubscribe",
 				"subscription", subscription
@@ -544,7 +536,7 @@ public class Urbit {
 	public void delete() throws IOException {
 		int id = this.nextID();
 
-		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "delete"
 		)).getAsJsonObject();
@@ -558,7 +550,7 @@ public class Urbit {
 	private void ack(int eventID) throws IOException {
 		int id = this.nextID();
 
-		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "ack",
 				"event-id", eventID
@@ -619,7 +611,7 @@ public class Urbit {
 
 		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
 
-		String jsonString = gson.toJson(jsonData.deepCopy()); // todo possible refactor of deepcopy
+		String jsonString = AirlockUtils.gson.toJson(jsonData.deepCopy()); // todo possible refactor of deep copy
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 

@@ -1,7 +1,4 @@
-import airlock.InMemoryResponseWrapper;
-import airlock.PokeResponse;
-import airlock.SubscribeEvent;
-import airlock.Urbit;
+import airlock.*;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
 import com.google.gson.*;
@@ -25,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UrbitIntegrationTests {
 
-	private static Gson gson;
 	private static Urbit urbit;
 
 	private static CompletableFuture<PokeResponse> futureChatPokeResponse1;
@@ -58,7 +54,6 @@ public class UrbitIntegrationTests {
 		urbit = new Urbit(url, shipName, code);
 		subscribeToMailboxEvents = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
-		gson = new Gson();
 
 		// Assumes fake ship zod is booted and running
 		// Assumes chat channel called 'test' is created
@@ -119,7 +114,7 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		futureChatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
+		futureChatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", AirlockUtils.gson.toJsonTree(payload));
 		await().until(futureChatPokeResponse1::isDone);
 
 		assertTrue(futureChatPokeResponse1.get().success);
@@ -142,7 +137,7 @@ public class UrbitIntegrationTests {
 
 		// the specification of this payload is at lib/chat-store.hoon#L119...
 
-		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
+		JsonElement json = AirlockUtils.gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
 		CompletableFuture<PokeResponse> pokeFuture = urbit.poke(urbit.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
@@ -157,7 +152,7 @@ public class UrbitIntegrationTests {
 				filter(onlyPrimaryChatUpdate)
 				.findFirst()
 				.ifPresentOrElse(subscribeEvent -> {
-					ChatUpdate chatUpdate = gson.fromJson(subscribeEvent.updateJson.get("chat-update"), ChatUpdate.class);
+					ChatUpdate chatUpdate = AirlockUtils.gson.fromJson(subscribeEvent.updateJson.get("chat-update"), ChatUpdate.class);
 					System.out.println("Got chat update");
 					System.out.println(chatUpdate);
 					Objects.requireNonNull(chatUpdate.message);
@@ -203,7 +198,7 @@ public class UrbitIntegrationTests {
 		//  todo maybe make a pull request and put an actual working example in that doc
 		// todo improve this test to verify the creation process better
 		long NOW = Instant.now().toEpochMilli();
-		JsonObject graphPayload = gson.toJsonTree(Map.of(
+		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
 				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
 				"create", Map.of(
 						"resource", Map.of(
