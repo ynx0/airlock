@@ -431,12 +431,13 @@ public class Urbit {
 
 			System.out.println(",============SendMessage============,");
 			System.out.println("Id: " + jsonData.get("id").getAsInt());
-			System.out.println("Sent message: " + gson.toJson(fullJsonDataArray));
+			System.out.println("Sent message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
 			System.out.println(".============SendMessage============.");
 
 			return new InMemoryResponseWrapper(response);
 		}
 	}
+
 
 	/**
 	 * Pokes a ship with data.
