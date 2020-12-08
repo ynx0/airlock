@@ -124,7 +124,7 @@ It is the escape sequence that represents carriage return on linux. Likewise, th
 <br/>
 
 Line 3 and onward is how we consume the output log, which is what the ship prints to stdout. 
-The tail command gets the last `n` lines from `fakeship_output.log`, `n` being `1` in this case, and is compared to a known value, `"\~zod:dojo>"`, which confirms that we've booted successfully.
+The tail command gets the last `n` lines from `fakeship_output.log`, `n` being `1` in this case, and is compared to a known value, `"~zod:dojo>"`, which confirms that we've booted successfully.
 
 <br/>
 
@@ -163,8 +163,8 @@ send2ship ";create channel /test^M"
 
 
 This is all that's necessary to boot a fakezod and perform various setup tasks like creating chats it in an automated fashion. 
-However, it makes no promises in regards to speed—necessarily, it boots up a full zod ship every time it runs, 
-which means that every time the script runs on a CI/CD platform, it will take roughly 5 minutes just to set up the tests. 
+However, it makes no promises in regards to speed—necessarily, it boots up a fakezod from scratch, *every time it runs*. 
+This means that every time the script runs on a CI/CD platform, it will take roughly **5 minutes** just to set up the tests. 
 Not the end of the world, but quite problematic for quickly evaluating and merging pull requests, for example.
 
 Let's move on to Method 2, which brings this time down to the order of seconds.
@@ -172,7 +172,7 @@ Let's move on to Method 2, which brings this time down to the order of seconds.
 
 ### Method 2 - Boot From Cache
 
-Method 2 works off of the same basic concepts as Method 1, and adds in caching functionality.
+Method 2 works off of the same basic concepts as Method 1, and adds in caching functionality to the booting process.
 
 #### Helper Functions
 
@@ -205,7 +205,7 @@ https://github.com/ynx0/urbit/blob/master/test_environment/setup_env.sh
 # test_environment/setup_env.sh
 
 REBUILD=false
-source ./setup_env_lib.sh  # import the functions from the library file
+source ./setup_env_lib.sh					# import the functions from the library file
 
 								# 1: Download Urbit Runtime
 if [ ! -d "./$URBIT_VERSION/" ]; then
@@ -213,8 +213,7 @@ if [ ! -d "./$URBIT_VERSION/" ]; then
 fi
 								# 2: Caching Logic
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
-								# 2a: build fakezod
-  echo "REBUILD: $REBUILD"
+  echo "REBUILD: $REBUILD"					# 2a: build fakezod
   make_fakezod
   tar_fakezod_state          
 else
@@ -230,9 +229,9 @@ The steps are as follows:
 	<li>Download the urbit runtime if it doesn't exist</li>
 	<li>Caching logic
 		<ol type="a">
-			<li>Rebuild or non-existent cache
+			<li>In the case of a rebuild or non-existent cache
 				<ul>
-					<li>Build fakezod from scratch</li>
+					<li>Boot a fakezod from scratch</li>
 					<li>Archive the pristine fakezod state</li>
 				</ul>
 			</li>
