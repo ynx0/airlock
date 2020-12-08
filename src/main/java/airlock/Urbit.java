@@ -1,5 +1,8 @@
 package airlock;
 
+import airlock.errors.ScryDataNotFound;
+import airlock.errors.ScryFailureException;
+import airlock.errors.ShipAuthenticationError;
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
