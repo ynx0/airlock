@@ -124,7 +124,7 @@ It is the escape sequence that represents carriage return on linux. Likewise, th
 <br/>
 
 Line 3 and onward is how we consume the output log, which is what the ship prints to stdout. 
-The tail command gets the last `n` lines from `fakeship_output.log`, `n` being `1` in this case, and is compared to a known value, `"\~zod:dojo>"`, which confirms that we've booted successfully.
+The tail command gets the last `n` lines from `fakeship_output.log`, `n` being `1` in this case, and is compared to a known value, `"~zod:dojo>"`, which confirms that we've booted successfully.
 
 <br/>
 
