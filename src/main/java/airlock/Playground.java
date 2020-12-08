@@ -1,6 +1,9 @@
 package airlock;
 
 import airlock.agent.graph.Resource;
+import airlock.errors.ScryDataNotFoundException;
+import airlock.errors.ScryFailureException;
+import airlock.errors.ShipAuthenticationError;
 import airlock.types.ShipName;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
@@ -15,7 +18,7 @@ import java.util.Map;
 
 public class Playground {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 
 //		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
 //		System.out.println(baseURL);

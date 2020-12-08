@@ -1,16 +1,16 @@
 package airlock.errors;
 
-public class ScryDataNotFound extends ScryException {
+public class ScryDataNotFoundException extends ScryException {
 
-	public ScryDataNotFound(String message) {
+	public ScryDataNotFoundException(String message) {
 		super(message);
 	}
 
-	public ScryDataNotFound(String message, Throwable cause) {
+	public ScryDataNotFoundException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public ScryDataNotFound(Throwable cause) {
+	public ScryDataNotFoundException(Throwable cause) {
 		super(cause);
 	}
 }

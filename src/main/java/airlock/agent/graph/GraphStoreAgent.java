@@ -6,6 +6,9 @@ import airlock.PokeResponse;
 import airlock.Urbit;
 import airlock.agent.Agent;
 import airlock.agent.group.GroupUtils;
+import airlock.errors.ScryDataNotFoundException;
+import airlock.errors.ScryFailureException;
+import airlock.errors.ShipAuthenticationError;
 import airlock.types.ShipName;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -505,7 +508,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement getKeys() throws IOException {
+	public JsonElement getKeys() throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/keys");
 		// todo implement state handling
 		/*
@@ -530,7 +533,7 @@ export const createPost = (
 
 */
 
-	public JsonElement getTags() throws IOException {
+	public JsonElement getTags() throws IOException, ScryFailureException, ShipAuthenticationError, ScryDataNotFoundException {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
 		// todo state handling
 		return scryResponse;
@@ -548,7 +551,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement getTagQueries() throws IOException {
+	public JsonElement getTagQueries() throws IOException, ScryFailureException, ShipAuthenticationError, ScryDataNotFoundException {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
 		// todo implement state handling
 		return scryResponse;
@@ -565,7 +568,7 @@ export const createPost = (
       });
   }
 */
-	public JsonElement getGraph(String ship, String resource) throws IOException {
+	public JsonElement getGraph(String ship, String resource) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resource);
 		// todo implement state handling
 		return scryResponse;
@@ -578,7 +581,7 @@ export const createPost = (
   }
 	*/
 
-	public void getNewest(String ship, String resource, int count, String index) throws IOException {
+	public void getNewest(String ship, String resource, int count, String index) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		final var data = this.urbit.scryRequest("graph-store", "/newest/" + ship + "/" + resource + "/" + count + index);
 		// todo state handling
 	}
@@ -593,7 +596,7 @@ export const createPost = (
     this.store.handleEvent({ data });
   }
 */
-	public void getOlderSiblings(String ship, String resource, int count, String index) throws IOException {
+	public void getOlderSiblings(String ship, String resource, int count, String index) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + ship + "/" + resource + "/" + count + idx);
 		// todo handle effect
@@ -611,7 +614,7 @@ export const createPost = (
   }
 	*/
 
-	public void getYoungerSiblings(String ship, String resource, int count, String index) throws IOException {
+	public void getYoungerSiblings(String ship, String resource, int count, String index) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + count + idx);
 		// todo handle storage
@@ -631,7 +634,7 @@ export const createPost = (
     });
   }
 */
-	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws IOException {
+	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + ship + "/" + resource + "/" + end + "/" + "start");
 		// todo handle storage
 		return scryResponse;
@@ -654,7 +657,7 @@ export const createPost = (
   }
 }
 */
-	public JsonElement getNode(String ship, String resource, String index) throws IOException {
+	public JsonElement getNode(String ship, String resource, String index) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + idx);
 		// todo handle storage
