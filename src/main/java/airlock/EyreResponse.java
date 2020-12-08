@@ -1,20 +1,22 @@
 package airlock;
 
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Type;
 
 /**
  * This is a data class which represents the response payload that is received from eyre after any request.
  * As a result, the structure of the properties of the class must strictly mirror the structure of the payload.
  */
 public class EyreResponse {
-	// todo potentially write custom deserializer that turns the "poke" -> ResponseType.POKE
-//	enum ResponseType {
-//		POKE,
-//		SUBSCRIBE,
-//		DIFF,
-//		QUIT
-//	}
+
+	enum ResponseType {
+		POKE,
+		SUBSCRIBE,
+		DIFF,
+		QUIT
+	}
 	// adapted from https://github.com/lukechampine/go-urbit/blob/master/airlock/airlock.go#L66
 	/**
 	 * The id of the response. This is different from our request ids.
@@ -24,38 +26,34 @@ public class EyreResponse {
 	 * send back a subscription event with id 2 if that's the id of the request that wanted the subscription
 	 * // todo move this documentation to somewhere more appropriate
 	 */
-	public int id;
+	public final int id;
+
 	/**
-	 * A string which is set to "ok" if there is no error. This shouldn't be used directly.
-	 * <p>
-	 * Prefer to use {@link EyreResponse#isOk()} instead
-	 * </p>
+	 * The success of the request
 	 */
-	public @Nullable String ok;
+	public final boolean ok;
 
 	/**
 	 * A string which contains an error message (usually a stack trace from hoon) if the request did not succeed
 	 */
-	public @Nullable String err;
+	public final @Nullable String err;
+
 	/**
 	 * The type of the response which you are receiving
 	 */
-	public String response;
+	public final ResponseType response;
 
 	/**
 	 * The json payload associated with the response, if any
 	 */
-	public @Nullable JsonObject json;
+	public final @Nullable JsonObject json;
 
-	/**
-	 * The success of the request
-	 * @return whether or not the request was successful
-	 */
-	public boolean isOk() {
-		return this.ok != null
-				&& this.ok.equals("ok")
-				&& this.err == null  // todo think about whether this would be problematic or not. i.e. should we not be this strict
-				;
+	private EyreResponse(int id, boolean ok, @Nullable String err, ResponseType response, @Nullable JsonObject json) {
+		this.id = id;
+		this.ok = ok;
+		this.err = err;
+		this.response = response;
+		this.json = json;
 	}
 
 
@@ -69,5 +67,54 @@ public class EyreResponse {
 				", json='" + json + '\'' +
 				'}';
 	}
+
+	static class Adapter implements JsonDeserializer<EyreResponse> {
+
+		@Override
+		public EyreResponse deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			JsonObject responseObject = json.getAsJsonObject();
+
+			// todo throw proper exceptions at different failure modes
+
+			int id = responseObject.get("id").getAsInt();
+			boolean ok = responseObject.has("ok"); // right now, when response is ok, the property looks like "ok"="ok". this could change in the future
+			String responseString = responseObject.get("response").getAsString();
+
+			String err = null;
+			if (responseObject.has("err")) {
+				err = responseObject.get("err").getAsString();
+			}
+
+			JsonObject jsonData = null;
+			if (responseObject.has("json")) {
+				jsonData = responseObject.get("json").getAsJsonObject();
+			}
+
+			ResponseType responseType;
+			switch (responseString) {
+				case "poke":
+					responseType = ResponseType.POKE;
+					break;
+				case "subscribe":
+					responseType = ResponseType.SUBSCRIBE;
+					break;
+				case "diff":
+					responseType = ResponseType.DIFF;
+					break;
+				case "quit":
+					responseType = ResponseType.QUIT;
+					break;
+				default:
+					throw new JsonParseException("Invalid Response type: " + responseString);
+			}
+
+			return new EyreResponse(id, ok, err, responseType, jsonData);
+		}
+
+		// no serializer implemented because we will never send an EyreResponse back to the ship
+
+	}
+
+	public static final Adapter ADAPTER = new Adapter();
 }
 

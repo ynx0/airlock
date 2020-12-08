@@ -5,9 +5,9 @@ public class UrbitFailureTests {
 
 	// TODO populate with tests which test various failure modes of the api
 
-	@BeforeAll
-	public static void setup() {
-
-	}
+//	@BeforeAll
+//	public static void setup() {
+//
+//	}
 
 }

@@ -1,4 +1,4 @@
-package airlock.app.chat;
+package airlock.agent.chat;
 
 import airlock.Urbit;
 
@@ -25,12 +25,12 @@ public class ChatUtils {
 	 * );
 	 * }
 	 * </pre>
-	 * @param path
-	 * @param uid
-	 * @param author
-	 * @param when
-	 * @param textContent
-	 * @return
+	 * @param path path to the chat
+	 * @param uid uid of the message
+	 * @param author author of the message
+	 * @param when when the message was sent
+	 * @param textContent text content of the message
+	 * @return returns a message payload
 	 */
 	public static MessagePayload createMessagePayload(String path, String uid, String author, long when, String textContent) {
 		return new MessagePayload(

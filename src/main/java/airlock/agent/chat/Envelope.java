@@ -1,26 +1,26 @@
-package airlock.app.chat;
+package airlock.agent.chat;
 
 public class Envelope {
 	/**
 	 * UID of the envelope
 	 */
-	public String uid;
+	public final String uid;
 	/**
 	 * Message number
 	 */
-	public int number;
+	public final int number;
 	/**
 	 * Author of the message
 	 */
-	public String author;
+	public final String author;
 	/**
 	 * Unix timestamp of when the message was sent
 	 */
-	public long when;
+	public final long when;
 	/**
 	 * Content of the message
 	 */
-	public Letter letter;
+	public final Letter letter;
 
 	public Envelope(String uid, int number, String author, long when, Letter letter) {
 		this.uid = uid;

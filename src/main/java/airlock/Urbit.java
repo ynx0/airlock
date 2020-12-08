@@ -1,5 +1,8 @@
 package airlock;
 
+import airlock.errors.ScryDataNotFoundException;
+import airlock.errors.ScryFailureException;
+import airlock.errors.ShipAuthenticationError;
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -123,8 +126,6 @@ public class Urbit {
 
 	private final OkHttpClient client;
 
-	private final Gson gson;
-
 	/**
 	 * Synchronization object used to prevent multithreading errors and incorrectly ordered network calls
 	 */
@@ -137,18 +138,20 @@ public class Urbit {
 	 * <p>
 	 * Please note that the connection times out after 1 day of not having received any events from a ship
 	 * </p>
-	 *  @param url      The URL (with protocol and port) of the ship to be accessed
+	 *
+	 * @param url      The URL (with protocol and port) of the ship to be accessed
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
 	 */
 	public Urbit(URL url, String shipName, String code) {
-		this.channelID = generateChannelID();
-		this.code = code;
+		this.shipName = requireNonNull(shipName);
+		this.code = requireNonNull(code, "Please provide a code");
+		requireNonNull(url, "Please provide a url");
+		this.url = AirlockUtils.normalizeOrBust(url);
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
-		this.shipName = requireNonNull(shipName);
 		this.cookie = null;
-		this.url = normalizeOrBust(url);
+		this.channelID = generateChannelID();
 
 		// init cookie manager to use `InMemoryCookieStore` by providing null
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
@@ -159,13 +162,6 @@ public class Urbit {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
-		gson = new Gson();
-
-		// todo, see if we want to punt up the IOException to the user or just consume it within the API or even make a custom exception (may be overkill).
-		// todo make nice parsing data classes for known apps (i.e. a ChatUpdatePayload class for chat-view subscription)
-		//  cause there is no clean way to access nested values with a raw gson object
-
-		// todo what about different marks. so far I've only ever encountered helm-hi or json, but the api only really accepts `JsonElement`s
 	}
 
 	/**
@@ -176,43 +172,26 @@ public class Urbit {
 		return this.requestId;
 	}
 
-	// todo maybe extract orbust methods to a utility class
-	private static URL normalizeOrBust(URL url) {
-		try {
-			return url.toURI().normalize().toURL();
-		} catch (MalformedURLException | URISyntaxException e) {
-			throw new IllegalStateException("Unable to normalize url: " + url);
-		}
-	}
-
-	private static URL resolveOrBust(URL url, String resolve) {
-		try {
-			return url.toURI().resolve(resolve).normalize().toURL();
-		} catch (MalformedURLException | URISyntaxException e) {
-			throw new IllegalStateException("Unable to resolve url: " + url);
-		}
-	}
-
 	/**
 	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
 	 *
-	 * @return
+	 * @return the URL to the unique channel created
 	 */
 	public URL getChannelUrl() {
-		return resolveOrBust(this.url, "/~/channel/" + this.channelID);
+		return AirlockUtils.resolveOrBust(this.url, "/~/channel/" + this.channelID);
 	}
 
 	@NotNull
 	public URL getLoginUrl() {
-		return resolveOrBust(this.url, ("/~/login"));
+		return AirlockUtils.resolveOrBust(this.url, "/~/login");
 	}
 
 	public URL getScryUrl(String app, String path, String mark) {
-		return resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
+		return AirlockUtils.resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
 	}
 
 	public URL getSpiderUrl(String inputMark, String threadName, String outputMark) {
-		return resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
+		return AirlockUtils.resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
 	}
 
 	/**
@@ -226,20 +205,14 @@ public class Urbit {
 				.build();
 
 		Request request = new Request.Builder()
-//				.header("connection", "keep-alive")
 				.url(this.getLoginUrl())
 				.post(formBody)
 				.build();
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) throw new IOException("Error: " + response);
-		// todo figure out best way to return an immutable response body obj or something
-		//  or design api around it or use different library.
-		// basically, response.body() is a one-shot obj that needs to be copied manually so it sucks
-		// we can't call it multiple times
 
-
-		// after we made the request, here we extract the cookie. its quite ceremonial
+		// after we made the request, here we extract the cookie. it's quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
 				.stream()
 				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
@@ -289,7 +262,7 @@ public class Urbit {
 						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
 
 						synchronized (urbitLock) {
-							EyreResponse eyreResponse = gson.fromJson(data, EyreResponse.class);
+							EyreResponse eyreResponse = AirlockUtils.gson.fromJson(data, EyreResponse.class);
 							lastSeenEventId = eyreResponse.id;
 
 							System.out.println(",=============Event==============,");
@@ -316,29 +289,29 @@ public class Urbit {
 							//}
 
 							switch (eyreResponse.response) {
-								case "poke":
+								case POKE:
 									var pokeHandler = pokeHandlers.get(eyreResponse.id);
-									if (eyreResponse.isOk()) {
+									if (eyreResponse.ok) {
 										pokeHandler.complete(PokeResponse.SUCCESS);
 									} else {
 										pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
 									}
 									pokeHandlers.remove(eyreResponse.id);
 									break;
-								case "subscribe":
+								case SUBSCRIBE:
 									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-									if (eyreResponse.isOk()) {
+									if (eyreResponse.ok) {
 										subscribeHandler.accept(SubscribeEvent.STARTED);
 									} else {
 										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
 										subscribeHandlers.remove(eyreResponse.id);
 									}
 									break;
-								case "diff":
+								case DIFF:
 									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
 									break;
-								case "quit":
+								case QUIT:
 									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
 									subscribeHandler.accept(SubscribeEvent.FINISHED);
 									subscribeHandlers.remove(eyreResponse.id);
@@ -355,10 +328,13 @@ public class Urbit {
 						// todo better error handling
 						//  right now, if I try to
 
+						// here, we get an EOFException if we have a running connection and then Ctrl-z forcibly close the fakezod
+						// so maybe that's another custom error to make
 						if (t != null && !(t instanceof SocketException)) {
 							System.err.println("Encountered error while doing sse stuff");
 							throw new RuntimeException(t);
 						}
+
 						if (response != null && response.code() != 200) {
 							System.err.println("Event Source Error: " + response);
 							return;
@@ -372,24 +348,24 @@ public class Urbit {
 						// todo see if more adaptation is needed
 						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
 
-						// todo possibly extract this code out to main class
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
 						tearDown();
 					}
 				});
 	}
 
-	// todo changeup api. this is temporary
+	// todo change up api. this may be temporary
 	public void tearDown() {
 
 
-		this.sseClient.cancel();
-//		this.client.dispatcher().cancelAll(); // todo see if we need this
-		sseClient = null;
 		channelID = Urbit.uid();
+		this.sseClient.cancel();
+//		this.client.dispatcher().cancelAll(); // todo see if we need this or if it will cause more problems
+		sseClient = null;
 		requestId = 0;
 		lastSeenEventId = 0;
 		lastAcknowledgedEventId = 0;
+		this.cookie = null;
 		pokeHandlers.clear();
 		subscribeHandlers.clear();
 	}
@@ -403,7 +379,7 @@ public class Urbit {
 	 * </p>
 	 *
 	 * @param jsonData The data to send with the action
-	 * @return
+	 * @return the response to the request
 	 */
 	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws IOException {
 		synchronized (urbitLock) {
@@ -417,12 +393,12 @@ public class Urbit {
 			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
 
-			String jsonString = gson.toJson(fullJsonDataArray);
+			String jsonString = AirlockUtils.gson.toJson(fullJsonDataArray);
 
 			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 			Request request = new Request.Builder()
-					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
+					.url(this.getChannelUrl())
 					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
 					.put(requestBody)
 					.build();
@@ -436,12 +412,13 @@ public class Urbit {
 
 			System.out.println(",============SendMessage============,");
 			System.out.println("Id: " + jsonData.get("id").getAsInt());
-			System.out.println("Sent message: " + fullJsonDataArray);
+			System.out.println("Sent message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
 			System.out.println(".============SendMessage============.");
 
 			return new InMemoryResponseWrapper(response);
 		}
 	}
+
 
 	/**
 	 * Pokes a ship with data.
@@ -459,9 +436,6 @@ public class Urbit {
 			@NotNull JsonElement json // todo maybe migrate type to JsonObject
 	) throws IOException {
 
-		// todo i think poke needs to return a completable future cause that seems to make more sense rather than taking in a pokeHandler...
-		//  however, since this is working for now, we shouldn't do this until much later
-
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
 		// also, urbit-airlock-ts seems to just use the connected ship here
@@ -471,7 +445,7 @@ public class Urbit {
 
 		CompletableFuture<PokeResponse> pokeFuture = new CompletableFuture<>();
 		int id = nextID();
-		JsonObject pokeDataObj = gson.toJsonTree(Map.of(
+		JsonObject pokeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "poke",
 				"ship", ship,
@@ -485,7 +459,6 @@ public class Urbit {
 		if (pokeResponse.getClosedResponse().isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
-//		pokeResponse.close();
 
 		return pokeFuture;
 	}
@@ -506,7 +479,7 @@ public class Urbit {
 	) throws IOException {
 		int id = this.nextID();
 		JsonObject subscribeDataObj;
-		subscribeDataObj = gson.toJsonTree(Map.of(
+		subscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "subscribe",
 				"ship", ship,
@@ -518,7 +491,6 @@ public class Urbit {
 		if (subscribeResponse.getClosedResponse().isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
 		}
-//		subscribeResponse.close();
 
 		return this.requestId;
 	}
@@ -531,14 +503,13 @@ public class Urbit {
 	public void unsubscribe(int subscription) throws IOException {
 		int id = this.nextID();
 
-		JsonObject unsubscribeDataObj = gson.toJsonTree(Map.of(
+		JsonObject unsubscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "unsubscribe",
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(unsubscribeDataObj);
-//		res.close();
+		this.sendJSONtoChannel(unsubscribeDataObj);
 	}
 
 	/**
@@ -547,37 +518,35 @@ public class Urbit {
 	public void delete() throws IOException {
 		int id = this.nextID();
 
-		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "delete"
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
-//		res.close();
+		this.sendJSONtoChannel(deleteDataObj);
 	}
 
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public void ack(int eventID) throws IOException {
+	private void ack(int eventID) throws IOException {
 		int id = this.nextID();
 
-		JsonObject deleteDataObj = gson.toJsonTree(Map.of(
+		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
 				"id", id,
 				"action", "ack",
 				"event-id", eventID
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
-//		res.close();
+		this.sendJSONtoChannel(deleteDataObj);
 	}
 
 
-	// todo deduplicate
-	@SuppressWarnings("DuplicatedCode")
-	public InMemoryResponseWrapper scryRequest(String app, String path, String mark) throws IOException {
-		// todo should this method return a json payload or scryresponse instead?
-		URL scryUrl = this.getScryUrl(app, path, mark);
+	public JsonElement scryRequest(String app, String path) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
+		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
+		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
+		URL scryUrl = this.getScryUrl(app, path, "json");
+
 
 		Request request = new Request.Builder()
 				.url(scryUrl)
@@ -588,26 +557,37 @@ public class Urbit {
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
 			System.err.println(requireNonNull(response.body()).string());
-			throw new IOException("Error: " + response);
+			this.throwOnScryFailure(response);
 		}
 		System.out.println(",============ScryRequest============,");
 		System.out.println("Request: " + scryUrl);
 		System.out.println(".============ScryRequest============.");
-
-		return new InMemoryResponseWrapper(response);
-
+		ResponseBody body = response.body();
+		requireNonNull(body);
+		String bodyText = body.string();
+		return JsonParser.parseString(bodyText);
 	}
 
-	@SuppressWarnings("DuplicatedCode")
-	public InMemoryResponseWrapper spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
+	// improve and de-duplicate code
+	private void throwOnScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFoundException {
+		// assuming we receive a non-closed response object
+		assert !response.isSuccessful();
+
+		if (response.code() == 403) {
+			throw new ShipAuthenticationError("Got 403 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		} else if (response.code() == 404) {
+			throw new ScryDataNotFoundException("Got 404 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		} else if (response.code() == 500) {
+			throw new ScryFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "Response: " + response.body());
+		}
+	}
+
+	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
 
 		// copied from sendJSONtoChannel
-		JsonArray fullJsonDataArray = new JsonArray();
-		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
-		fullJsonDataArray.add(fullJsonData);
+		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
 
-		String jsonString = gson.toJson(fullJsonDataArray);
+		String jsonString = AirlockUtils.gson.toJson(jsonData.deepCopy()); // todo possible refactor of deep copy
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
@@ -622,14 +602,21 @@ public class Urbit {
 
 		Response response = client.newCall(request).execute();
 		if (!response.isSuccessful()) {
+			// 500 means there was an error doing the spider. add to custom errors
+			// for example, trying to create a duplicate graph. in that case it doesn't seem to give a stack trace unlike the other times which was weird
 			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}
 		System.out.println(",============SpiderRequest============,");
 		System.out.println("Request: " + spiderUrl);
+		System.out.println("Payload: " + jsonString);
 		System.out.println(".============SpiderRequest============.");
 
-		return new InMemoryResponseWrapper(response);
+		ResponseBody body = response.body();
+		requireNonNull(body);
+		String bodyText = body.string();
+		return JsonParser.parseString(bodyText);
+//		return new InMemoryResponseWrapper(response);
 
 	}
 

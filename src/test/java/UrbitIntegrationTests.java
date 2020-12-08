@@ -1,15 +1,11 @@
-import airlock.InMemoryResponseWrapper;
-import airlock.PokeResponse;
-import airlock.SubscribeEvent;
-import airlock.Urbit;
-import airlock.app.chat.ChatUpdate;
-import airlock.app.chat.ChatUtils;
-import com.google.gson.Gson;
+import airlock.*;
+import airlock.agent.chat.ChatUpdate;
+import airlock.agent.chat.ChatUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
@@ -27,15 +23,17 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UrbitIntegrationTests {
 
-	private static Gson gson;
-	private static Urbit ship;
-	private static CompletableFuture<PokeResponse> chatPokeResponse1;
+	private static Urbit urbit;
+
+	private static CompletableFuture<PokeResponse> futureChatPokeResponse1;
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
+
 	private static List<SubscribeEvent> primaryChatSubscriptionEvents;
+	private final CompletableFuture<String> futurePrimaryChatMessage = new CompletableFuture<>();
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
-	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
+	final Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
 			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // an update event
 					&& subscribeEvent.updateJson.has("chat-update")  // and the update json contains a "chat-update" object
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
@@ -54,10 +52,9 @@ public class UrbitIntegrationTests {
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
-		ship = new Urbit(url, shipName, code);
+		urbit = new Urbit(url, shipName, code);
 		subscribeToMailboxEvents = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
-		gson = new Gson();
 
 		// Assumes fake ship zod is booted and running
 		// Assumes chat channel called 'test' is created
@@ -69,7 +66,7 @@ public class UrbitIntegrationTests {
 	public void successfulAuthentication() throws ExecutionException, InterruptedException {
 		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
 		assertDoesNotThrow(() -> {
-			InMemoryResponseWrapper res = ship.authenticate();
+			InMemoryResponseWrapper res = urbit.authenticate();
 			futureResponseString.complete(res.getBody().utf8());
 		});
 		await().until(futureResponseString::isDone);
@@ -79,19 +76,17 @@ public class UrbitIntegrationTests {
 	@Test
 	@Order(2)
 	public void successfullyConnectToShip() {
-		await().until(ship::isAuthenticated);
-		assertDoesNotThrow(() -> ship.connect());
+		await().until(urbit::isAuthenticated);
+		assertDoesNotThrow(() -> urbit.connect());
 	}
 
 
 	@Test
 	@Order(3)
-	public void canSubscribeToTestChat() throws IOException {
-		await().until(ship::isConnected);
+	public void canSubscribeToTestChat() throws Exception {
+		await().until(urbit::isConnected);
 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
-			subscribeToMailboxEvents.add(subscribeEvent);
-		});
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> subscribeToMailboxEvents.add(subscribeEvent));
 
 		await().until(() -> subscribeToMailboxEvents.size() >= 2);
 		assertEquals(SubscribeEvent.EventType.STARTED, subscribeToMailboxEvents.get(0).eventType);
@@ -101,8 +96,8 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(4)
-	public void canSendChatMessage() throws IOException, ExecutionException, InterruptedException {
-		await().until(ship::isConnected);
+	public void canSendChatMessage() throws Exception {
+		await().until(urbit::isConnected);
 		await().until(() -> !subscribeToMailboxEvents.isEmpty());
 
 		Map<String, Object> payload = Map.of(
@@ -118,31 +113,29 @@ public class UrbitIntegrationTests {
 				)
 		);
 
-		chatPokeResponse1 = ship.poke(ship.getShipName(), "chat-hook", "json", gson.toJsonTree(payload));
-		await().until(chatPokeResponse1::isDone);
+		futureChatPokeResponse1 = urbit.poke(urbit.getShipName(), "chat-hook", "json", AirlockUtils.gson.toJsonTree(payload));
+		await().until(futureChatPokeResponse1::isDone);
 
-		assertTrue(chatPokeResponse1.get().success);
+		assertTrue(futureChatPokeResponse1.get().success);
 	}
 
 	@Test
 	@Order(5)
-	public void testChatView() throws IOException, ExecutionException, InterruptedException {
-		await().until(ship::isConnected);
-		await().until(chatPokeResponse1::isDone);
+	public void testChatView() throws Exception {
+		await().until(urbit::isConnected);
+		await().until(futureChatPokeResponse1::isDone);
 
 
-		int subscriptionID = ship.subscribe(ship.getShipName(), "chat-view", "/primary", subscribeEvent -> {
-			primaryChatSubscriptionEvents.add(subscribeEvent);
-		});
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> primaryChatSubscriptionEvents.add(subscribeEvent));
 
 		// send a message to a chat that we haven't subscribed to already
-		// todo reimpl above behavior. it will fail on ci because integration test setup does not create it
+		// todo re implement above behavior. it will fail on ci because integration test setup does not create it
 
 
 		// the specification of this payload is at lib/chat-store.hoon#L119...
 
-		JsonElement json = gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
-		CompletableFuture<PokeResponse> pokeFuture = ship.poke(ship.getShipName(), "chat-hook", "json", json);
+		JsonElement json = AirlockUtils.gson.toJsonTree(ChatUtils.createMessagePayload("/~zod/test", "~zod", primaryChatViewTestMessage));
+		CompletableFuture<PokeResponse> pokeFuture = urbit.poke(urbit.getShipName(), "chat-hook", "json", json);
 		await().until(pokeFuture::isDone);
 		assertTrue(pokeFuture.get().success);
 
@@ -156,36 +149,82 @@ public class UrbitIntegrationTests {
 				filter(onlyPrimaryChatUpdate)
 				.findFirst()
 				.ifPresentOrElse(subscribeEvent -> {
-					ChatUpdate chatUpdate = gson.fromJson(subscribeEvent.updateJson.get("chat-update"), ChatUpdate.class);
+					ChatUpdate chatUpdate = AirlockUtils.gson.fromJson(subscribeEvent.updateJson.get("chat-update"), ChatUpdate.class);
 					System.out.println("Got chat update");
 					System.out.println(chatUpdate);
 					Objects.requireNonNull(chatUpdate.message);
 					assertEquals(primaryChatViewTestMessage, chatUpdate.message.envelope.letter.text);
+					futurePrimaryChatMessage.complete(chatUpdate.message.envelope.letter.text);
 				}, () -> fail("Chat message received was not the same as the one sent"));
 
 	}
 
 	@Test
 	@Order(6)
-	public void canScry() throws IOException {
-		await().until(ship::isConnected);
-		InMemoryResponseWrapper responseWrapper = ship.scryRequest("file-server", "/clay/base/hash", "json");
-		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+	public void canScry() throws Exception {
+		await().until(urbit::isConnected);
+		JsonElement responseJson = urbit.scryRequest("file-server", "/clay/base/hash");
+		assertEquals(responseJson.getAsInt(), 0);
+	}
+
+	@Test
+	@Order(7)
+	public void scryGraph() throws Exception {
+		await().until(urbit::isConnected);
+		JsonObject keyScry = urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
+		JsonObject tagScry = urbit.scryRequest("graph-store", "/tags").getAsJsonObject();
+		JsonObject tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries").getAsJsonObject();
+
+		System.out.println(keyScry);
+		System.out.println("graph scry: /keys response");
+		assertTrue(keyScry.has("graph-update"));
+		assertTrue(keyScry.get("graph-update").getAsJsonObject().has("keys"));
+
+		System.out.println("graph scry: /tags response");
+		System.out.println(tagScry);
+		assertTrue(tagScry.has("graph-update"));
+		assertTrue(tagScry.get("graph-update").getAsJsonObject().has("tags"));
+
+
+		System.out.println("graph scry: /tag-queries response");
+		System.out.println(tagQueriesScry);
+		assertTrue(tagQueriesScry.has("graph-update"));
+		assertTrue(tagQueriesScry.get("graph-update").getAsJsonObject().has("tag-queries"));
 	}
 
 
 	@Test
-	@Order(7)
-	@Disabled("throws 500")
-	public void canSpider() throws IOException {
-		await().until(ship::isConnected);
-		// todo write a working version of the test
+	@Order(8)
+	public void canSpider() throws Exception {
+		await().until(urbit::isConnected);
+
 		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
-		JsonObject payload = gson.toJsonTree(Map.of("foo", "bar")).getAsJsonObject();
-		InMemoryResponseWrapper responseWrapper = ship.spiderRequest("graph-view-action", "graph-create", "json", payload);
-		assertTrue(responseWrapper.getClosedResponse().isSuccessful());
-		assertEquals("\"0\"", responseWrapper.getBody().utf8());
+		//  todo maybe make a pull request and put an actual working example in that doc
+		// todo improve this test to verify the creation process better
+		long NOW = Instant.now().toEpochMilli();
+		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
+				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
+				"create", Map.of(
+						"resource", Map.of(
+								"ship", "~zod",       // =entity
+								"name", "test-graph" + NOW    // name=term
+						),
+						"title", "Test Graph!!!" + NOW,
+						"description", "graph for testing only! having fun strictly prohibited",
+						"associated", Map.of(
+								"group", Map.of(
+										"ship", "~zod",
+										"name", "TEST_GROUP" + NOW
+								)
+						),
+//						"module", GraphStoreAgent.Modules.LINK.moduleName() // this is hella verbose and opaque
+						"module", "link"
+				)
+		)).getAsJsonObject();
+		JsonElement responseJson = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
+		assertTrue(responseJson.isJsonNull());
+
 	}
+
 
 }

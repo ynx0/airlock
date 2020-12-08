@@ -1,8 +1,8 @@
-package airlock.app.chat;
+package airlock.agent.chat;
 
 public class Message {
-	public Envelope envelope;
-	public String path;
+	public final Envelope envelope;
+	public final String path;
 
 
 	public Message(Envelope envelope, String path) {
