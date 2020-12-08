@@ -7,8 +7,6 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
-import static java.util.Objects.requireNonNullElse;
-
 public abstract class Agent {
 
 	protected final Urbit urbit;
