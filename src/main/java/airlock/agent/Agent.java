@@ -19,8 +19,11 @@ public abstract class Agent {
 	}
 
 	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws IOException {
-		ship = requireNonNullElse(ship, this.urbit.getShipName());
 		return this.urbit.poke(ship, app, mark, data);
+	}
+
+	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws IOException {
+		return this.urbit.poke(this.urbit.getShipName(), app, mark, data);
 	}
 
 	void unsubscribe(int subscriptionID) throws IOException {

@@ -205,7 +205,7 @@ export const createPost = (
 		return this.spider('graph-view-action', 'json', threadName, action);
 	  }
 	*/
-	private InMemoryResponseWrapper viewAction(String threadName, JsonObject payload) throws IOException {
+	private JsonElement viewAction(String threadName, JsonObject payload) throws IOException {
 		return this.urbit.spiderRequest("graph-view-action", threadName, "json", payload);
 	}
 
@@ -243,7 +243,7 @@ export const createPost = (
     });
   }
   */
-	public InMemoryResponseWrapper createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws IOException {
+	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws IOException {
 		final var associated = Map.of("group", GroupUtils.resourceFromPath(pathOfGroup));
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 
@@ -295,7 +295,7 @@ export const createPost = (
     });
   }
 */
-	public InMemoryResponseWrapper joinGraph(String ship, String name) throws IOException {
+	public JsonElement joinGraph(String ship, String name) throws IOException {
 		final var resource = GroupUtils.makeResource(ship, name);
 		return this.viewAction("graph-join", map2json(Map.of(
 				"join", Map.of(
@@ -315,7 +315,7 @@ export const createPost = (
     });
   }
 */
-	public InMemoryResponseWrapper deleteGraph(String name) throws IOException {
+	public JsonElement deleteGraph(String name) throws IOException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 		return this.viewAction("graph-delete", map2json(Map.of(
 				"delete", resource
@@ -334,7 +334,7 @@ export const createPost = (
   }
 
 */
-	public InMemoryResponseWrapper leaveGraph(String ship, String name) throws IOException {
+	public JsonElement leaveGraph(String ship, String name) throws IOException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 		return this.viewAction("graph-leave", map2json(Map.of("leave", resource)));
 	}
@@ -354,17 +354,21 @@ export const createPost = (
   }
 
 */
-	public InMemoryResponseWrapper groupifyGraph(String ship, String name, Optional<String> toPath) throws IOException {
+	public JsonElement groupifyGraph(String ship, String name, String toPath) throws IOException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 
 		//GroupUtils::resourceFromPath
-		final Optional<Resource> to = toPath.map(GroupUtils::resourceFromPath);
+		final Resource to = GroupUtils.resourceFromPath(toPath);
 		return this.viewAction("graph-groupify", map2json(Map.of(
 				"groupify", Map.of(
 						"resource", resource,
 						"to", to
 				)
 		)));
+	}
+	
+	public JsonElement groupifyGraph(String ship, String name) throws IOException {
+		return this.groupifyGraph(ship, name, null);
 	}
 
 	/*

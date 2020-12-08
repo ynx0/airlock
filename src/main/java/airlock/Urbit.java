@@ -582,7 +582,7 @@ public class Urbit {
 		}
 	}
 
-	public InMemoryResponseWrapper spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
+	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
 
 		// copied from sendJSONtoChannel
 		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
@@ -612,9 +612,11 @@ public class Urbit {
 		System.out.println("Payload: " + jsonString);
 		System.out.println(".============SpiderRequest============.");
 
-		// todo migrate to this returning the json payload returned in the body of the response
-
-		return new InMemoryResponseWrapper(response);
+		ResponseBody body = response.body();
+		requireNonNull(body);
+		String bodyText = body.string();
+		return JsonParser.parseString(bodyText);
+//		return new InMemoryResponseWrapper(response);
 
 	}
 
