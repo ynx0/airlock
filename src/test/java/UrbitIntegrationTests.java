@@ -83,12 +83,10 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(3)
-	public void canSubscribeToTestChat() throws IOException {
+	public void canSubscribeToTestChat() throws Exception {
 		await().until(urbit::isConnected);
 
-		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
-			subscribeToMailboxEvents.add(subscribeEvent);
-		});
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> subscribeToMailboxEvents.add(subscribeEvent));
 
 		await().until(() -> subscribeToMailboxEvents.size() >= 2);
 		assertEquals(SubscribeEvent.EventType.STARTED, subscribeToMailboxEvents.get(0).eventType);
@@ -98,7 +96,7 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(4)
-	public void canSendChatMessage() throws IOException, ExecutionException, InterruptedException {
+	public void canSendChatMessage() throws Exception {
 		await().until(urbit::isConnected);
 		await().until(() -> !subscribeToMailboxEvents.isEmpty());
 
@@ -123,17 +121,15 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(5)
-	public void testChatView() throws IOException, ExecutionException, InterruptedException {
+	public void testChatView() throws Exception {
 		await().until(urbit::isConnected);
 		await().until(futureChatPokeResponse1::isDone);
 
 
-		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> {
-			primaryChatSubscriptionEvents.add(subscribeEvent);
-		});
+		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-view", "/primary", subscribeEvent -> primaryChatSubscriptionEvents.add(subscribeEvent));
 
 		// send a message to a chat that we haven't subscribed to already
-		// todo reimpl above behavior. it will fail on ci because integration test setup does not create it
+		// todo re implement above behavior. it will fail on ci because integration test setup does not create it
 
 
 		// the specification of this payload is at lib/chat-store.hoon#L119...
@@ -165,7 +161,7 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(6)
-	public void canScry() throws IOException {
+	public void canScry() throws Exception {
 		await().until(urbit::isConnected);
 		JsonElement responseJson = urbit.scryRequest("file-server", "/clay/base/hash");
 		assertEquals(responseJson.getAsInt(), 0);
@@ -173,26 +169,33 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(7)
-	public void scryGraph() throws IOException {
+	public void scryGraph() throws Exception {
 		await().until(urbit::isConnected);
-		JsonElement keyScry = urbit.scryRequest("graph-store", "/keys");
-		JsonElement tagScry = urbit.scryRequest("graph-store", "/tags");
-		JsonElement tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries");
-		System.out.println("graph scry: /keys response");
+		JsonObject keyScry = urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
+		JsonObject tagScry = urbit.scryRequest("graph-store", "/tags").getAsJsonObject();
+		JsonObject tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries").getAsJsonObject();
+
 		System.out.println(keyScry);
+		System.out.println("graph scry: /keys response");
+		assertTrue(keyScry.has("graph-update"));
+		assertTrue(keyScry.get("graph-update").getAsJsonObject().has("keys"));
 
 		System.out.println("graph scry: /tags response");
 		System.out.println(tagScry);
+		assertTrue(tagScry.has("graph-update"));
+		assertTrue(tagScry.get("graph-update").getAsJsonObject().has("tags"));
 
 
 		System.out.println("graph scry: /tag-queries response");
 		System.out.println(tagQueriesScry);
+		assertTrue(tagQueriesScry.has("graph-update"));
+		assertTrue(tagQueriesScry.get("graph-update").getAsJsonObject().has("tag-queries"));
 	}
 
 
 	@Test
 	@Order(8)
-	public void canSpider() throws IOException {
+	public void canSpider() throws Exception {
 		await().until(urbit::isConnected);
 
 		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
@@ -214,6 +217,7 @@ public class UrbitIntegrationTests {
 										"name", "TEST_GROUP" + NOW
 								)
 						),
+//						"module", GraphStoreAgent.Modules.LINK.moduleName() // this is hella verbose and opaque
 						"module", "link"
 				)
 		)).getAsJsonObject();
