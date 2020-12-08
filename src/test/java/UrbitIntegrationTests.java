@@ -1,10 +1,11 @@
 import airlock.*;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
-import com.google.gson.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;

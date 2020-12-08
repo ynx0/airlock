@@ -147,7 +147,7 @@ public class Urbit {
 		this.shipName = requireNonNull(shipName);
 		this.code = requireNonNull(code, "Please provide a code");
 		requireNonNull(url, "Please provide a url");
-		this.url = normalizeOrBust(url);
+		this.url = AirlockUtils.normalizeOrBust(url);
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.cookie = null;
@@ -173,43 +173,26 @@ public class Urbit {
 		return this.requestId;
 	}
 
-	// todo maybe extract or bust methods to a utility class
-	private static URL normalizeOrBust(URL url) {
-		try {
-			return url.toURI().normalize().toURL();
-		} catch (MalformedURLException | URISyntaxException e) {
-			throw new IllegalStateException("Unable to normalize url: " + url);
-		}
-	}
-
-	private static URL resolveOrBust(URL url, String resolve) {
-		try {
-			return url.toURI().resolve(resolve).normalize().toURL();
-		} catch (MalformedURLException | URISyntaxException e) {
-			throw new IllegalStateException("Unable to resolve url: " + url);
-		}
-	}
-
 	/**
 	 * This is basic interpolation to get the channel URL of an instantiated Urbit connection.
 	 *
-	 * @return
+	 * @return the URL to the unique channel created
 	 */
 	public URL getChannelUrl() {
-		return resolveOrBust(this.url, "/~/channel/" + this.channelID);
+		return AirlockUtils.resolveOrBust(this.url, "/~/channel/" + this.channelID);
 	}
 
 	@NotNull
 	public URL getLoginUrl() {
-		return resolveOrBust(this.url, "/~/login");
+		return AirlockUtils.resolveOrBust(this.url, "/~/login");
 	}
 
 	public URL getScryUrl(String app, String path, String mark) {
-		return resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
+		return AirlockUtils.resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
 	}
 
 	public URL getSpiderUrl(String inputMark, String threadName, String outputMark) {
-		return resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
+		return AirlockUtils.resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
 	}
 
 	/**
