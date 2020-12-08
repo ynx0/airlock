@@ -373,7 +373,7 @@ public class Urbit {
 				});
 	}
 
-	// todo changeup api. this is temporary
+	// todo change up api. this is temporary
 	public void tearDown() {
 
 
@@ -635,6 +635,8 @@ public class Urbit {
 		System.out.println("Request: " + spiderUrl);
 		System.out.println("Payload: " + jsonString);
 		System.out.println(".============SpiderRequest============.");
+
+		// todo migrate to this returning the json payload returned in the body of the response
 
 		return new InMemoryResponseWrapper(response);
 
