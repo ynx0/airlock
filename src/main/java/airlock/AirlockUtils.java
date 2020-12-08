@@ -5,6 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Map;
 
 public class AirlockUtils {
@@ -33,4 +36,19 @@ public class AirlockUtils {
 	}
 
 
+	static URL normalizeOrBust(URL url) {
+		try {
+			return url.toURI().normalize().toURL();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new IllegalStateException("Unable to normalize url: " + url);
+		}
+	}
+
+	static URL resolveOrBust(URL url, String resolve) {
+		try {
+			return url.toURI().resolve(resolve).normalize().toURL();
+		} catch (MalformedURLException | URISyntaxException e) {
+			throw new IllegalStateException("Unable to resolve url: " + url);
+		}
+	}
 }
