@@ -162,7 +162,6 @@ public class Urbit {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
-		// todo what about different marks. so far I've only ever encountered helm-hi or json, but the api only really accepts `JsonElement`s
 	}
 
 	/**
@@ -349,14 +348,13 @@ public class Urbit {
 						// todo see if more adaptation is needed
 						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
 
-						// todo possibly extract this code out to main class
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
 						tearDown();
 					}
 				});
 	}
 
-	// todo change up api. this is temporary
+	// todo change up api. this may be temporary
 	public void tearDown() {
 
 
@@ -400,7 +398,7 @@ public class Urbit {
 			RequestBody requestBody = RequestBody.create(jsonString, JSON);
 
 			Request request = new Request.Builder()
-					.url(this.getChannelUrl()) // todo maybe move to using `Headers` object
+					.url(this.getChannelUrl())
 					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
 					.put(requestBody)
 					.build();
@@ -544,7 +542,6 @@ public class Urbit {
 	}
 
 
-	// todo deduplicate
 	public JsonElement scryRequest(String app, String path) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
 		// we are never gonna use any other mark than json because that's the only protocol we know how to work with

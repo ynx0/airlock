@@ -1,7 +1,6 @@
 package airlock.agent.graph;
 
 import airlock.AirlockUtils;
-import airlock.InMemoryResponseWrapper;
 import airlock.PokeResponse;
 import airlock.Urbit;
 import airlock.agent.Agent;

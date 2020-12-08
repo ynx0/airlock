@@ -33,7 +33,7 @@ public class UrbitIntegrationTests {
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
 
-	Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
+	final Predicate<SubscribeEvent> onlyPrimaryChatUpdate = subscribeEvent ->       // anything that is:
 			subscribeEvent.eventType.equals(SubscribeEvent.EventType.UPDATE)  // an update event
 					&& subscribeEvent.updateJson.has("chat-update")  // and the update json contains a "chat-update" object
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");

@@ -4,16 +4,11 @@ import airlock.agent.graph.Resource;
 import airlock.errors.ScryDataNotFoundException;
 import airlock.errors.ScryFailureException;
 import airlock.errors.ShipAuthenticationError;
-import airlock.types.ShipName;
 import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 
 public class Playground {

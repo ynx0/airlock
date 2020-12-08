@@ -99,7 +99,7 @@ public class Main {
 		System.out.println("tearing down");
 		urbit.tearDown();
 
-		System.exit(0); // FIXME for now you need this otherwise it takes like 30 seconds longer to exit
+		System.exit(0); // todo for now you need this otherwise it takes like 30 seconds longer to exit
 
 	}
 

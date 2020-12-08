@@ -6,15 +6,18 @@ import java.util.Map;
 
 public class ChatUpdate {
 	public @Nullable
+	final
 	Message message;
 
 	public @Nullable
+	final
 	ChatReadMarker read;
 	/**
 	 * Gotten from chat-view request
 	 * key is a chat path
 	 */
 	public @Nullable
+	final
 	Map<String, InitialUpdate> initial;
 
 

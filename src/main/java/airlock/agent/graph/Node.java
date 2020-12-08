@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class Node {
 
-	Post post;
-	Map<String, Object> children;
+	final Post post;
+	final Map<String, Object> children;
 
 	public Node(Post post, Map<String, Object> children) {
 		this.post = post;
