@@ -381,7 +381,7 @@ public class Urbit {
 	 * </p>
 	 *
 	 * @param jsonData The data to send with the action
-	 * @return
+	 * @return the response to the request
 	 */
 	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws IOException {
 		synchronized (urbitLock) {
@@ -511,7 +511,7 @@ public class Urbit {
 				"subscription", subscription
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(unsubscribeDataObj);
+		this.sendJSONtoChannel(unsubscribeDataObj);
 	}
 
 	/**
@@ -525,7 +525,7 @@ public class Urbit {
 				"action", "delete"
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+		this.sendJSONtoChannel(deleteDataObj);
 	}
 
 	/**
@@ -540,13 +540,12 @@ public class Urbit {
 				"event-id", eventID
 		)).getAsJsonObject();
 
-		InMemoryResponseWrapper res = this.sendJSONtoChannel(deleteDataObj);
+		this.sendJSONtoChannel(deleteDataObj);
 	}
 
 
 	// todo deduplicate
-	@SuppressWarnings("DuplicatedCode")
-	public JsonElement scryRequest(String app, String path) throws IOException {
+	public JsonElement scryRequest(String app, String path) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
 		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
 		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
 		URL scryUrl = this.getScryUrl(app, path, "json");
