@@ -27,7 +27,7 @@ public class GraphStoreAgent extends Agent {
 	private final Gson gson = AirlockUtils.gson;
 
 	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
-	protected GraphStoreAgent(Urbit urbit) {
+	public GraphStoreAgent(Urbit urbit) {
 		super(urbit);
 	}
 
