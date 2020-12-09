@@ -1,28 +1,15 @@
 # TODO
 
 
-
-
-
-
-
-
-
-
-
 - move towards stable master
 - up to date examples once everything stabilizes
 - upload junit report test.html as github actions artifact
 
 # Current Focus
 - clean up tests
-	- refactor out URL stuff
 	- deduplicate code in urbit
-	- add new errors
 	- add documentation / comments
-	- delete or stage new files
 	- cleanup Main.java. make it simple, and prefer using the unit tests as examples
-	- merge existing changes first before continuing
 	
 - `graph-store`
 	- i need to be developing from smallest component to biggest. i.e.
@@ -38,8 +25,7 @@
 	- deduplicate code
 	- ignore spider stuff for now
 	- im try too hard with the impl of the aura type system in java. do that later if anything
+	- use this if want pretty printed html errors https://github.com/dkorobtsov/LoggingInterceptor
+
 
 # Ideas
-- possibly make custom exceptions that wrap around known failure modes
-    - for example: ShipNotAvailable when first http request fails ...
-
