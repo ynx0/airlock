@@ -244,7 +244,11 @@ export const createPost = (
   }
   */
 	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws IOException {
-		final var associated = Map.of("group", GroupUtils.resourceFromPath(pathOfGroup));
+		return this.createManagedGraph(name, title, description, GroupUtils.resourceFromPath(pathOfGroup), module);
+	}
+
+	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Modules module) throws IOException {
+		final var associated = Map.of("group", groupResource);
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 
 		return this.viewAction("graph-create", gson.toJsonTree(Map.of(
@@ -511,8 +515,11 @@ export const createPost = (
   }
 
 */
-	public JsonElement getKeys() throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/keys");
+	public JsonObject getKeys() throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
+		JsonObject scryResponse = this.urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
+		// this should be an object of the form:
+		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
+
 		// todo implement state handling
 		/*
 		this.store.handleEvent({
