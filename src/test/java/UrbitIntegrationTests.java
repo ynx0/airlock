@@ -1,6 +1,9 @@
 import airlock.*;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
+import airlock.agent.graph.GraphStoreAgent;
+import airlock.agent.graph.Resource;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 
+import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,6 +33,7 @@ public class UrbitIntegrationTests {
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
 
 	private static List<SubscribeEvent> primaryChatSubscriptionEvents;
+	private static GraphStoreAgent graphStoreAgent;
 	private final CompletableFuture<String> futurePrimaryChatMessage = new CompletableFuture<>();
 	private final String primaryChatViewTestMessage = "Primary Chat view Test Message" + Instant.now().toEpochMilli();
 
@@ -53,6 +58,8 @@ public class UrbitIntegrationTests {
 		String code = "lidlut-tabwed-pillex-ridrup";
 
 		urbit = new Urbit(url, shipName, code);
+		graphStoreAgent = new GraphStoreAgent(urbit);
+
 		subscribeToMailboxEvents = new ArrayList<>();
 		primaryChatSubscriptionEvents = new ArrayList<>();
 
@@ -169,7 +176,7 @@ public class UrbitIntegrationTests {
 
 	@Test
 	@Order(7)
-	public void scryGraph() throws Exception {
+	public void getGraphDataFromScry() throws Exception {
 		await().until(urbit::isConnected);
 		JsonObject keyScry = urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
 		JsonObject tagScry = urbit.scryRequest("graph-store", "/tags").getAsJsonObject();
@@ -198,31 +205,44 @@ public class UrbitIntegrationTests {
 	public void canSpider() throws Exception {
 		await().until(urbit::isConnected);
 
-		//  this is taken directly from https://urbit.org/using/integrating-api/, but doesn't work in its current state
-		//  todo maybe make a pull request and put an actual working example in that doc
-		// todo improve this test to verify the creation process better
+		// todo add basic spider test.
+		// it used to be graph store but graph store works and so does spider
+		// but we need a basic test with a single spider request
+		// in order to discern whether or not a possible regression is
+		// b/c spider is failing or graph store agent is failing
+
+	}
+
+
+	@Test
+	@Order(9)
+	public void createGraph() throws Exception {
+		await().until(urbit::isConnected);
+
 		long NOW = Instant.now().toEpochMilli();
-		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
-				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
-				"create", Map.of(
-						"resource", Map.of(
-								"ship", "~zod",       // =entity
-								"name", "test-graph" + NOW    // name=term
-						),
-						"title", "Test Graph!!!" + NOW,
-						"description", "graph for testing only! having fun strictly prohibited",
-						"associated", Map.of(
-								"group", Map.of(
-										"ship", "~zod",
-										"name", "TEST_GROUP" + NOW
-								)
-						),
-//						"module", GraphStoreAgent.Modules.LINK.moduleName() // this is hella verbose and opaque
-						"module", "link"
-				)
-		)).getAsJsonObject();
-		JsonElement responseJson = urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
-		assertTrue(responseJson.isJsonNull());
+		String graphName = "test-graph" + NOW;
+		String graphTitle = "Test Graph Created " + NOW;
+		String graphDescription = "graph for testing only! having fun strictly prohibited";
+		Resource associatedGroup = new Resource("~zod", "TEST_GROUP_" + NOW);
+		JsonElement responseJson = graphStoreAgent.createManagedGraph(
+				graphName,
+				graphTitle,
+				graphDescription,
+				associatedGroup,
+				GraphStoreAgent.Modules.LINK
+		);
+
+		assertTrue(responseJson.isJsonNull()); // a successful call gives null
+
+		JsonObject keysPayload = graphStoreAgent.getKeys();
+		JsonArray keys = keysPayload.get("graph-update").getAsJsonObject().get("keys").getAsJsonArray();
+		JsonObject expectedKey = map2json(Map.of(
+				"ship", "zod",
+				"name", graphName
+		));
+		// we expect to see a key with our ship and the name of the graph that we just created
+		assertTrue(keys.contains(expectedKey));
+
 
 	}
 
