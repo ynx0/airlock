@@ -6,7 +6,14 @@ public class GroupUtils {
 
 	// implements https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/lib/group.ts
 	// lib/group.ts
+
+	/**
+	 * // takes in input of the form "~landscape/ship/~bitbet-bolbel/urbit-community"
+	 * @param pathOfGroup the full path to the group, including extra data from t=
+	 * @return
+	 */
 	public static Resource resourceFromPath(String pathOfGroup) {
+
 		String[] splitPath = pathOfGroup.split("/");
 		// implements
 		/* const [, , ship, name] = path.split('/');
