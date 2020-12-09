@@ -3,6 +3,7 @@ package airlock;
 import airlock.errors.ScryDataNotFoundException;
 import airlock.errors.ScryFailureException;
 import airlock.errors.ShipAuthenticationError;
+import airlock.errors.SpiderFailureException;
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -568,7 +569,7 @@ public class Urbit {
 		return JsonParser.parseString(bodyText);
 	}
 
-	// improve and de-duplicate code
+
 	private void throwOnScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFoundException {
 		// assuming we receive a non-closed response object
 		assert !response.isSuccessful();
@@ -582,7 +583,7 @@ public class Urbit {
 		}
 	}
 
-	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException {
+	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws IOException, SpiderFailureException {
 
 		// copied from sendJSONtoChannel
 		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
@@ -604,6 +605,7 @@ public class Urbit {
 		if (!response.isSuccessful()) {
 			// 500 means there was an error doing the spider. add to custom errors
 			// for example, trying to create a duplicate graph. in that case it doesn't seem to give a stack trace unlike the other times which was weird
+			this.throwOnSpiderFailure(response);
 			System.err.println(requireNonNull(response.body()).string());
 			throw new IOException("Error: " + response);
 		}
@@ -619,6 +621,17 @@ public class Urbit {
 //		return new InMemoryResponseWrapper(response);
 
 	}
+
+
+	private void throwOnSpiderFailure(Response response) throws SpiderFailureException {
+		// assuming we receive a non-closed response object
+		assert !response.isSuccessful();
+
+		if (response.code() == 500) {
+			throw new SpiderFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "\nResponse: \n" + response.body());
+		}
+	}
+
 
 
 	/**

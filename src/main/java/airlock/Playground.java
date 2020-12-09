@@ -4,6 +4,7 @@ import airlock.agent.graph.Resource;
 import airlock.errors.ScryDataNotFoundException;
 import airlock.errors.ScryFailureException;
 import airlock.errors.ShipAuthenticationError;
+import airlock.errors.SpiderFailureException;
 import com.google.gson.*;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public class Playground {
 
-	public static void main(String[] args) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
+	public static void main(String[] args) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, SpiderFailureException {
 
 //		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
 //		System.out.println(baseURL);

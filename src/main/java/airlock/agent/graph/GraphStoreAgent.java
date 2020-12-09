@@ -8,6 +8,7 @@ import airlock.agent.group.GroupUtils;
 import airlock.errors.ScryDataNotFoundException;
 import airlock.errors.ScryFailureException;
 import airlock.errors.ShipAuthenticationError;
+import airlock.errors.SpiderFailureException;
 import airlock.types.ShipName;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -205,7 +206,7 @@ export const createPost = (
 		return this.spider('graph-view-action', 'json', threadName, action);
 	  }
 	*/
-	private JsonElement viewAction(String threadName, JsonObject payload) throws IOException {
+	private JsonElement viewAction(String threadName, JsonObject payload) throws IOException, SpiderFailureException {
 		return this.urbit.spiderRequest("graph-view-action", threadName, "json", payload);
 	}
 
@@ -243,11 +244,11 @@ export const createPost = (
     });
   }
   */
-	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws IOException {
+	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws IOException, SpiderFailureException {
 		return this.createManagedGraph(name, title, description, GroupUtils.resourceFromPath(pathOfGroup), module);
 	}
 
-	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Modules module) throws IOException {
+	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Modules module) throws IOException, SpiderFailureException {
 		final var associated = Map.of("group", groupResource);
 		final var resource = GroupUtils.makeResource(ShipName.withSig(this.urbit.getShipName()), name);
 
@@ -299,7 +300,7 @@ export const createPost = (
     });
   }
 */
-	public JsonElement joinGraph(String ship, String name) throws IOException {
+	public JsonElement joinGraph(String ship, String name) throws IOException, SpiderFailureException {
 		final var resource = GroupUtils.makeResource(ship, name);
 		return this.viewAction("graph-join", map2json(Map.of(
 				"join", Map.of(
@@ -319,7 +320,7 @@ export const createPost = (
     });
   }
 */
-	public JsonElement deleteGraph(String name) throws IOException {
+	public JsonElement deleteGraph(String name) throws IOException, SpiderFailureException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 		return this.viewAction("graph-delete", map2json(Map.of(
 				"delete", resource
@@ -338,7 +339,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement leaveGraph(String ship, String name) throws IOException {
+	public JsonElement leaveGraph(String ship, String name) throws IOException, SpiderFailureException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 		return this.viewAction("graph-leave", map2json(Map.of("leave", resource)));
 	}
@@ -358,7 +359,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement groupifyGraph(String ship, String name, String toPath) throws IOException {
+	public JsonElement groupifyGraph(String ship, String name, String toPath) throws IOException, SpiderFailureException {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 
 		//GroupUtils::resourceFromPath
@@ -371,7 +372,7 @@ export const createPost = (
 		)));
 	}
 	
-	public JsonElement groupifyGraph(String ship, String name) throws IOException {
+	public JsonElement groupifyGraph(String ship, String name) throws IOException, SpiderFailureException {
 		return this.groupifyGraph(ship, name, null);
 	}
 
