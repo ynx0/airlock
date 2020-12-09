@@ -249,7 +249,7 @@ export const createPost = (
 
 	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Modules module) throws IOException {
 		final var associated = Map.of("group", groupResource);
-		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
+		final var resource = GroupUtils.makeResource(ShipName.withSig(this.urbit.getShipName()), name);
 
 		return this.viewAction("graph-create", gson.toJsonTree(Map.of(
 				"create", Map.of(
