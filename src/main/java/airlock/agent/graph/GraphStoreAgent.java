@@ -138,7 +138,7 @@ export const createPost = (
 };
 */
 
-	public static Object createPost(String shipAuthor, List<Content> contents, String parentIndex, String childIndex) {
+	public static Post createPost(String shipAuthor, List<Content> contents, String parentIndex, String childIndex) {
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "DATE_PLACEHOLDER");
 		if (childIndex.equals("DATE_PLACEHOLDER")) {
