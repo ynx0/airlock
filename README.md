@@ -77,6 +77,7 @@ However, if you want to try it out, you can download the jar without actually do
 - [ ] Integration for `scry` and `spider`
     - [x] `scry`
     - [x] `spider`
+- [x] Custom Exceptions for core interface 
 
 - [ ] `graph-store`
     - [ ] Initial functional implementation of interface 
