@@ -8,9 +8,10 @@ public class GroupUtils {
 	// lib/group.ts
 
 	/**
-	 * // takes in input of the form "~landscape/ship/~bitbet-bolbel/urbit-community"
+	 * takes in input of the form "~landscape/ship/~bitbet-bolbel/urbit-community"
+	 *
 	 * @param pathOfGroup the full path to the group, including extra data from t=
-	 * @return
+	 * @return the resource that is represented by the path of the group given
 	 */
 	public static Resource resourceFromPath(String pathOfGroup) {
 

@@ -163,6 +163,8 @@ public class Urbit {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
+		// todo deduplicate network requests and error handling code
+
 	}
 
 	/**
@@ -331,9 +333,15 @@ public class Urbit {
 
 						// here, we get an EOFException if we have a running connection and then Ctrl-z forcibly close the fakezod
 						// so maybe that's another custom error to make
-						if (t != null && !(t instanceof SocketException)) {
+						// socket exception occurs because by default, the okhttp sse event client times out after like 500ms
+						// if it hasn't received any data from the connection, even though that's normal when using eyre. this is why we set the timeout really high.
+
+						if (t != null) {
 							System.err.println("Encountered error while doing sse stuff");
-							throw new RuntimeException(t);
+							if (!(t instanceof SocketException)) {
+								throw new RuntimeException(t);
+							}
+							System.err.println("Socket error");
 						}
 
 						if (response != null && response.code() != 200) {
