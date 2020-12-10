@@ -1,5 +1,6 @@
 package airlock;
 
+import airlock.errors.AirlockException;
 import okhttp3.Response;
 import okio.BufferedSource;
 import okio.ByteString;
@@ -26,11 +27,21 @@ public class InMemoryResponseWrapper {
 	// For example, we cannot inspect the body in one method, then pass the same response object to somewhere else because the buffer will be exhausted
 	// this is why InMemoryResponseWrapper exists
 
-	public InMemoryResponseWrapper(Response response) throws IOException {
+	public InMemoryResponseWrapper(Response response) {
 		this.closedResponse = response;
 		// taken from https://github.com/square/okhttp/issues/2869
-		BufferedSource source = Objects.requireNonNull(response.body()).source();
-		source.request(Integer.MAX_VALUE);
+		BufferedSource source = Objects.requireNonNull(response.body(), "Got null response body").source();
+		try {
+			source.request(Integer.MAX_VALUE);
+		} catch (IOException e) {
+			// for now, we will fail fatally if we cannot buffer the body
+			// why? because normally we are able to buffer the body even if it is empty and we are good
+			// besides that, we often need to parse json directly from the body of a request such as in the case of a spider / scry request.
+			// so, if we are unable to, we cannot really continue in any meaningful way (at least not that I know how to yet)
+			// so we just conk out. this also makes the exception throwing cleaner in Urbit.java
+			// until we have a proper way of addressing this, im leaving it as a runtime exception
+			throw new RuntimeException("Unable to buffer body from okhttp response", e);
+		}
 		this.inMemoryResponseBody = source.getBuffer().snapshot();
 		response.close();
 	}
