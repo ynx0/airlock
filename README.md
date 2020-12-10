@@ -34,7 +34,7 @@ public class Main {
 
 ```
 
-For the most up to date usage examples, see `src/test/java/UrbitIntegrationTests.java`.
+For the most up to date usage examples, see `src/test/java/UrbitIntegrationTestsCore.java`.
 
 The file `src/main/java/Main.java` serves as a starting point to experiment with the library, 
 but may not showcase all features and functionality of the api. 
