@@ -1,10 +1,7 @@
 package airlock;
 
 import airlock.agent.graph.Resource;
-import airlock.errors.ScryDataNotFoundException;
-import airlock.errors.ScryFailureException;
-import airlock.errors.ShipAuthenticationError;
-import airlock.errors.SpiderFailureException;
+import airlock.errors.*;
 import com.google.gson.*;
 
 import java.io.IOException;
@@ -14,7 +11,7 @@ import java.util.Map;
 
 public class Playground {
 
-	public static void main(String[] args) throws IOException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, SpiderFailureException {
+	public static void main(String[] args) {
 
 //		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
 //		System.out.println(baseURL);
@@ -23,10 +20,28 @@ public class Playground {
 
 		//  lidlut-tabwed-pillex-ridrup
 		// "toprus-dopsul-dozmep-hocbep"
-		Urbit urbit = new Urbit(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
-		urbit.authenticate();
-		urbit.connect();
-		System.out.println(AirlockUtils.gson.toJson(urbit.scryRequest("graph-store", "/keys")));
+
+		try {
+			throwTest(1);
+		} catch (AirlockChannelError e) {
+			System.out.println("lol");
+		} catch (ScryFailureException e) {
+			System.out.println("xd");
+		}
+
+		try {
+			throwTest(1);
+		} catch (AirlockException e) {
+			e.printStackTrace();
+//			System.out.println("lol");
+		}
+
+
+
+//		Urbit urbit = new Urbit(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+//		urbit.authenticate();
+//		urbit.connect();
+//		System.out.println(AirlockUtils.gson.toJson(urbit.scryRequest("graph-store", "/keys")));
 
 		// notes dump
 		/*
@@ -55,35 +70,42 @@ public class Playground {
 		// okay so we're gonna try to create a graph instead of adding it https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts#L109
 
 //		long NOW = 0;
-		long NOW = Instant.now().toEpochMilli();
-		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
-				// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
-				"create", Map.of(
-						"resource", new Resource(
-								"~zod",       // =entity
-								"test-graph" + NOW    // name=term
-						),
-						"title", "Test Graph!!!" + NOW,
-						"description", "graph for testing only! having fun strictly prohibited",
-						"associated", Map.of(
-								"group", Map.of(
-										"ship", "~zod",
-										"name", "TEST_GROUP" + NOW
-								)
-						),
-						"module", "link"
-				)
-		)).getAsJsonObject();
-		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
-
-
-
+//		long NOW = Instant.now().toEpochMilli();
+//		JsonObject graphPayload = AirlockUtils.gson.toJsonTree(Map.of(
+//				 https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/landscape/components/NewChannel.tsx#L98
+//				"create", Map.of(
+//						"resource", new Resource(
+//								"~zod",       // =entity
+//								"test-graph" + NOW    // name=term
+//						),
+//						"title", "Test Graph!!!" + NOW,
+//						"description", "graph for testing only! having fun strictly prohibited",
+//						"associated", Map.of(
+//								"group", Map.of(
+//										"ship", "~zod",
+//										"name", "TEST_GROUP" + NOW
+//								)
+//						),
+//						"module", "link"
+//				)
+//		)).getAsJsonObject();
+//		urbit.spiderRequest("graph-view-action", "graph-create", "json", graphPayload.getAsJsonObject());
 
 
 		// answer was found in lib/resource.hoon. basically, you need a sig int front of the ship's name
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/" + ShipName.withSig("littel-wolfur") + "/announcements"))); // the datatype we get back from this is graphs, which is a map of resource to mark
 
+	}
+
+	public static void throwTest(int exceptionNum) throws AirlockChannelError, ScryFailureException {
+		if (exceptionNum == 0) {
+			throw new AirlockChannelError("channel error", new IOException("io exception generic"));
+		} else if (exceptionNum == 1) {
+			throw new ScryFailureException("scry failure", new IOException("io exception scry"));
+		} else {
+//			throw new AirlockException("base airlock exception");
+		}
 	}
 
 }
