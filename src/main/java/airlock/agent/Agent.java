@@ -2,9 +2,9 @@ package airlock.agent;
 
 import airlock.PokeResponse;
 import airlock.Urbit;
+import airlock.errors.AirlockChannelError;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class Agent {
@@ -16,15 +16,15 @@ public abstract class Agent {
 		this.urbit = urbit;
 	}
 
-	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws IOException {
+	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockChannelError {
 		return this.urbit.poke(ship, app, mark, data);
 	}
 
-	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws IOException {
+	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws AirlockChannelError {
 		return this.urbit.poke(this.urbit.getShipName(), app, mark, data);
 	}
 
-	void unsubscribe(int subscriptionID) throws IOException {
+	void unsubscribe(int subscriptionID) throws AirlockChannelError {
 		this.urbit.unsubscribe(subscriptionID);
 	}
 
