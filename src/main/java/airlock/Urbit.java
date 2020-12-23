@@ -165,6 +165,12 @@ public class Urbit {
 
 		// todo deduplicate network requests and error handling code
 
+		// todo figure out what happens vs what should happen when:
+		//  ship ~tun is running at localhost:80 and has code sampel-sampel
+		//  you use the library, and make a new ship new Urbit("localhost:80", "~zod", "sampel-sample");
+		//  you are now succesfully authenticated, but you have the wrong ship name. what do?
+		//  ok so urbit 1.0 runs into a silent failure (on our end) and the helm hi fails when we use the ship tun while pretending our name is zod
+
 	}
 
 	/**
