@@ -35,6 +35,8 @@ public class AirlockUtils {
 		return gson.toJsonTree(map).getAsJsonObject();
 	}
 
+	// todo: airlock utils: use https://square.github.io/okhttp/4.x/okhttp/okhttp3/-http-url/#percent-encoding
+	// which properly encodes spaces (i.e. *-> %20. currently this just throws when it encounters chars that need escaping
 
 	static URL normalizeOrBust(URL url) {
 		try {
@@ -46,7 +48,8 @@ public class AirlockUtils {
 
 	static URL resolveOrBust(URL url, String resolve) {
 		try {
-			return url.toURI().resolve(resolve).normalize().toURL();
+//			URLEncoder.encode(resolve, StandardCharsets.UTF_8); // this encodes spaces to + like a search query rather than %20
+			return url.toURI().normalize().resolve(resolve).normalize().toURL(); // do i need the second call to normalize?
 		} catch (MalformedURLException | URISyntaxException e) {
 			throw new IllegalStateException("Unable to resolve url: " + url);
 		}
