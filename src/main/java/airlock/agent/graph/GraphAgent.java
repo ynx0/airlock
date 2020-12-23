@@ -5,27 +5,32 @@ import airlock.PokeResponse;
 import airlock.Urbit;
 import airlock.agent.Agent;
 import airlock.agent.group.GroupUtils;
+import airlock.agent.group.types.GroupPolicy;
 import airlock.errors.*;
+import airlock.errors.scry.ScryDataNotFoundException;
+import airlock.errors.scry.ScryFailureException;
+import airlock.errors.spider.SpiderFailureException;
 import airlock.types.ShipName;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static airlock.AirlockUtils.gson;
 import static airlock.AirlockUtils.map2json;
 import static java.util.Objects.requireNonNullElse;
 
-public class GraphStoreAgent extends Agent {
-
-	private final Gson gson = AirlockUtils.gson;
+public class GraphAgent extends Agent {
 
 	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
-	public GraphStoreAgent(Urbit urbit) {
-		super(urbit);
+	// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
+	public GraphAgent(Urbit urbit) {
+		// todo handle state
+		super(urbit, new GraphAgentState());
 	}
 
 
@@ -66,7 +71,7 @@ export const createBlankNodeWithChildPost = (
 };
 	 */
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
-	public static Map<String, Object> createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<Content> contents) {
+	public static Map<String, Object> createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "");
 
@@ -84,9 +89,12 @@ export const createBlankNodeWithChildPost = (
 								null,
 								Collections.emptyList()
 						),
+						Graph.EMPTY_GRAPH
+						/*
 						Map.of(
 								"empty", Optional.empty()  // {empty: null}
 						)
+						*/
 				)
 		);
 		return Map.of(
@@ -134,7 +142,8 @@ export const createPost = (
 };
 */
 
-	public static Post createPost(String shipAuthor, List<Content> contents, String parentIndex, String childIndex) {
+	// todo make this api design more idiomatic
+	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable String parentIndex, @Nullable String childIndex) {
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "DATE_PLACEHOLDER");
 		if (childIndex.equals("DATE_PLACEHOLDER")) {
@@ -166,14 +175,14 @@ export const createPost = (
 	  return undefined;
 	}
 	*/
-	public enum Modules {
+	public enum Module {
 		LINK("graph-validator-link"),
 		PUBLISH("graph-validator-publish"),
 		CHAT("graph-validator-chat");
 
 		public final String mark;
 
-		Modules(String mark) {
+		Module(String mark) {
 			this.mark = mark;
 		}
 
@@ -183,7 +192,7 @@ export const createPost = (
 
 	}
 
-	static String moduleToMark(Modules module) {
+	static String moduleToMark(Module module) {
 		return module.mark;
 	}
 
@@ -213,7 +222,9 @@ export const createPost = (
 
 */
 	private CompletableFuture<PokeResponse> hookAction(String ship, JsonObject payload) throws AirlockChannelError {
-		return this.action("graph-push-hook", "graph-update", payload, null);
+		// okay i don't know if you actually need ship or not based simply on porting right now
+		// so i guess todo to test out ship unused parameter behaviour
+		return this.action("graph-push-hook", "graph-update", payload, ship);
 	}
 
 
@@ -240,15 +251,17 @@ export const createPost = (
     });
   }
   */
-	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Modules module) throws SpiderFailureException, AirlockChannelError {
+	public JsonElement createManagedGraph(String name, String title, String description, String pathOfGroup, Module module) throws SpiderFailureException, AirlockChannelError {
 		return this.createManagedGraph(name, title, description, GroupUtils.resourceFromPath(pathOfGroup), module);
 	}
 
-	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Modules module) throws SpiderFailureException, AirlockChannelError {
+
+	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Module module) throws SpiderFailureException, AirlockChannelError {
+		// todo note: name should be url safe. also, landscape tends to replace spaces and other characters with dashes, but we aren't doing that yet
 		final var associated = Map.of("group", groupResource);
 		final var resource = GroupUtils.makeResource(ShipName.withSig(this.urbit.getShipName()), name);
 
-		return this.viewAction("graph-create", gson.toJsonTree(Map.of(
+		JsonObject createPayload = gson.toJsonTree(Map.of(
 				"create", Map.of(
 						"resource", resource,
 						"title", title,
@@ -257,11 +270,12 @@ export const createPost = (
 						"module", module.moduleName(),
 						"mark", moduleToMark(module)
 				)
-		)).getAsJsonObject());
+		)).getAsJsonObject();
+
+		return this.viewAction("graph-create", createPayload);
 	}
 
 	/*
-	// todo implement createUnmanagedGraph
   createUnmanagedGraph(
     name: string,
     title: string,
@@ -283,6 +297,37 @@ export const createPost = (
     });
   }
 */
+
+
+	public JsonElement createUnmanagedGraph(String name, String title, String description, GroupPolicy policy, Module module) throws AirlockChannelError, SpiderFailureException {
+		/*
+		This requires Enc<S>, which idk wtf it's doing. I mean i guess i get it now but like translating this requires a different way of doing things compeltely.
+		I think i can just implement the equivalent in a custom seralizer or a utlitiy class...
+
+		// Turns sets into arrays and maps into objects so we can send them over the wire
+		export type Enc<S> =
+		S extends Set<any> ?
+		Enc<SetElement<S>>[] :
+		S extends Map<string, any> ?
+		{ [s: string]: Enc<MapValue<S>> } :
+		S extends object ?
+				{ [K in keyof S]: Enc<S[K]> } :
+		S;
+
+		 */
+		final var resource = GroupUtils.makeResource(urbit.getShipName(), name);
+		return this.viewAction("graph-create", map2json(Map.of(
+				"create", Map.of(
+						"resource", resource,
+						"title", title,
+						"description", description,
+						"associated", Map.of("policy", policy),
+						"module", module.moduleName(),
+						"mark", moduleToMark(module)
+				)
+		)));
+
+	}
 
 
 	/*
@@ -367,7 +412,7 @@ export const createPost = (
 				)
 		)));
 	}
-	
+
 	public JsonElement groupifyGraph(String ship, String name) throws SpiderFailureException, AirlockChannelError {
 		return this.groupifyGraph(ship, name, null);
 	}
@@ -575,8 +620,8 @@ export const createPost = (
       });
   }
 */
-	public JsonElement getGraph(String ship, String resource) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resource);
+	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
 		// todo implement state handling
 		return scryResponse;
 	}
