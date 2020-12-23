@@ -433,6 +433,11 @@ public class Urbit {
 					.build();
 
 			Response response = null;
+			System.out.println(",============SendMessage============,");
+			System.out.println("About the send the following message");
+			System.out.println("Id: " + jsonData.get("id").getAsInt());
+			System.out.println("Message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
+			System.out.println(".============SendMessage============.");
 			try {
 				response = client.newCall(request).execute();
 			} catch (IOException e) {
@@ -441,14 +446,10 @@ public class Urbit {
 
 			InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
 			if (!response.isSuccessful()) {
-				System.err.println(responseWrapper);
+				System.err.println(responseWrapper.getBody().utf8());
 				throw new AirlockChannelError("Got unsuccessful http response code", new IOException("Error: " + response));
 			}
 
-			System.out.println(",============SendMessage============,");
-			System.out.println("Id: " + jsonData.get("id").getAsInt());
-			System.out.println("Sent message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
-			System.out.println(".============SendMessage============.");
 
 			return responseWrapper;
 		}
