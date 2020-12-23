@@ -9,11 +9,14 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class Agent {
 
+	protected final AgentState state;
+
 	protected final Urbit urbit;
 
 	// adapted from https://github.com/dclelland/UrsusAPI/
-	protected Agent(Urbit urbit) {
+	protected Agent(Urbit urbit, AgentState state) {
 		this.urbit = urbit;
+		this.state = state;
 	}
 
 	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockChannelError {
