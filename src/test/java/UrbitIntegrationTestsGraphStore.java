@@ -1,5 +1,5 @@
 import airlock.Urbit;
-import airlock.agent.graph.GraphStoreAgent;
+import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.Resource;
 import airlock.errors.AirlockChannelError;
 import com.google.gson.JsonArray;
@@ -21,7 +21,7 @@ public class UrbitIntegrationTestsGraphStore {
 
 
 	private static Urbit urbit;
-	private static GraphStoreAgent graphStoreAgent;
+	private static GraphAgent graphStoreAgent;
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
@@ -33,7 +33,7 @@ public class UrbitIntegrationTestsGraphStore {
 		urbit = new Urbit(url, shipName, code);
 		urbit.authenticate();
 		urbit.connect();
-		graphStoreAgent = new GraphStoreAgent(urbit);
+		graphStoreAgent = new GraphAgent(urbit);
 
 		// Assumes fake ship zod is booted and running
 
@@ -71,7 +71,7 @@ public class UrbitIntegrationTestsGraphStore {
 				graphTitle,
 				graphDescription,
 				associatedGroup,
-				GraphStoreAgent.Modules.LINK
+				GraphAgent.Module.LINK
 		);
 
 		assertTrue(responseJson.isJsonNull()); // a successful call gives us back a null
