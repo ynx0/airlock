@@ -1,5 +1,7 @@
 package airlock.agent.graph;
 
-public class Content {
+
+// ideally this would be a sealed class or something
+public abstract class GraphContent {
 
 }

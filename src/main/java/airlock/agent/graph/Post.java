@@ -1,7 +1,7 @@
 package airlock.agent.graph;
 
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -10,11 +10,11 @@ public class Post {
 	final String index;
 	@SerializedName("time-sent")
 	final long timeSent;
-	final List<Content> contents;
-	final String hash;
-	final List<JsonObject> signatures; // todo narrow by creating signature type
+	final List<GraphContent> contents;
+	final @Nullable String hash;
+	final List<String> signatures; // todo narrow by creating signature type
 
-	public Post(String author, String index, long timeSent, List<Content> contents, String hash, List<JsonObject> signatures) {
+	public Post(String author, String index, long timeSent, List<GraphContent> contents, String hash, List<String> signatures) {
 		this.author = author;
 		this.index = index;
 		this.timeSent = timeSent;
