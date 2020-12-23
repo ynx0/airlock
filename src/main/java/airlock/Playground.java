@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 public class Playground {
 
-	public static void main(String[] args) throws AirlockChannelError, MalformedURLException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, SpiderFailureException, ExecutionException, InterruptedException {
+	public static void main(String[] args) throws Exception {
 
 //		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
 //		System.out.println(baseURL);
@@ -123,16 +123,6 @@ public class Playground {
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/~timluc-miptev/collapse-open-blog")));
 //		System.out.println(gson.toJson(urbit.scryRequest("graph-store", "/graph/" + ShipName.withSig("littel-wolfur") + "/announcements"))); // the datatype we get back from this is graphs, which is a map of resource to mark
 
-	}
-
-	public static void throwTest(int exceptionNum) throws AirlockChannelError, ScryFailureException {
-		if (exceptionNum == 0) {
-			throw new AirlockChannelError("channel error", new IOException("io exception generic"));
-		} else if (exceptionNum == 1) {
-			throw new ScryFailureException("scry failure", new IOException("io exception scry"));
-		} else {
-//			throw new AirlockException("base airlock exception");
-		}
 	}
 
 }
