@@ -1,17 +1,25 @@
 package airlock;
 
+import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.Resource;
+import airlock.agent.graph.TextContent;
+import airlock.agent.group.GroupUtils;
 import airlock.errors.*;
+import airlock.types.ShipName;
 import com.google.gson.*;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.Map;
+import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.StreamSupport;
 
 public class Playground {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws AirlockChannelError, MalformedURLException, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, SpiderFailureException, ExecutionException, InterruptedException {
 
 //		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
 //		System.out.println(baseURL);
@@ -21,27 +29,49 @@ public class Playground {
 		//  lidlut-tabwed-pillex-ridrup
 		// "toprus-dopsul-dozmep-hocbep"
 
-		try {
-			throwTest(1);
-		} catch (AirlockChannelError e) {
-			System.out.println("lol");
-		} catch (ScryFailureException e) {
-			System.out.println("xd");
-		}
 
-		try {
-			throwTest(1);
-		} catch (AirlockException e) {
-			e.printStackTrace();
-//			System.out.println("lol");
-		}
+		String url = "http://localhost:8080";
+//		String shipName = "sipfyn-pidmex";
+		String shipName = "zod";
+//		String code = "toprus-dopsul-dozmep-hocbep";
+		String code = "lidlut-tabwed-pillex-ridrup";
+		Urbit urbit = new Urbit(new URL(url), shipName, code);
+		urbit.authenticate();
+		urbit.connect();
+		GraphAgent agent = new GraphAgent(urbit);
+
+//		JsonArray graphKeys = agent.getKeys().getAsJsonObject()
+//				.get("graph-update").getAsJsonObject()
+//				.get("keys").getAsJsonArray();
+//		JsonObject graphOwnedByMe = StreamSupport.stream(graphKeys.spliterator(), false)
+//				.map(JsonElement::getAsJsonObject)
+//				.filter(key -> key.get("ship").getAsString().equals("sipfyn-pidmex"))
+//				.filter(key -> !key.get("name").getAsString().contains("dm--"))
+//				.filter(key -> key.get("name").getAsString().contains("2"))
+//				.findFirst().orElseThrow().getAsJsonObject();
+//
+//		System.out.println(graphKeys);
+//		System.out.println(graphOwnedByMe);
+//		JsonElement graphUpdate = agent.getGraph(ShipName.withSig(graphOwnedByMe.get("ship").getAsString()),graphOwnedByMe.get("name").getAsString());
+//		System.out.println(AirlockUtils.gson.toJson(graphUpdate));
+//
+		long NOW = Instant.now().toEpochMilli();
+		String graphName = "test-graph-" + NOW;
+		String sipWithSig = ShipName.withSig(urbit.getShipName());
+		Resource myOwnStuffGroup = GroupUtils.makeResource(sipWithSig, "test-group-1");
+		var createGraphResponse = agent.createManagedGraph(
+				graphName,
+				"Title of graph" + NOW,
+				"description",
+				myOwnStuffGroup,
+				GraphAgent.Module.CHAT
+				);
 
 
+		CompletableFuture<PokeResponse> futurePostResponse = agent.addPost(sipWithSig, myOwnStuffGroup.name, GraphAgent.createPost(sipWithSig, Collections.singletonList(new TextContent("Hello " + NOW)), null, null));
+		futurePostResponse.get();
 
-//		Urbit urbit = new Urbit(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
-//		urbit.authenticate();
-//		urbit.connect();
-//		System.out.println(AirlockUtils.gson.toJson(urbit.scryRequest("graph-store", "/keys")));
+
 
 		// notes dump
 		/*
@@ -63,10 +93,6 @@ public class Playground {
 
 		//https://github.com/dclelland/UrsusAPI/blob/master/Sources/UrsusAPI/APIs/Graph/Agents/GraphStoreAgent.swift
 		// rip
-//		urbit.poke(urbit.getShipName(), "graph-store", "graph-update", JsonParser.parseString(
-//				// DON'T LOOK AT ME: https://youtu.be/EnBdGTX3vZc?t=136
-//
-//		));
 		// okay so we're gonna try to create a graph instead of adding it https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/api/graph.ts#L109
 
 //		long NOW = 0;
