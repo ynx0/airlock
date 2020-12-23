@@ -5,8 +5,10 @@ import airlock.agent.graph.Resource;
 import airlock.agent.graph.TextContent;
 import airlock.agent.group.GroupUtils;
 import airlock.errors.*;
+import airlock.errors.scry.ScryDataNotFoundException;
+import airlock.errors.scry.ScryFailureException;
+import airlock.errors.spider.SpiderFailureException;
 import airlock.types.ShipName;
-import com.google.gson.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -15,7 +17,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.StreamSupport;
 
 public class Playground {
 

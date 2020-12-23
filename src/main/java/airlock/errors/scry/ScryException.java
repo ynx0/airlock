@@ -1,5 +1,10 @@
-package airlock.errors;
+package airlock.errors.scry;
 
+import airlock.errors.AirlockException;
+
+/**
+ * Thrown when there was a problem performing the scry
+ */
 public class ScryException extends AirlockException {
 
 	public ScryException(String message) {

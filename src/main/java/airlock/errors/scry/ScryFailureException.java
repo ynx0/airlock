@@ -1,4 +1,4 @@
-package airlock.errors;
+package airlock.errors.scry;
 
 public class ScryFailureException extends ScryException {
 

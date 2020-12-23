@@ -1,4 +1,6 @@
-package airlock.errors;
+package airlock.errors.spider;
+
+import airlock.errors.AirlockException;
 
 public class SpiderFailureException extends AirlockException {
 

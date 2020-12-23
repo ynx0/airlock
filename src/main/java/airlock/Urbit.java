@@ -1,6 +1,9 @@
 package airlock;
 
 import airlock.errors.*;
+import airlock.errors.scry.ScryDataNotFoundException;
+import airlock.errors.scry.ScryFailureException;
+import airlock.errors.spider.SpiderFailureException;
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -215,10 +218,12 @@ public class Urbit {
 			response = client.newCall(request).execute();
 		} catch (IOException e) {
 			throw new AirlockChannelError("Failed to execute request", e);
+//			throw new AirlockConnectionError("Failed to execute request", e);
+
 		}
 
 		if (!response.isSuccessful()) {
-			throw new AirlockChannelError("Got unsuccessful http response code", new IOException("Error: " + response));
+			throw new AirlockAuthenticationError("Got unsuccessful http response code", new IOException("Error: " + response));
 		}
 
 		// after we made the request, here we extract the cookie. it's quite ceremonial
@@ -601,12 +606,12 @@ public class Urbit {
 	}
 
 
-	private void throwOnScryFailure(Response response) throws ShipAuthenticationError, ScryFailureException, ScryDataNotFoundException {
+	private void throwOnScryFailure(Response response) throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError {
 		// assuming we receive a non-closed response object
 		assert !response.isSuccessful();
 
 		if (response.code() == 403) {
-			throw new ShipAuthenticationError("Got 403 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+			throw new AirlockAuthenticationError("Got 403 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
 		} else if (response.code() == 404) {
 			throw new ScryDataNotFoundException("Got 404 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
 		} else if (response.code() == 500) {
