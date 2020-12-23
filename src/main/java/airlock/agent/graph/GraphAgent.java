@@ -455,10 +455,12 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addPost(String ship, String name, Post post) throws AirlockChannelError {
 		Map<String, Object> nodes = new HashMap<>();
 //		new Node(post, null);
-		nodes.put(post.index, map2json(Map.of(
-				"post", post,
-				"children", Optional.empty()
-		)));
+
+		Map<Object, Object> postPayload = new HashMap<>();
+		postPayload.put("post", post);
+		postPayload.put("children", null);
+
+		nodes.put(post.index, map2json(postPayload));
 
 		return this.addNodes(ship, name, nodes);
 
