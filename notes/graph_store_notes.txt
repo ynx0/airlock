@@ -1,0 +1,195 @@
+// so this is basically graph-store.hoon, but i'm trying too hard.
+// i don't need any of this knowledge to implement an agent
+
+import post.hoon
+
+class Graph extends TreeMap<Atom, Node> {
+	// ((mop atom node) gth)
+	Graph() {
+		super(Comparator<Atom>.reverseOrder())
+	}
+}         
+// marked-graph  [p=graph q=(unit mark)]
+class MarkedGraph {
+	Graph p;
+	Unit<Mark> q;
+}
+
+class Unit<T> extends Optional<T> {}	// typedef
+
+
++$  node          [=post children=internal-graph]
+class Node {
+	Post post;
+	InternalGraph children;
+}
+
+typedef graphs Map<Resource, MarkedGraph>
+
+
++$  tag-queries   (jug term resource)
+class TagQueries extends (jug term resource) {
+	
+}
+
+// NOT java map
+typedef jug (map <type> (set <type>))
+
+
+
+::
++$  update-log    ((mop time logged-update) gth)
++$  update-logs   (map resource update-log)
+::
++$  internal-graph
+  $~  [%empty ~]
+  $%  [%graph p=graph]
+      [%empty ~]
+  ==
+::
++$  network
+  $:  =graphs
+      =tag-queries
+      =update-logs
+      archive=graphs
+      validators=(set mark)
+  ==
+::
++$  update
+  $%  [%0 p=time q=update-0]
+  ==
+::
++$  logged-update
+  $%  [%0 p=time q=logged-update-0]
+  ==
+::
++$  logged-update-0
+  $%  [%add-nodes =resource nodes=(map index node)]
+      [%remove-nodes =resource indices=(set index)]
+      [%add-signatures =uid =signatures]
+      [%remove-signatures =uid =signatures]
+  ==
+::
++$  update-0
+  $%  logged-update-0
+      [%add-graph =resource =graph mark=(unit mark)]
+      [%remove-graph =resource]
+    ::
+      [%add-tag =term =resource]
+      [%remove-tag =term =resource]
+    ::
+      [%archive-graph =resource]
+      [%unarchive-graph =resource]
+      [%run-updates =resource =update-log]
+    ::
+    ::  NOTE: cannot be sent as pokes
+    ::
+      [%keys =resources]
+      [%tags tags=(set term)]
+      [%tag-queries =tag-queries]
+  ==
+--
+
+
+
+
+
+
+
+
+
+===================
+
+
+class Post {
+  Ship author;
+  List<Atom> index;
+  Time time-sent
+  List<Content> contents
+  Optional<Hash> hash; // or nullable whatever
+  Set<Signature> signatures;
+}
+
+// thought: should we mark typedefs as final? since I don't think it would make sense to inherit from them 
+
+class Ship extends Atom<Auras.P> {}		// typedef
+class Time extends Atom<Auras.DA> {}	// typedef
+class Hash extends Atom<Auras.UX> {}	// typedef
+
+
+abstract class Content {
+	enum Type {
+		TEXT,
+		URL,
+		CODE,
+		REFERENCE
+	}
+	// thought: or static classes instead of enum
+
+  @Nullable Cord text
+  @Nullable Cord url;
+  // [expression=cord output=(list tank)]
+  @Nullable Pair<Cord, List<Tank>> code;
+  @Nullable UID uid; // reference
+}
+class Cord extends Atom<Auras.T> {}
+
+
+class UID {
+	Resource resource; 
+	Index index;
+}
+
+class Resource {
+	Entity entity;
+	Term name;
+}
+class Term extends Atom<Auras.TAS> {}		// typedef
+
+class Resources extends Set<Resource> {}	// typedef
+// above not strictly necessary/optional
+
+
+// ok seriously wtf is an entity
+class Entity {
+	Ship ship;
+
+	+$  entity
+	  $@  ship
+	  $%  !!
+	  ==
+	--
+}
+
+
+
+abstract class Tank {
+	private Tank() {}
+}
+
+
+class Leaf extends Tank{
+	Tape p;
+}
+
+class Palm extends Tank {
+	Tape[] p = new Tape[4]; // p q r s are all `tape`s
+	List<Tank> q;
+}
+
+
+class Rose extends Tank {
+	Tape[] p = new Tape[3]; // p q r are all `tape`s
+	List<Tank> q;
+}
+class Tape extends List<Auras.TD> {}	// typedef
+
+
+
+class Signature {
+	Atom.UX p; // probably hash/sham?
+	Ship q;
+	Life r;
+}
+
+class Life extends Atom<Auras.UD> {}	// typedef
