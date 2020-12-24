@@ -167,12 +167,13 @@ public class AirlockChannel {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
-		// todo deduplicate network requests and error handling code
+		// todo make this class more modular so we can easily replace http clients/libraries.
+		//  the only thing thatt would have some friction is adapting the cookie jar, but you could just go back to string based auth temporarily
 
 		// todo figure out what happens vs what should happen when:
 		//  ship ~tun is running at localhost:80 and has code sampel-sampel
 		//  you use the library, and make a new ship new Urbit("localhost:80", "~zod", "sampel-sample");
-		//  you are now succesfully authenticated, but you have the wrong ship name. what do?
+		//  you are now successfully authenticated, but you have the wrong ship name. what do?
 		//  ok so urbit 1.0 runs into a silent failure (on our end) and the helm hi fails when we use the ship tun while pretending our name is zod
 
 	}
@@ -317,10 +318,7 @@ public class AirlockChannel {
 								throw new IllegalStateException("could not ack");
 							}
 
-
-							//if (eyreResponse.id != eventD) {
-							//throw new IllegalStateException("invalid ids or something");
-							//}
+							// possible enhancement: add check to ensure that the id received in the eyreResponse matches the one we expect to see
 
 							switch (eyreResponse.response) {
 								case POKE:
@@ -563,9 +561,10 @@ public class AirlockChannel {
 
 	/**
 	 * Acks the given eventID
+	 *
 	 * @param eventID the id of the event to ack
 	 */
-	private void ack(int eventID) throws AirlockResponseError, AirlockRequestError {
+	private void ack(int eventID) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		int id = this.nextID();
 
 		JsonObject ackObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -667,6 +666,7 @@ public class AirlockChannel {
 	 * @param name Name of the ship e.g. zod
 	 * @param code Code to log in
 	 */
+	@SuppressWarnings("unused")
 	@NotNull
 	public static AirlockChannel onArvoNetwork(String name, String code) {
 		try {
