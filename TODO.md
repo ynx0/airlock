@@ -39,3 +39,6 @@
 - new agent -> read docs -> look at landscape impl -> read json payloads created by landscape
   -> recreate same raw transaction in java -> write dataclasses, deserializers, agents, exceptions, etc.
   -> add tests -> add documentation -> merge
+  
+- maybe my exception hierarchy is too extra ?? 
+  idk we will only find out after actually using it but for now it makes sense theoretically
