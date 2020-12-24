@@ -247,7 +247,7 @@ public class AirlockChannel {
 		// after we made the request, here we extract the cookie. it's quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
 				.stream()
-				.filter(cookie1 -> cookie1.name().startsWith("urbauth"))
+				.filter(cookie -> cookie.name().startsWith("urbauth-" + ShipName.withSig(this.shipName)))
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
