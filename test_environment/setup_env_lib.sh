@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-URBIT_VERSION=urbit-v0.10.8-linux64
+PLATFORM=linux64
+VERSION_NUM=v1.0-rc1
+URBIT_VERSION=urbit-$VERSION_NUM-$PLATFORM  # example output: urbit-v1.0-rc1-linux64
 FAKEZOD_TAR=fakezod-init.tar.gz
 LOGFILE=fakeship_output.log
 
@@ -9,8 +11,13 @@ LOGFILE=fakeship_output.log
 
 function downloadUrbitRuntime() {
   echo "Downloading Urbit Runtime"
-  curl -O https://bootstrap.urbit.org/$URBIT_VERSION.tgz
-  tar xzf $URBIT_VERSION.tgz
+  curl -o $URBIT_VERSION.tgz https://bootstrap.urbit.org/$URBIT_VERSION.tgz  # force filename to be $URBIT_VERSION
+  # we need to strip one directory inside and just get the binary files directly,
+  # then extract them to the known folder name using the -C flag
+  # this is because there is inconsistent naming of the tgz vs the internal folder so the script breaks without this
+  # from https://unix.stackexchange.com/a/11019
+  mkdir $URBIT_VERSION
+  tar xzvf $URBIT_VERSION.tgz -C $URBIT_VERSION --strip-components 1
 }
 
 
@@ -78,7 +85,7 @@ function untar_fakezod_state() {
 function cleanup() {
   killShip
   mkdir -p ./old_logs
-  mv "$LOGFILE" "./old_logs/{$LOGFILE}_$(date -Iminutes).old.log"
+  mv "$LOGFILE" "./old_logs/${LOGFILE}_$(date -Iminutes).old.log"
   rm -rf ./zod >> /dev/null 2>&1
   rm -f $URBIT_VERSION.tgz
 }

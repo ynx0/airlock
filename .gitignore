@@ -6,3 +6,4 @@ test_environment/old_logs/
 test_environment/fakeship_output.log
 test_environment/urbit-v0.10.8-linux64
 test_environment/urbit-v0.10.8-linux64.tgz
+/test_environment/urbit-v1.0-rc1-linux64/
