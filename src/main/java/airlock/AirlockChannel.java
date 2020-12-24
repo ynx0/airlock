@@ -1,9 +1,13 @@
 package airlock;
 
-import airlock.errors.*;
+import airlock.errors.AirlockAuthenticationError;
+import airlock.errors.AirlockChannelError;
+import airlock.errors.AirlockRequestError;
+import airlock.errors.AirlockResponseError;
 import airlock.errors.scry.ScryDataNotFoundException;
 import airlock.errors.scry.ScryFailureException;
 import airlock.errors.spider.SpiderFailureException;
+import airlock.types.ShipName;
 import com.google.gson.*;
 import okhttp3.*;
 import okhttp3.sse.EventSource;
@@ -203,12 +207,32 @@ public class AirlockChannel {
 		return AirlockUtils.resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
 	}
 
+	private InMemoryResponseWrapper sendRequest(Request request) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
+		Response response;
+
+		try {
+			response = client.newCall(request).execute();
+		} catch (IOException e) {
+			throw new AirlockRequestError("Failed to execute request", e);
+		}
+
+		if (!response.isSuccessful()) {
+			if (response.code() == 403) {
+				throw new AirlockAuthenticationError("Got 403 while trying to send request");
+			} else {
+				throw new AirlockResponseError("Got unsuccessful http response code", new InMemoryResponseWrapper(response), new IOException("Error: " + response));
+			}
+		}
+
+		return new InMemoryResponseWrapper(response);
+	}
+
 	/**
 	 * Connects to the Urbit ship. Nothing can be done until this is called.
 	 *
 	 * @return Returns an immutable wrapper around a response body object
 	 */
-	public InMemoryResponse authenticate() throws AirlockRequestError, AirlockAuthenticationError {
+	public InMemoryResponseWrapper authenticate() throws AirlockRequestError, AirlockAuthenticationError, AirlockResponseError {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -218,17 +242,7 @@ public class AirlockChannel {
 				.post(formBody)
 				.build();
 
-		Response response = null;
-
-		try {
-			response = client.newCall(request).execute();
-		} catch (IOException e) {
-			throw new AirlockRequestError("Failed to execute request", e);
-		}
-
-		if (!response.isSuccessful()) {
-			throw new AirlockAuthenticationError("Got unsuccessful http response code", new IOException("Error: " + response));
-		}
+		InMemoryResponseWrapper responseWrapper = this.sendRequest(request);
 
 		// after we made the request, here we extract the cookie. it's quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
@@ -237,7 +251,7 @@ public class AirlockChannel {
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
-		return new InMemoryResponse(response);
+		return responseWrapper;
 	}
 
 
@@ -245,9 +259,8 @@ public class AirlockChannel {
 	 * Creates the channel on which the sseClient will be instantiated on
 	 * This must be done in the same breath as creating the sseClient (i.e. in {@link AirlockChannel#connect()},
 	 * otherwise we will never be able to create a connection to the ship.
-	 *
 	 */
-	private void createChannel() throws AirlockResponseError, AirlockRequestError {
+	private void createChannel() throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
 		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload);
 	}
@@ -255,7 +268,7 @@ public class AirlockChannel {
 	/**
 	 * Initializes the SSE pipe for the appropriate channel (if necessary). Must be called after authenticating
 	 */
-	public void connect() throws AirlockResponseError, AirlockRequestError {
+	public void connect() throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		if (this.sseClient != null) {
 			return;
 		}
@@ -431,26 +444,13 @@ public class AirlockChannel {
 					.put(requestBody)
 					.build();
 
-			Response response = null;
 			System.out.println(",============SendMessage============,");
 			System.out.println("About the send the following message");
 			System.out.println("Id: " + jsonData.get("id").getAsInt());
 			System.out.println("Message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
 			System.out.println(".============SendMessage============.");
-			try {
-				response = client.newCall(request).execute();
-			} catch (IOException e) {
-				throw new AirlockRequestError("Unable to execute request", e);
-			}
 
-			InMemoryResponse responseWrapper = new InMemoryResponse(response);
-			if (!response.isSuccessful()) {
-				System.err.println(responseWrapper.getBodyAsString());
-				throw new AirlockResponseError("Got unsuccessful http response code", new IOException("Error: " + response));
-			}
-
-
-			return responseWrapper;
+			return this.sendRequest(request);
 		}
 	}
 
@@ -469,7 +469,7 @@ public class AirlockChannel {
 			@NotNull String app,
 			@NotNull String mark,
 			@NotNull JsonElement json // todo maybe migrate type to JsonObject
-	) throws AirlockResponseError, AirlockRequestError {
+	) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
@@ -511,7 +511,7 @@ public class AirlockChannel {
 			@NotNull String app,
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
-	) throws AirlockResponseError, AirlockRequestError {
+	) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		int id = this.nextID();
 		JsonObject subscribeDataObj;
 		subscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -535,7 +535,7 @@ public class AirlockChannel {
 	 *
 	 * @param subscription The id of the subscription to unsubscribe from
 	 */
-	public void unsubscribe(int subscription) throws AirlockResponseError, AirlockRequestError {
+	public void unsubscribe(int subscription) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		int id = this.nextID();
 
 		JsonObject unsubscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -550,7 +550,7 @@ public class AirlockChannel {
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public void delete() throws AirlockResponseError, AirlockRequestError {
+	public void delete() throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		int id = this.nextID();
 
 		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -578,11 +578,10 @@ public class AirlockChannel {
 	}
 
 
-	public JsonElement scryRequest(String app, String path) throws ScryDataNotFoundException, ScryFailureException, AirlockResponseError, AirlockAuthenticationError {
+	public JsonElement scryRequest(String app, String path) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockRequestError, AirlockResponseError {
 		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
 		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
 		URL scryUrl = this.getScryUrl(app, path, "json");
-
 
 		Request request = new Request.Builder()
 				.url(scryUrl)
@@ -590,42 +589,36 @@ public class AirlockChannel {
 				.get()
 				.build();
 
-		Response response = null;
-		try {
-			response = client.newCall(request).execute();
-		} catch (IOException e) {
-			throw new AirlockResponseError("Unable to execute request", e);
-		}
-
-		InMemoryResponse responseWrapper = new InMemoryResponse(response);
-		String bodyText = responseWrapper.getBodyAsString();
-
-		if (!response.isSuccessful()) {
-			System.err.println(bodyText);
-			this.throwOnScryFailure(response);
-		}
 		System.out.println(",============ScryRequest============,");
 		System.out.println("Request: " + scryUrl);
 		System.out.println(".============ScryRequest============.");
+
+		InMemoryResponseWrapper responseWrapper;
+		try {
+			responseWrapper = this.sendRequest(request);
+		} catch (AirlockResponseError responseError) {
+
+			InMemoryResponseWrapper errorResponseWrapper = responseError.responseWrapper;
+			Response response = errorResponseWrapper.response;
+			System.err.println(errorResponseWrapper.getBodyAsString());
+
+			if (response.code() == 404) {
+				throw new ScryDataNotFoundException("Got 404 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
+			} else if (response.code() == 500) {
+				throw new ScryFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "Response: " + response.body());
+			} else {
+				throw responseError;
+			}
+
+		}
+
+		String bodyText = responseWrapper.getBodyAsString();
 
 		return JsonParser.parseString(bodyText);
 	}
 
 
-	private void throwOnScryFailure(Response response) throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError {
-		// assuming we receive a non-closed response object
-		assert !response.isSuccessful();
-
-		if (response.code() == 403) {
-			throw new AirlockAuthenticationError("Got 403 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
-		} else if (response.code() == 404) {
-			throw new ScryDataNotFoundException("Got 404 when trying to make scry request.\n" + "Request: " + response.request() + "Response: " + response.body());
-		} else if (response.code() == 500) {
-			throw new ScryFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "Response: " + response.body());
-		}
-	}
-
-	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws AirlockResponseError, AirlockRequestError, SpiderFailureException {
+	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws AirlockRequestError, SpiderFailureException, AirlockResponseError, AirlockAuthenticationError {
 
 		// copied from sendJSONtoChannel
 		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
@@ -633,9 +626,12 @@ public class AirlockChannel {
 		String jsonString = AirlockUtils.gson.toJson(jsonData.deepCopy()); // todo possible refactor of deep copy
 
 		RequestBody requestBody = RequestBody.create(jsonString, JSON);
-
-
 		URL spiderUrl = this.getSpiderUrl(inputMark, threadName, outputMark);
+
+		System.out.println(",============SpiderRequest============,");
+		System.out.println("Request: " + spiderUrl);
+		System.out.println("Payload: " + jsonString);
+		System.out.println(".============SpiderRequest============.");
 
 		Request request = new Request.Builder()
 				.url(spiderUrl)
@@ -643,45 +639,26 @@ public class AirlockChannel {
 				.post(requestBody)
 				.build();
 
-		Response response = null;
+		InMemoryResponseWrapper responseWrapper;
+
 		try {
-			response = client.newCall(request).execute();
-		} catch (IOException e) {
-			throw new AirlockRequestError("Failed to execute request", e);
+			responseWrapper = this.sendRequest(request);
+
+		} catch (AirlockResponseError airlockResponseError) {
+
+			Response response = airlockResponseError.responseWrapper.response;
+			if (response.code() == 500) {
+				throw new SpiderFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "\nResponse: \n" + response.body(), airlockResponseError);
+			} else {
+				throw airlockResponseError;
+			}
+
 		}
 
-		InMemoryResponse responseWrapper = new InMemoryResponse(response);
 		String bodyText = responseWrapper.getBodyAsString();
 
-		if (!response.isSuccessful()) {
-			// 500 means there was an error doing the spider. add to custom errors
-			// for example, trying to create a duplicate graph. in that case it doesn't seem to give a stack trace unlike the other times which was weird
-			this.throwOnSpiderFailure(response);
-			System.err.println(bodyText);
-			throw new AirlockResponseError("Got unsuccessful http response code", new IOException("Error: " + response));
-		}
-
-		System.out.println(",============SpiderRequest============,");
-		System.out.println("Request: " + spiderUrl);
-		System.out.println("Payload: " + jsonString);
-		System.out.println(".============SpiderRequest============.");
-
-
 		return JsonParser.parseString(bodyText);
-
-
 	}
-
-
-	private void throwOnSpiderFailure(Response response) throws SpiderFailureException {
-		// assuming we receive a non-closed response object
-		assert !response.isSuccessful();
-
-		if (response.code() == 500) {
-			throw new SpiderFailureException("Got 500 when trying to make a request.\n" + "Request: " + response.request() + "\nResponse: \n" + response.body());
-		}
-	}
-
 
 
 	/**
