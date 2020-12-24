@@ -167,8 +167,12 @@ public class AirlockChannel {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
 				.build();
 
+		// todo figure out if newly changed `synchronized` blocks break functionality again or not
+		//  i basically removed what i thought would not be affected by inter-thread bugs (i.e. only local thread data stuff outside of synchronized
+		//  but there may still be problems which will only arise after testing
+
 		// todo make this class more modular so we can easily replace http clients/libraries.
-		//  the only thing thatt would have some friction is adapting the cookie jar, but you could just go back to string based auth temporarily
+		//  the only thing that would have some friction is adapting the cookie jar, but you could just go back to string based auth temporarily
 
 		// todo figure out what happens vs what should happen when:
 		//  ship ~tun is running at localhost:80 and has code sampel-sampel
@@ -292,8 +296,9 @@ public class AirlockChannel {
 					public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
 						int eventID = Integer.parseInt(requireNonNull(id, "Got null id")); // this thing is kinda useless
 
+						EyreResponse eyreResponse = AirlockUtils.gson.fromJson(data, EyreResponse.class);
+
 						synchronized (urbitLock) {
-							EyreResponse eyreResponse = AirlockUtils.gson.fromJson(data, EyreResponse.class);
 							lastSeenEventId = eyreResponse.id;
 
 							System.out.println(",=============Event==============,");
@@ -319,39 +324,39 @@ public class AirlockChannel {
 							}
 
 							// possible enhancement: add check to ensure that the id received in the eyreResponse matches the one we expect to see
+						}
 
-							switch (eyreResponse.response) {
-								case POKE:
-									var pokeHandler = pokeHandlers.get(eyreResponse.id);
-									if (eyreResponse.ok) {
-										pokeHandler.complete(PokeResponse.SUCCESS);
-									} else {
-										pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
-									}
-									pokeHandlers.remove(eyreResponse.id);
-									break;
-								case SUBSCRIBE:
-									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-									if (eyreResponse.ok) {
-										subscribeHandler.accept(SubscribeEvent.STARTED);
-									} else {
-										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
-										subscribeHandlers.remove(eyreResponse.id);
-									}
-									break;
-								case DIFF:
-									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
-									break;
-								case QUIT:
-									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-									subscribeHandler.accept(SubscribeEvent.FINISHED);
+						switch (eyreResponse.response) {
+							case POKE:
+								var pokeHandler = pokeHandlers.get(eyreResponse.id);
+								if (eyreResponse.ok) {
+									pokeHandler.complete(PokeResponse.SUCCESS);
+								} else {
+									pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
+								}
+								pokeHandlers.remove(eyreResponse.id);
+								break;
+							case SUBSCRIBE:
+								var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+								if (eyreResponse.ok) {
+									subscribeHandler.accept(SubscribeEvent.STARTED);
+								} else {
+									subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
 									subscribeHandlers.remove(eyreResponse.id);
-									break;
+								}
+								break;
+							case DIFF:
+								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+								subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
+								break;
+							case QUIT:
+								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+								subscribeHandler.accept(SubscribeEvent.FINISHED);
+								subscribeHandlers.remove(eyreResponse.id);
+								break;
 
-								default:
-									throw new IllegalStateException("Got unknown eyre responseType");
-							}
+							default:
+								throw new IllegalStateException("Got unknown eyre responseType");
 						}
 					}
 
@@ -420,36 +425,37 @@ public class AirlockChannel {
 	 * @return the response to the request
 	 */
 	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
+		JsonArray fullJsonDataArray = new JsonArray();
+		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
+		fullJsonDataArray.add(fullJsonData);
+
+		String jsonString = AirlockUtils.gson.toJson(fullJsonDataArray);
+
+		RequestBody requestBody = RequestBody.create(jsonString, JSON);
+
+		Request request = new Request.Builder()
+				.url(this.getChannelUrl())
+				.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
+				.put(requestBody)
+				.build();
+
+
+		System.out.println(",============SendMessage============,");
+		System.out.println("About the send the following message");
+		System.out.println("Id: " + jsonData.get("id").getAsInt());
+		System.out.println("Message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
+		System.out.println(".============SendMessage============.");
 
 		synchronized (urbitLock) {
-			JsonArray fullJsonDataArray = new JsonArray();
-			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
-			//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
-			fullJsonDataArray.add(fullJsonData);
 
 			// todo is this correct behavior?? I just adapted it blindly-ish
 			// commenting it out seems to not have an effect, i.e. tests still pass,
 			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
-
-			String jsonString = AirlockUtils.gson.toJson(fullJsonDataArray);
-
-			RequestBody requestBody = RequestBody.create(jsonString, JSON);
-
-			Request request = new Request.Builder()
-					.url(this.getChannelUrl())
-					.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
-					.put(requestBody)
-					.build();
-
-			System.out.println(",============SendMessage============,");
-			System.out.println("About the send the following message");
-			System.out.println("Id: " + jsonData.get("id").getAsInt());
-			System.out.println("Message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
-			System.out.println(".============SendMessage============.");
-
 			return this.sendRequest(request);
 		}
+
 	}
 
 
