@@ -5,9 +5,6 @@ import airlock.agent.graph.Resource;
 import airlock.agent.graph.TextContent;
 import airlock.agent.group.GroupUtils;
 import airlock.types.ShipName;
-import airlock.errors.*;
-import airlock.errors.scry.*;
-import airlock.errors.spider.*;
 
 import java.net.URL;
 import java.time.Instant;
