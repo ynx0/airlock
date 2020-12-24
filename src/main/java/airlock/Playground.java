@@ -4,19 +4,15 @@ import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.Resource;
 import airlock.agent.graph.TextContent;
 import airlock.agent.group.GroupUtils;
-import airlock.errors.*;
-import airlock.errors.scry.ScryDataNotFoundException;
-import airlock.errors.scry.ScryFailureException;
-import airlock.errors.spider.SpiderFailureException;
 import airlock.types.ShipName;
+import airlock.errors.*;
+import airlock.errors.scry.*;
+import airlock.errors.spider.*;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 public class Playground {
 

@@ -1,6 +1,5 @@
 package airlock;
 
-import airlock.errors.AirlockException;
 import okhttp3.Response;
 import okio.BufferedSource;
 import okio.ByteString;

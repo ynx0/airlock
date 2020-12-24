@@ -208,7 +208,7 @@ public class Urbit {
 	 *
 	 * @return Returns an immutable wrapper around a response body object
 	 */
-	public InMemoryResponseWrapper authenticate() throws AirlockChannelError {
+	public InMemoryResponseWrapper authenticate() throws AirlockRequestError, AirlockAuthenticationError {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -223,9 +223,7 @@ public class Urbit {
 		try {
 			response = client.newCall(request).execute();
 		} catch (IOException e) {
-			throw new AirlockChannelError("Failed to execute request", e);
-//			throw new AirlockConnectionError("Failed to execute request", e);
-
+			throw new AirlockRequestError("Failed to execute request", e);
 		}
 
 		if (!response.isSuccessful()) {
@@ -249,7 +247,7 @@ public class Urbit {
 	 * otherwise we will never be able to create a connection to the ship.
 	 *
 	 */
-	private void createChannel() throws AirlockChannelError {
+	private void createChannel() throws AirlockResponseError, AirlockRequestError {
 		JsonPrimitive jsonPayload = new JsonPrimitive("Opening Airlock :)");
 		this.poke(this.getShipName(), "hood", "helm-hi", jsonPayload);
 	}
@@ -257,7 +255,7 @@ public class Urbit {
 	/**
 	 * Initializes the SSE pipe for the appropriate channel (if necessary). Must be called after authenticating
 	 */
-	public void connect() throws AirlockChannelError {
+	public void connect() throws AirlockResponseError, AirlockRequestError {
 		if (this.sseClient != null) {
 			return;
 		}
@@ -410,7 +408,7 @@ public class Urbit {
 	 * @param jsonData The data to send with the action
 	 * @return the response to the request
 	 */
-	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockChannelError {
+	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockResponseError, AirlockRequestError {
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
@@ -441,13 +439,13 @@ public class Urbit {
 			try {
 				response = client.newCall(request).execute();
 			} catch (IOException e) {
-				throw new AirlockChannelError("Unable to execute request", e);
+				throw new AirlockRequestError("Unable to execute request", e);
 			}
 
 			InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
 			if (!response.isSuccessful()) {
 				System.err.println(responseWrapper.getBody().utf8());
-				throw new AirlockChannelError("Got unsuccessful http response code", new IOException("Error: " + response));
+				throw new AirlockResponseError("Got unsuccessful http response code", new IOException("Error: " + response));
 			}
 
 
@@ -470,7 +468,7 @@ public class Urbit {
 			@NotNull String app,
 			@NotNull String mark,
 			@NotNull JsonElement json // todo maybe migrate type to JsonObject
-	) throws AirlockChannelError {
+	) throws AirlockResponseError, AirlockRequestError {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
 		//  you cannot poke a foreign ship with any other mark than json
@@ -512,7 +510,7 @@ public class Urbit {
 			@NotNull String app,
 			@NotNull String path,
 			@NotNull Consumer<SubscribeEvent> subscribeHandler
-	) throws AirlockChannelError {
+	) throws AirlockResponseError, AirlockRequestError {
 		int id = this.nextID();
 		JsonObject subscribeDataObj;
 		subscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -536,7 +534,7 @@ public class Urbit {
 	 *
 	 * @param subscription The id of the subscription to unsubscribe from
 	 */
-	public void unsubscribe(int subscription) throws AirlockChannelError {
+	public void unsubscribe(int subscription) throws AirlockResponseError, AirlockRequestError {
 		int id = this.nextID();
 
 		JsonObject unsubscribeDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -551,7 +549,7 @@ public class Urbit {
 	/**
 	 * Deletes the connection to a channel.
 	 */
-	public void delete() throws AirlockChannelError {
+	public void delete() throws AirlockResponseError, AirlockRequestError {
 		int id = this.nextID();
 
 		JsonObject deleteDataObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -566,7 +564,7 @@ public class Urbit {
 	 * Acks the given eventID
 	 * @param eventID the id of the event to ack
 	 */
-	private void ack(int eventID) throws AirlockChannelError {
+	private void ack(int eventID) throws AirlockResponseError, AirlockRequestError {
 		int id = this.nextID();
 
 		JsonObject ackObj = AirlockUtils.gson.toJsonTree(Map.of(
@@ -579,7 +577,7 @@ public class Urbit {
 	}
 
 
-	public JsonElement scryRequest(String app, String path) throws AirlockChannelError, ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException {
+	public JsonElement scryRequest(String app, String path) throws ScryDataNotFoundException, ScryFailureException, AirlockResponseError, AirlockAuthenticationError {
 		// as per https://github.com/urbit/urbit/blob/90faac16c9f61278d0a1d946bd91c5b387f7a423/pkg/interface/src/logic/api/base.ts
 		// we are never gonna use any other mark than json because that's the only protocol we know how to work with
 		URL scryUrl = this.getScryUrl(app, path, "json");
@@ -595,7 +593,7 @@ public class Urbit {
 		try {
 			response = client.newCall(request).execute();
 		} catch (IOException e) {
-			throw new AirlockChannelError("Unable to execute request", e);
+			throw new AirlockResponseError("Unable to execute request", e);
 		}
 
 		InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
@@ -626,7 +624,7 @@ public class Urbit {
 		}
 	}
 
-	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws AirlockChannelError, SpiderFailureException {
+	public JsonElement spiderRequest(String inputMark, String threadName, String outputMark, JsonObject jsonData) throws AirlockResponseError, AirlockRequestError, SpiderFailureException {
 
 		// copied from sendJSONtoChannel
 		// tbh I think that for now I'm only ever gonna be sending the json mark. so maybe I should just send
@@ -648,7 +646,7 @@ public class Urbit {
 		try {
 			response = client.newCall(request).execute();
 		} catch (IOException e) {
-			throw new AirlockChannelError("Failed to execute request", e);
+			throw new AirlockRequestError("Failed to execute request", e);
 		}
 
 		InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
@@ -659,7 +657,7 @@ public class Urbit {
 			// for example, trying to create a duplicate graph. in that case it doesn't seem to give a stack trace unlike the other times which was weird
 			this.throwOnSpiderFailure(response);
 			System.err.println(bodyText);
-			throw new AirlockChannelError("Got unsuccessful http response code", new IOException("Error: " + response));
+			throw new AirlockResponseError("Got unsuccessful http response code", new IOException("Error: " + response));
 		}
 
 		System.out.println(",============SpiderRequest============,");

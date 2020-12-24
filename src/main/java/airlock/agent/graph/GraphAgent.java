@@ -202,7 +202,7 @@ export const createPost = (
     return this.action('graph-store', 'graph-update', action)
   }
   */
-	private CompletableFuture<PokeResponse> storeAction(JsonObject payload) throws AirlockChannelError {
+	private CompletableFuture<PokeResponse> storeAction(JsonObject payload) throws AirlockResponseError, AirlockRequestError {
 		return this.action("graph-store", "graph-update", payload, null);
 	}
 
@@ -211,7 +211,7 @@ export const createPost = (
 		return this.spider('graph-view-action', 'json', threadName, action);
 	  }
 	*/
-	private JsonElement viewAction(String threadName, JsonObject payload) throws AirlockChannelError, SpiderFailureException {
+	private JsonElement viewAction(String threadName, JsonObject payload) throws AirlockResponseError, AirlockRequestError, SpiderFailureException {
 		return this.urbit.spiderRequest("graph-view-action", threadName, "json", payload);
 	}
 
@@ -221,7 +221,7 @@ export const createPost = (
   }
 
 */
-	private CompletableFuture<PokeResponse> hookAction(String ship, JsonObject payload) throws AirlockChannelError {
+	private CompletableFuture<PokeResponse> hookAction(String ship, JsonObject payload) throws AirlockResponseError, AirlockRequestError {
 		// okay i don't know if you actually need ship or not based simply on porting right now
 		// so i guess todo to test out ship unused parameter behaviour
 		return this.action("graph-push-hook", "graph-update", payload, ship);
@@ -299,7 +299,7 @@ export const createPost = (
 */
 
 
-	public JsonElement createUnmanagedGraph(String name, String title, String description, GroupPolicy policy, Module module) throws AirlockChannelError, SpiderFailureException {
+	public JsonElement createUnmanagedGraph(String name, String title, String description, GroupPolicy policy, Module module) throws AirlockResponseError, AirlockRequestError, SpiderFailureException {
 		/*
 		This requires Enc<S>, which idk wtf it's doing. I mean i guess i get it now but like translating this requires a different way of doing things compeltely.
 		I think i can just implement the equivalent in a custom seralizer or a utlitiy class...
@@ -429,7 +429,7 @@ export const createPost = (
     });
   }
   */
-	public CompletableFuture<PokeResponse> addGraph(String ship, String name, Map<String, Object> graph, String mark) throws AirlockChannelError {
+	public CompletableFuture<PokeResponse> addGraph(String ship, String name, Map<String, Object> graph, String mark) throws AirlockResponseError, AirlockRequestError {
 		return this.storeAction(map2json(Map.of(
 				"add-graph", Map.of(
 						"resource", Map.of("ship", ship, "name", name),
@@ -452,7 +452,7 @@ export const createPost = (
     return this.addNodes(ship, name, nodes);
   }
   */
-	public CompletableFuture<PokeResponse> addPost(String ship, String name, Post post) throws AirlockChannelError {
+	public CompletableFuture<PokeResponse> addPost(String ship, String name, Post post) throws AirlockResponseError, AirlockRequestError {
 		Map<String, Object> nodes = new HashMap<>();
 //		new Node(post, null);
 
@@ -478,7 +478,7 @@ export const createPost = (
     return this.addNodes(ship, name, nodes);
   }
 */
-	public CompletableFuture<PokeResponse> addNode(String ship, String name, Node node) throws AirlockChannelError {
+	public CompletableFuture<PokeResponse> addNode(String ship, String name, Node node) throws AirlockResponseError, AirlockRequestError {
 		Map<String, Object> nodes = new HashMap<>();
 
 		nodes.put(node.post.index, node);
@@ -504,7 +504,7 @@ export const createPost = (
     return promise;
   }
 */
-	public CompletableFuture<PokeResponse> addNodes(String ship, String name, Map<String, Object> nodes) throws AirlockChannelError {
+	public CompletableFuture<PokeResponse> addNodes(String ship, String name, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
 						"resource", Map.of("ship", ship, "name", name),
@@ -537,7 +537,7 @@ export const createPost = (
     });
   }
 */
-	public CompletableFuture<PokeResponse> removeNodes(String ship, String name, String[] indices) throws AirlockChannelError {
+	public CompletableFuture<PokeResponse> removeNodes(String ship, String name, String[] indices) throws AirlockResponseError, AirlockRequestError {
 		return this.hookAction(ship, map2json(Map.of(
 				"remove-nodes", Map.of(
 						"resource", Map.of("ship", ship, "name", name),
@@ -559,7 +559,7 @@ export const createPost = (
   }
 
 */
-	public JsonObject getKeys() throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public JsonObject getKeys() throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		JsonObject scryResponse = this.urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
 		// this should be an object of the form:
 		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
@@ -587,7 +587,7 @@ export const createPost = (
 
 */
 
-	public JsonElement getTags() throws ScryFailureException, ShipAuthenticationError, ScryDataNotFoundException, AirlockChannelError {
+	public JsonElement getTags() throws ScryFailureException, ScryDataNotFoundException, AirlockChannelError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
 		// todo state handling
 		return scryResponse;
@@ -605,7 +605,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement getTagQueries() throws ScryFailureException, ShipAuthenticationError, ScryDataNotFoundException, AirlockChannelError {
+	public JsonElement getTagQueries() throws ScryFailureException, ScryDataNotFoundException, AirlockChannelError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
 		// todo implement state handling
 		return scryResponse;
@@ -622,7 +622,7 @@ export const createPost = (
       });
   }
 */
-	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
 		// todo implement state handling
 		return scryResponse;
@@ -635,7 +635,7 @@ export const createPost = (
   }
 	*/
 
-	public void getNewest(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public void getNewest(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		final var data = this.urbit.scryRequest("graph-store", "/newest/" + ship + "/" + resource + "/" + count + index);
 		// todo state handling
 	}
@@ -650,7 +650,7 @@ export const createPost = (
     this.store.handleEvent({ data });
   }
 */
-	public void getOlderSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public void getOlderSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + ship + "/" + resource + "/" + count + idx);
 		// todo handle effect
@@ -668,7 +668,7 @@ export const createPost = (
   }
 	*/
 
-	public void getYoungerSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public void getYoungerSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + count + idx);
 		// todo handle storage
@@ -688,7 +688,7 @@ export const createPost = (
     });
   }
 */
-	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + ship + "/" + resource + "/" + end + "/" + "start");
 		// todo handle storage
 		return scryResponse;
@@ -711,7 +711,7 @@ export const createPost = (
   }
 }
 */
-	public JsonElement getNode(String ship, String resource, String index) throws ScryDataNotFoundException, ShipAuthenticationError, ScryFailureException, AirlockChannelError {
+	public JsonElement getNode(String ship, String resource, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockChannelError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + idx);
 		// todo handle storage
