@@ -22,6 +22,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Disabled("Chat store is deprecated")
 public class UrbitIntegrationTestsChatStore {
 	private static AirlockChannel urbit;
 
@@ -38,11 +39,6 @@ public class UrbitIntegrationTestsChatStore {
 					&& subscribeEvent.updateJson.has("chat-update")  // and the update json contains a "chat-update" object
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
 
-
-	/* TODOs
-	 * TODO add tests for subscription canceling
-	 * TODO test manually canceling eventsource / deleting channel
-	 */
 
 
 	@BeforeAll
