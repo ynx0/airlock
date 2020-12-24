@@ -2,9 +2,10 @@ package airlock;
 
 import okhttp3.Response;
 import okio.BufferedSource;
-import okio.ByteString;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 
@@ -14,20 +15,29 @@ import java.util.Objects;
  *     Specifically, it makes generates an immutable "copy" of the response body.
  * </p>
  */
-public class InMemoryResponseWrapper {
+public class InMemoryResponse {
 	// todo, maybe we don't need to keep around this data and the class is useless
 	//  the Response body is meant to be thrown away as per okhttp design
 	//  in the future, maybe we should remove the use of this class entirely and not return any responses.
 	// for now im keeping it tho
-	private final Response closedResponse;
-	private final ByteString inMemoryResponseBody;
+
+	/**
+	 * The closed response object. Trying to perform any reads to the body will necessarily cause a `closed` exception to be thrown
+	 * (i.e. anything like response.close() or response.body())
+	 */
+	public final Response response;
+
+	/**
+	 * The body content of the response, as a string
+	 */
+	public final ByteBuffer responseBody;
 
 	// response.body() is a one-shot obj that needs to be copied manually, and we can't call it multiple times to use in multiple places
 	// For example, we cannot inspect the body in one method, then pass the same response object to somewhere else because the buffer will be exhausted
 	// this is why InMemoryResponseWrapper exists
 
-	public InMemoryResponseWrapper(Response response) {
-		this.closedResponse = response;
+	public InMemoryResponse(Response response) {
+		this.response = response;
 		// taken from https://github.com/square/okhttp/issues/2869
 		BufferedSource source = Objects.requireNonNull(response.body(), "Got null response body").source();
 		try {
@@ -41,26 +51,12 @@ public class InMemoryResponseWrapper {
 			// until we have a proper way of addressing this, im leaving it as a runtime exception
 			throw new RuntimeException("Unable to buffer body from okhttp response", e);
 		}
-		this.inMemoryResponseBody = source.getBuffer().snapshot();
+		this.responseBody = source.getBuffer().snapshot().asByteBuffer().asReadOnlyBuffer(); // i don't know if i need `asReadOnlyBuffer`
 		response.close();
 	}
 
-	/**
-	 * Get the underlying response object
-	 * @return the underlying response object
-	 */
-	public Response getClosedResponse() {
-		return this.closedResponse;
-	}
-
-	/**
-	 * Get the immutable copy of the response body as a {@link ByteString}
-	 * @return the response body
-	 */
-	public ByteString getBody() {
-		// todo, returning a OkHttp.ByteString requires the outside user to also depend on okhttp
-		//  which may be bad as it is leaking unneeded apis. so, maybe we should return a ByteBuffer (native java thingy) instead
-		return this.inMemoryResponseBody;
+	public String getBodyAsString() {
+		return StandardCharsets.UTF_8.decode(this.responseBody).toString();
 	}
 
 }

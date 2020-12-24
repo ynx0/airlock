@@ -208,7 +208,7 @@ public class AirlockChannel {
 	 *
 	 * @return Returns an immutable wrapper around a response body object
 	 */
-	public InMemoryResponseWrapper authenticate() throws AirlockRequestError, AirlockAuthenticationError {
+	public InMemoryResponse authenticate() throws AirlockRequestError, AirlockAuthenticationError {
 		RequestBody formBody = new FormBody.Builder()
 				.add("password", this.code)
 				.build();
@@ -237,7 +237,7 @@ public class AirlockChannel {
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
-		return new InMemoryResponseWrapper(response);
+		return new InMemoryResponse(response);
 	}
 
 
@@ -408,7 +408,7 @@ public class AirlockChannel {
 	 * @param jsonData The data to send with the action
 	 * @return the response to the request
 	 */
-	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockResponseError, AirlockRequestError {
+	public InMemoryResponse sendJSONtoChannel(JsonObject jsonData) throws AirlockResponseError, AirlockRequestError {
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
@@ -442,9 +442,9 @@ public class AirlockChannel {
 				throw new AirlockRequestError("Unable to execute request", e);
 			}
 
-			InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
+			InMemoryResponse responseWrapper = new InMemoryResponse(response);
 			if (!response.isSuccessful()) {
-				System.err.println(responseWrapper.getBody().utf8());
+				System.err.println(responseWrapper.getBodyAsString());
 				throw new AirlockResponseError("Got unsuccessful http response code", new IOException("Error: " + response));
 			}
 
@@ -488,9 +488,9 @@ public class AirlockChannel {
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		InMemoryResponseWrapper pokeResponse = this.sendJSONtoChannel(pokeDataObj);
+		InMemoryResponse pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
-		if (pokeResponse.getClosedResponse().isSuccessful()) {
+		if (pokeResponse.response.isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
 		}
 
@@ -520,9 +520,9 @@ public class AirlockChannel {
 				"app", app,
 				"path", path
 		)).getAsJsonObject();
-		InMemoryResponseWrapper subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
+		InMemoryResponse subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
 
-		if (subscribeResponse.getClosedResponse().isSuccessful()) {
+		if (subscribeResponse.response.isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
 		}
 
@@ -596,8 +596,8 @@ public class AirlockChannel {
 			throw new AirlockResponseError("Unable to execute request", e);
 		}
 
-		InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
-		String bodyText = responseWrapper.getBody().utf8();
+		InMemoryResponse responseWrapper = new InMemoryResponse(response);
+		String bodyText = responseWrapper.getBodyAsString();
 
 		if (!response.isSuccessful()) {
 			System.err.println(bodyText);
@@ -649,8 +649,8 @@ public class AirlockChannel {
 			throw new AirlockRequestError("Failed to execute request", e);
 		}
 
-		InMemoryResponseWrapper responseWrapper = new InMemoryResponseWrapper(response);
-		String bodyText = responseWrapper.getBody().utf8();
+		InMemoryResponse responseWrapper = new InMemoryResponse(response);
+		String bodyText = responseWrapper.getBodyAsString();
 
 		if (!response.isSuccessful()) {
 			// 500 means there was an error doing the spider. add to custom errors
