@@ -2,6 +2,7 @@ package airlock.agent;
 
 import airlock.PokeResponse;
 import airlock.AirlockChannel;
+import airlock.errors.AirlockAuthenticationError;
 import airlock.errors.AirlockRequestError;
 import airlock.errors.AirlockResponseError;
 import com.google.gson.JsonObject;
@@ -20,15 +21,15 @@ public abstract class Agent {
 		this.state = state;
 	}
 
-	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockResponseError, AirlockRequestError {
+	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.urbit.poke(ship, app, mark, data);
 	}
 
-	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws AirlockResponseError, AirlockRequestError {
+	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.urbit.poke(this.urbit.getShipName(), app, mark, data);
 	}
 
-	void unsubscribe(int subscriptionID) throws AirlockResponseError, AirlockRequestError {
+	void unsubscribe(int subscriptionID) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		this.urbit.unsubscribe(subscriptionID);
 	}
 
