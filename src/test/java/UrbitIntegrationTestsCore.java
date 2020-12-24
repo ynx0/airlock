@@ -1,5 +1,5 @@
 import airlock.InMemoryResponseWrapper;
-import airlock.Urbit;
+import airlock.AirlockChannel;
 import airlock.errors.AirlockChannelError;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UrbitIntegrationTestsCore {
 
-	private static Urbit urbit;
+	private static AirlockChannel urbit;
 
 
 	/* TODOs
@@ -32,7 +32,7 @@ public class UrbitIntegrationTestsCore {
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
-		urbit = new Urbit(url, shipName, code);
+		urbit = new AirlockChannel(url, shipName, code);
 
 		// Assumes fake ship zod is booted and running
 

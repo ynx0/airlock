@@ -1,7 +1,7 @@
 import airlock.AirlockUtils;
 import airlock.PokeResponse;
 import airlock.SubscribeEvent;
-import airlock.Urbit;
+import airlock.AirlockChannel;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
 import airlock.agent.chat.MessagePayload;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UrbitIntegrationTestsChatStore {
-	private static Urbit urbit;
+	private static AirlockChannel urbit;
 
 	private static CompletableFuture<PokeResponse> futureChatPokeResponse;
 	private static List<SubscribeEvent> subscribeToMailboxEvents;
@@ -52,7 +52,7 @@ public class UrbitIntegrationTestsChatStore {
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
-		urbit = new Urbit(url, shipName, code);
+		urbit = new AirlockChannel(url, shipName, code);
 		urbit.authenticate();
 		urbit.connect();
 

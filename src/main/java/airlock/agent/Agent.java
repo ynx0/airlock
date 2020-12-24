@@ -1,7 +1,7 @@
 package airlock.agent;
 
 import airlock.PokeResponse;
-import airlock.Urbit;
+import airlock.AirlockChannel;
 import airlock.errors.AirlockRequestError;
 import airlock.errors.AirlockResponseError;
 import com.google.gson.JsonObject;
@@ -12,10 +12,10 @@ public abstract class Agent {
 
 	protected final AgentState state;
 
-	protected final Urbit urbit;
+	protected final AirlockChannel urbit;
 
 	// adapted from https://github.com/dclelland/UrsusAPI/
-	protected Agent(Urbit urbit, AgentState state) {
+	protected Agent(AirlockChannel urbit, AgentState state) {
 		this.urbit = urbit;
 		this.state = state;
 	}

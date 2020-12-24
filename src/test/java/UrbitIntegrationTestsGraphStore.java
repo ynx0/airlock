@@ -1,4 +1,4 @@
-import airlock.Urbit;
+import airlock.AirlockChannel;
 import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.Resource;
 import airlock.errors.AirlockChannelError;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UrbitIntegrationTestsGraphStore {
 
 
-	private static Urbit urbit;
+	private static AirlockChannel urbit;
 	private static GraphAgent graphStoreAgent;
 
 	@BeforeAll
@@ -30,7 +30,7 @@ public class UrbitIntegrationTestsGraphStore {
 		String shipName = "zod";
 		String code = "lidlut-tabwed-pillex-ridrup";
 
-		urbit = new Urbit(url, shipName, code);
+		urbit = new AirlockChannel(url, shipName, code);
 		urbit.authenticate();
 		urbit.connect();
 		graphStoreAgent = new GraphAgent(urbit);

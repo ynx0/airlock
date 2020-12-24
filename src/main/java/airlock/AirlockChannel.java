@@ -26,7 +26,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * This class represents a connection to an urbit ship. It can be used to send messages to a respective ship over the eyre protocol.
  */
-public class Urbit {
+public class AirlockChannel {
 
 	/**
 	 * The code is the deterministic password used to authenticate with an Urbit ship
@@ -67,7 +67,7 @@ public class Urbit {
 	private EventSource sseClient;
 
 	/**
-	 * The authentication cookie given to us after logging in with the {@link Urbit#code}.
+	 * The authentication cookie given to us after logging in with the {@link AirlockChannel#code}.
 	 * Note: it is possible to authenticate with an incorrect +code and still get an auth cookie.
 	 * Only after sending the first real request will it fail.
 	 */
@@ -118,7 +118,7 @@ public class Urbit {
 	private final Map<Integer, CompletableFuture<PokeResponse>> pokeHandlers;
 
 	/**
-	 * This is the equivalent mapping for subscription handlers. See {@link Urbit#pokeHandlers}.
+	 * This is the equivalent mapping for subscription handlers. See {@link AirlockChannel#pokeHandlers}.
 	 */
 	private final Map<Integer, Consumer<SubscribeEvent>> subscribeHandlers;
 
@@ -144,7 +144,7 @@ public class Urbit {
 	 * @param shipName The name of the ship to connect to (@p)
 	 * @param code     The access code for the ship at that address
 	 */
-	public Urbit(URL url, String shipName, String code) {
+	public AirlockChannel(URL url, String shipName, String code) {
 		this.shipName = requireNonNull(shipName);
 		this.code = requireNonNull(code, "Please provide a code");
 		requireNonNull(url, "Please provide a url");
@@ -243,7 +243,7 @@ public class Urbit {
 
 	/**
 	 * Creates the channel on which the sseClient will be instantiated on
-	 * This must be done in the same breath as creating the sseClient (i.e. in {@link Urbit#connect()},
+	 * This must be done in the same breath as creating the sseClient (i.e. in {@link AirlockChannel#connect()},
 	 * otherwise we will never be able to create a connection to the ship.
 	 *
 	 */
@@ -385,7 +385,7 @@ public class Urbit {
 	public void tearDown() {
 
 
-		channelID = Urbit.uid();
+		channelID = AirlockChannel.uid();
 		this.sseClient.cancel();
 //		this.client.dispatcher().cancelAll(); // todo see if we need this or if it will cause more problems
 		sseClient = null;
@@ -690,9 +690,9 @@ public class Urbit {
 	 * @param code Code to log in
 	 */
 	@NotNull
-	public static Urbit onArvoNetwork(String name, String code) {
+	public static AirlockChannel onArvoNetwork(String name, String code) {
 		try {
-			return new Urbit(URI.create("https://" + name + ".arvo.network").toURL(), name, code);
+			return new AirlockChannel(URI.create("https://" + name + ".arvo.network").toURL(), name, code);
 		} catch (MalformedURLException e) {
 			throw new IllegalStateException("Unable to create proper url from arvo.network");
 		}
@@ -713,7 +713,7 @@ public class Urbit {
 
 		StringBuilder r = new StringBuilder(Integer.toString((int) Math.round(n), 16));
 		while (r.toString().length() < len) {
-			r.append(Urbit.hexString(len - maxlen));
+			r.append(AirlockChannel.hexString(len - maxlen));
 		}
 		return r.toString();
 	}
@@ -744,7 +744,7 @@ public class Urbit {
 
 	@NotNull
 	public static String generateChannelID() {
-		return Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + Urbit.hexString(6);
+		return Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + AirlockChannel.hexString(6);
 	}
 
 

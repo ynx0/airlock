@@ -2,7 +2,7 @@ package airlock.agent.graph;
 
 import airlock.AirlockUtils;
 import airlock.PokeResponse;
-import airlock.Urbit;
+import airlock.AirlockChannel;
 import airlock.agent.Agent;
 import airlock.agent.group.GroupUtils;
 import airlock.agent.group.types.GroupPolicy;
@@ -28,7 +28,7 @@ public class GraphAgent extends Agent {
 
 	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
 	// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
-	public GraphAgent(Urbit urbit) {
+	public GraphAgent(AirlockChannel urbit) {
 		// todo handle state
 		super(urbit, new GraphAgentState());
 	}

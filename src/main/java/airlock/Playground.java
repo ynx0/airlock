@@ -32,7 +32,7 @@ public class Playground {
 		String shipName = "zod";
 //		String code = "toprus-dopsul-dozmep-hocbep";
 		String code = "lidlut-tabwed-pillex-ridrup";
-		Urbit urbit = new Urbit(new URL(url), shipName, code);
+		AirlockChannel urbit = new AirlockChannel(new URL(url), shipName, code);
 		urbit.authenticate();
 		urbit.connect();
 		GraphAgent agent = new GraphAgent(urbit);

@@ -32,7 +32,7 @@ public class Main {
 
 
 		// MARK - ship setup
-		Urbit urbit = new Urbit(url, shipName, code);
+		AirlockChannel urbit = new AirlockChannel(url, shipName, code);
 		urbit.authenticate(); // submit the code to the ship for authentication. must be done before anything else
 		urbit.connect();      // establishes the ServerSideEvent (SSE) client. this is what is used to receive all responses from the ship
 
