@@ -14,7 +14,7 @@ public class Post {
 	final @Nullable String hash;
 	final List<String> signatures; // todo narrow by creating signature type
 
-	public Post(String author, String index, long timeSent, List<GraphContent> contents, String hash, List<String> signatures) {
+	public Post(String author, String index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
 		this.author = author;
 		this.index = index;
 		this.timeSent = timeSent;
