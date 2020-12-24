@@ -1,4 +1,4 @@
-import airlock.InMemoryResponse;
+import airlock.InMemoryResponseWrapper;
 import airlock.AirlockChannel;
 import airlock.errors.AirlockChannelError;
 import com.google.gson.JsonElement;
@@ -43,7 +43,7 @@ public class UrbitIntegrationTestsCore {
 	public void successfulAuthentication() throws ExecutionException, InterruptedException, AirlockChannelError {
 		CompletableFuture<String> futureResponseString = new CompletableFuture<>();
 
-		InMemoryResponse res = urbit.authenticate();
+		InMemoryResponseWrapper res = urbit.authenticate();
 		futureResponseString.complete(res.getBodyAsString());
 
 		await().until(futureResponseString::isDone);

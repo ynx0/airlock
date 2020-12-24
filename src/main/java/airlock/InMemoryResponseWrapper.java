@@ -15,7 +15,7 @@ import java.util.Objects;
  *     Specifically, it makes generates an immutable "copy" of the response body.
  * </p>
  */
-public class InMemoryResponse {
+public class InMemoryResponseWrapper {
 	// todo, maybe we don't need to keep around this data and the class is useless
 	//  the Response body is meant to be thrown away as per okhttp design
 	//  in the future, maybe we should remove the use of this class entirely and not return any responses.
@@ -36,7 +36,7 @@ public class InMemoryResponse {
 	// For example, we cannot inspect the body in one method, then pass the same response object to somewhere else because the buffer will be exhausted
 	// this is why InMemoryResponseWrapper exists
 
-	public InMemoryResponse(Response response) {
+	public InMemoryResponseWrapper(Response response) {
 		this.response = response;
 		// taken from https://github.com/square/okhttp/issues/2869
 		BufferedSource source = Objects.requireNonNull(response.body(), "Got null response body").source();

@@ -408,7 +408,8 @@ public class AirlockChannel {
 	 * @param jsonData The data to send with the action
 	 * @return the response to the request
 	 */
-	public InMemoryResponse sendJSONtoChannel(JsonObject jsonData) throws AirlockResponseError, AirlockRequestError {
+	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
+
 		synchronized (urbitLock) {
 			JsonArray fullJsonDataArray = new JsonArray();
 			JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
@@ -488,7 +489,7 @@ public class AirlockChannel {
 				"json", json
 		)).getAsJsonObject();
 		// adapted from https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L114
-		InMemoryResponse pokeResponse = this.sendJSONtoChannel(pokeDataObj);
+		InMemoryResponseWrapper pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.response.isSuccessful()) {
 			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
@@ -520,7 +521,7 @@ public class AirlockChannel {
 				"app", app,
 				"path", path
 		)).getAsJsonObject();
-		InMemoryResponse subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
+		InMemoryResponseWrapper subscribeResponse = this.sendJSONtoChannel(subscribeDataObj);
 
 		if (subscribeResponse.response.isSuccessful()) {
 			subscribeHandlers.put(id, subscribeHandler);
