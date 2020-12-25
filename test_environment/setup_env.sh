@@ -8,6 +8,8 @@ cd "$(dirname "$0")"  # ensure that the current directory is where the script is
 REBUILD=false
 source ./setup_env_lib.sh
 
+cleanup  # always start fresh. if we are in the setup, we'll never use a running fakezod directory
+
 # this script sets up a pristine fakezod
 if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
