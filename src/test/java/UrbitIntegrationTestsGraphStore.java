@@ -32,7 +32,7 @@ public class UrbitIntegrationTestsGraphStore {
 	public static final String GRAPH_NAME = "test-chat-" + NOW;
 	public static final String GRAPH_TITLE = "Test Graph Created " + NOW;
 	public static final String GRAPH_DESCRIPTION = "graph for testing only! having fun strictly prohibited";
-	public static final Resource ASSOCIATED_GROUP = new Resource("~zod", "TEST_GROUP_" + NOW);
+	public static final Resource ASSOCIATED_GROUP = new Resource("~zod", "test-group");
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
@@ -46,32 +46,15 @@ public class UrbitIntegrationTestsGraphStore {
 		urbit.connect();
 		graphStoreAgent = new GraphAgent(urbit);
 
-		// Assumes fake ship zod is booted and running
+		// Assumes fake ship zod is booted and running, and group exists named `test-group`
 
 	}
-
-	/* TODOs
-	// todo make test that gets all of these
-			JsonObject tagScry = urbit.scryRequest("graph-store", "/tags").getAsJsonObject();
-		JsonObject tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries").getAsJsonObject();
-
-		System.out.println("graph scry: /tags response");
-		System.out.println(tagScry);
-		assertTrue(tagScry.has("graph-update"));
-		assertTrue(tagScry.get("graph-update").getAsJsonObject().has("tags"));
-
-
-		System.out.println("graph scry: /tag-queries response");
-		System.out.println(tagQueriesScry);
-		assertTrue(tagQueriesScry.has("graph-update"));
-		assertTrue(tagQueriesScry.get("graph-update").getAsJsonObject().has("tag-queries"));
-	 */
 
 	@Test
 	@Order(1)
 	public void canCreateGraph() throws Exception {
 		await().until(urbit::isConnected);
-
+		// todo create the group
 		JsonElement responseJson = graphStoreAgent.createManagedGraph(
 				GRAPH_NAME,
 				GRAPH_TITLE,
@@ -95,6 +78,7 @@ public class UrbitIntegrationTestsGraphStore {
 
 	@Test
 	@Order(2)
+	@Disabled("As of v1.0-rc1, the fakezod creation process is broken, causing this test to fail")
 	public void canSendChatOnGraph() throws Exception {
 		String shipName = urbit.getShipName();
 		CompletableFuture<PokeResponse> futureResponse = graphStoreAgent.addPost(
@@ -104,13 +88,50 @@ public class UrbitIntegrationTestsGraphStore {
 						shipName,
 						Collections.singletonList(new TextContent("hello world")),
 						null,
-						null)
+						null
+				)
 		);
 		PokeResponse response = futureResponse.get();
 
 		assertTrue(response.success);
 
 	}
+
+	/* TODOs
+	// todo make test that gets all of these
+			JsonObject tagScry = urbit.scryRequest("graph-store", "/tags").getAsJsonObject();
+		JsonObject tagQueriesScry = urbit.scryRequest("graph-store", "/tag-queries").getAsJsonObject();
+
+		System.out.println("graph scry: /tags response");
+		System.out.println(tagScry);
+		assertTrue(tagScry.has("graph-update"));
+		assertTrue(tagScry.get("graph-update").getAsJsonObject().has("tags"));
+
+
+		System.out.println("graph scry: /tag-queries response");
+		System.out.println(tagQueriesScry);
+		assertTrue(tagQueriesScry.has("graph-update"));
+		assertTrue(tagQueriesScry.get("graph-update").getAsJsonObject().has("tag-queries"));
+	 */
+
+	/*
+	// todo potentially do something with this code
+
+//		JsonArray graphKeys = agent.getKeys().getAsJsonObject()
+//				.get("graph-update").getAsJsonObject()
+//				.get("keys").getAsJsonArray();
+//		JsonObject graphOwnedByMe = StreamSupport.stream(graphKeys.spliterator(), false)
+//				.map(JsonElement::getAsJsonObject)
+//				.filter(key -> key.get("ship").getAsString().equals("sipfyn-pidmex"))
+//				.filter(key -> !key.get("name").getAsString().contains("dm--"))
+//				.filter(key -> key.get("name").getAsString().contains("2"))
+//				.findFirst().orElseThrow().getAsJsonObject();
+//
+//		System.out.println(graphKeys);
+//		System.out.println(graphOwnedByMe);
+//		JsonElement graphUpdate = agent.getGraph(ShipName.withSig(graphOwnedByMe.get("ship").getAsString()),graphOwnedByMe.get("name").getAsString());
+//		System.out.println(AirlockUtils.gson.toJson(graphUpdate));
+	 */
 
 
 }
