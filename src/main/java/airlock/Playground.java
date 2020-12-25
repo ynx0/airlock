@@ -16,12 +16,12 @@ public class Playground {
 	public static void main(String[] args) throws Exception {
 
 
-		String url = "http://localhost:80";
 //		String url = "http://localhost:8080";
-		String shipName = "sipfyn-pidmex";
 //		String shipName = "zod";
-		String code = "toprus-dopsul-dozmep-hocbep";
 //		String code = "lidlut-tabwed-pillex-ridrup";
+		String url = "http://localhost:80";
+		String shipName = "sipfyn-pidmex";
+		String code = "toprus-dopsul-dozmep-hocbep";
 		AirlockChannel urbit = new AirlockChannel(new URL(url), shipName, code);
 		urbit.authenticate();
 		urbit.connect();
@@ -57,6 +57,8 @@ public class Playground {
 				)
 		);
 		assert futurePostResponse.get().success;
+
+		urbit.teardown();
 
 
 		// notes dump
