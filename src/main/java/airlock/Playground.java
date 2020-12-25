@@ -24,11 +24,12 @@ public class Playground {
 		// "toprus-dopsul-dozmep-hocbep"
 
 
-		String url = "http://localhost:8080";
-//		String shipName = "sipfyn-pidmex";
-		String shipName = "zod";
-//		String code = "toprus-dopsul-dozmep-hocbep";
-		String code = "lidlut-tabwed-pillex-ridrup";
+		String url = "http://localhost:80";
+//		String url = "http://localhost:8080";
+		String shipName = "sipfyn-pidmex";
+//		String shipName = "zod";
+		String code = "toprus-dopsul-dozmep-hocbep";
+//		String code = "lidlut-tabwed-pillex-ridrup";
 		AirlockChannel urbit = new AirlockChannel(new URL(url), shipName, code);
 		urbit.authenticate();
 		urbit.connect();
@@ -51,8 +52,8 @@ public class Playground {
 //
 		long NOW = Instant.now().toEpochMilli();
 		String graphName = "test-graph-" + NOW;
-		String sipWithSig = ShipName.withSig(urbit.getShipName());
-		Resource myOwnStuffGroup = GroupUtils.makeResource(sipWithSig, "test-group-1");
+		String shipWithSig = ShipName.withSig(urbit.getShipName());
+		Resource myOwnStuffGroup = GroupUtils.makeResource(shipWithSig, "my-own-stuff");
 		var createGraphResponse = agent.createManagedGraph(
 				graphName,
 				"Title of graph" + NOW,
@@ -62,7 +63,8 @@ public class Playground {
 				);
 
 
-		CompletableFuture<PokeResponse> futurePostResponse = agent.addPost(sipWithSig, myOwnStuffGroup.name, GraphAgent.createPost(sipWithSig, Collections.singletonList(new TextContent("Hello " + NOW)), null, null));
+		// you add the post to the graph name
+		CompletableFuture<PokeResponse> futurePostResponse = agent.addPost(shipWithSig, graphName, GraphAgent.createPost(shipWithSig, Collections.singletonList(new TextContent("Hello " + NOW)), null, null));
 		futurePostResponse.get();
 
 
