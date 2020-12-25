@@ -142,8 +142,9 @@ export const createPost = (
 };
 */
 
-	// todo make this api design more idiomatic
 	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable String parentIndex, @Nullable String childIndex) {
+		// todo make this api design more idiomatic by adding overloaded method for nullable params
+
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "DATE_PLACEHOLDER");
 		if (childIndex.equals("DATE_PLACEHOLDER")) {
