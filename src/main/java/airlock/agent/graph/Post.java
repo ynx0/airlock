@@ -1,5 +1,6 @@
 package airlock.agent.graph;
 
+import airlock.types.ShipName;
 import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +16,7 @@ public class Post {
 	final List<String> signatures; // todo narrow by creating signature type
 
 	public Post(String author, String index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
-		this.author = author;
+		this.author = ShipName.withSig(author);
 		this.index = index;
 		this.timeSent = timeSent;
 		this.contents = contents;

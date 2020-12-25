@@ -12,7 +12,7 @@ public class ShipName {
 	}
 
 	@NotNull
-	private static String withoutSig(@NotNull String shipName) {
+	public static String withoutSig(@NotNull String shipName) {
 		return shipName.replace("~", "");
 	}
 

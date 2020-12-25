@@ -427,6 +427,15 @@ public class AirlockChannel {
 	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
 		JsonArray fullJsonDataArray = new JsonArray();
 		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+
+		// `withoutSig` is VERY IMPORTANT. Otherwise, ship returns error 400
+		/// i tried sending a req with {..., ship: "~zod"} on the most basic thing (a helm hi) and it seems to fail
+		// which leads me to believe you really can never have a sig in front of ship at the root object level of the eyre request
+		if (fullJsonData.has("ship")) {
+			// enforce no sig on ship property
+			fullJsonData.addProperty("ship", ShipName.withoutSig(fullJsonData.get("ship").getAsString()));
+		}
+
 		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 		fullJsonDataArray.add(fullJsonData);
 

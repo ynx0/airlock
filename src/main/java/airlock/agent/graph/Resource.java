@@ -1,5 +1,7 @@
 package airlock.agent.graph;
 
+import airlock.types.ShipName;
+
 import java.util.Objects;
 
 public class Resource {
@@ -7,7 +9,8 @@ public class Resource {
 	public final String name; // term
 
 	public Resource(String ship, String name) {
-		this.ship = ship;
+		this.ship = ShipName.withSig(ship);
+		System.out.println(ship);
 		this.name = name;
 	}
 
