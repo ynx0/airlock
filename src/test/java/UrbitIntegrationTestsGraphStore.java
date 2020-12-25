@@ -1,7 +1,10 @@
 import airlock.AirlockChannel;
-import airlock.agent.graph.GraphAgent;
-import airlock.agent.graph.Resource;
+import airlock.PokeResponse;
+import airlock.agent.graph.*;
+import airlock.errors.AirlockAuthenticationError;
 import airlock.errors.AirlockChannelError;
+import airlock.errors.AirlockRequestError;
+import airlock.errors.AirlockResponseError;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,7 +13,10 @@ import org.junit.jupiter.api.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
@@ -22,6 +28,11 @@ public class UrbitIntegrationTestsGraphStore {
 
 	private static AirlockChannel urbit;
 	private static GraphAgent graphStoreAgent;
+	public static final long NOW = Instant.now().toEpochMilli();
+	public static final String GRAPH_NAME = "test-chat-" + NOW;
+	public static final String GRAPH_TITLE = "Test Graph Created " + NOW;
+	public static final String GRAPH_DESCRIPTION = "graph for testing only! having fun strictly prohibited";
+	public static final Resource ASSOCIATED_GROUP = new Resource("~zod", "TEST_GROUP_" + NOW);
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
@@ -58,20 +69,15 @@ public class UrbitIntegrationTestsGraphStore {
 
 	@Test
 	@Order(1)
-	public void createGraph() throws Exception {
+	public void canCreateGraph() throws Exception {
 		await().until(urbit::isConnected);
 
-		long NOW = Instant.now().toEpochMilli();
-		String graphName = "test-graph" + NOW;
-		String graphTitle = "Test Graph Created " + NOW;
-		String graphDescription = "graph for testing only! having fun strictly prohibited";
-		Resource associatedGroup = new Resource("~zod", "TEST_GROUP_" + NOW);
 		JsonElement responseJson = graphStoreAgent.createManagedGraph(
-				graphName,
-				graphTitle,
-				graphDescription,
-				associatedGroup,
-				GraphAgent.Module.LINK
+				GRAPH_NAME,
+				GRAPH_TITLE,
+				GRAPH_DESCRIPTION,
+				ASSOCIATED_GROUP,
+				GraphAgent.Module.CHAT
 		);
 
 		assertTrue(responseJson.isJsonNull()); // a successful call gives us back a null
@@ -80,10 +86,29 @@ public class UrbitIntegrationTestsGraphStore {
 		JsonArray keys = keysPayload.get("graph-update").getAsJsonObject().get("keys").getAsJsonArray();
 		JsonObject expectedKey = map2json(Map.of(
 				"ship", "zod",
-				"name", graphName
+				"name", GRAPH_NAME
 		));
 		// we expect to see a key with our ship and the name of the graph that we just created
 		assertTrue(keys.contains(expectedKey));
+
+	}
+
+	@Test
+	@Order(2)
+	public void canSendChatOnGraph() throws Exception {
+		String shipName = urbit.getShipName();
+		CompletableFuture<PokeResponse> futureResponse = graphStoreAgent.addPost(
+				shipName,
+				GRAPH_NAME,
+				GraphAgent.createPost(
+						shipName,
+						Collections.singletonList(new TextContent("hello world")),
+						null,
+						null)
+		);
+		PokeResponse response = futureResponse.get();
+
+		assertTrue(response.success);
 
 	}
 
