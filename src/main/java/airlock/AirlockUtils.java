@@ -1,14 +1,18 @@
 package airlock;
 
+import airlock.agent.graph.Graph;
+import airlock.agent.graph.Node;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import okhttp3.HttpUrl;
 
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Objects;
 
 public class AirlockUtils {
 
@@ -17,6 +21,7 @@ public class AirlockUtils {
 	public static final Gson gson = new GsonBuilder()
 			.setPrettyPrinting()  // disable in production
 			.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
+			.registerTypeAdapter(Graph.class, Graph.ADAPTER)
 			.serializeNulls() // necessary for certain payloads that we send
 			.create();
 
