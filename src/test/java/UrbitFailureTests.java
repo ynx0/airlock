@@ -6,6 +6,8 @@ public class UrbitFailureTests {
 
 	// TODO populate with tests which test various failure modes of the api
 
+	// idea: sig vs. no sig on known payloads
+
 //	@BeforeAll
 //	public static void setup() {
 //

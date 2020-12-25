@@ -59,5 +59,14 @@ public class UrbitUnitTests {
 
 	}
 
+	/*
+	//		URL baseURL = new URL("http://localhost:8080/~/").toURI().normalize().toURL();
+//		System.out.println(baseURL);
+//		System.out.println(baseURL.toURI().resolve("/scry//" + "app/" + "/"));
+//		System.out.println(baseURL.toURI().resolve("/~/channel/" + Urbit.generateChannelID()));
+
+
+	 */
+
 
 }
