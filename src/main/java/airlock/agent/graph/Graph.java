@@ -10,7 +10,6 @@ import java.util.TreeMap;
 // same as BigIntOrderedMap
 public class Graph extends TreeMap<BigInteger, Node> {
 
-	// todo write proper implementation. this is not functional right now
 
 	public static final Graph EMPTY_GRAPH = new Graph();
 
@@ -23,12 +22,12 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		@Override
 		public JsonElement serialize(Graph src, Type typeOfSrc, JsonSerializationContext context) {
 			if (src.equals(EMPTY_GRAPH)) {
-				return JsonNull.INSTANCE;
+				return JsonNull.INSTANCE; // results in {..., "children": null}
 			} else {
 				JsonArray serializedGraph = new JsonArray();
-				src.forEach(((bigInteger, node) -> {
+				src.forEach(((index, node) -> {
 					JsonArray serializedEntry = new JsonArray();
-					JsonPrimitive serializedBigInt = new JsonPrimitive(bigInteger.toString());
+					JsonPrimitive serializedBigInt = new JsonPrimitive("/" + index.toString());
 					JsonElement serializedNode = context.serialize(node);
 
 					serializedEntry.add(serializedBigInt);
@@ -42,7 +41,15 @@ public class Graph extends TreeMap<BigInteger, Node> {
 
 		@Override
 		public Graph deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-			return null;
+			Graph graph = new Graph();
+			JsonObject graphJson = json.getAsJsonObject();
+			graphJson.entrySet().forEach(graphEntry -> {
+				String indexString = graphEntry.getKey().substring(1); // strip leading slash
+				BigInteger index = new BigInteger(indexString);
+				Node node = context.deserialize(graphEntry.getValue(), Node.class);
+				graph.put(index, node);
+			});
+			return graph;
 		}
 	}
 
