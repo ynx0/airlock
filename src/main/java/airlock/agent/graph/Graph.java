@@ -23,9 +23,7 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		@Override
 		public JsonElement serialize(Graph src, Type typeOfSrc, JsonSerializationContext context) {
 			if (src.equals(EMPTY_GRAPH)) {
-				JsonObject empty = new JsonObject();
-				// todo, see if we need {"empty": null} here
-				return empty;
+				return JsonNull.INSTANCE;
 			} else {
 				JsonArray serializedGraph = new JsonArray();
 				src.forEach(((bigInteger, node) -> {
@@ -48,5 +46,6 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		}
 	}
 
+	public static final Adapter ADAPTER = new Adapter();
 
 }
