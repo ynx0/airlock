@@ -35,17 +35,20 @@ public class AirlockUtils {
 		return DA_UNIX_EPOCH.add(timeSinceEpoch);
 	}
 
-	@SuppressWarnings("rawtypes")
-	public static JsonObject map2json(Map map) {
+	public static JsonObject map2json(Map<String, Object> map) {
 		return gson.toJsonTree(map).getAsJsonObject();
 	}
 
-	// todo: airlock utils: use https://square.github.io/okhttp/4.x/okhttp/okhttp3/-http-url/#percent-encoding
-	// which properly encodes spaces (i.e. *-> %20. currently this just throws when it encounters chars that need escaping
+	static URL escaped(String url) {
+		// todo: airlock utils: use https://square.github.io/okhttp/4.x/okhttp/okhttp3/-http-url/#percent-encoding
+		// which properly encodes spaces (i.e. *-> %20. currently this just throws when it encounters chars that need escaping
+		return Objects.requireNonNull(HttpUrl.parse(url)).url();
+	}
 
 	static URL normalizeOrBust(URL url) {
 		try {
 			return url.toURI().normalize().toURL();
+//			return Objects.requireNonNull(HttpUrl.parse(String.valueOf(url))).url().toURI().normalize().toURL();
 		} catch (MalformedURLException | URISyntaxException e) {
 			throw new IllegalStateException("Unable to normalize url: " + url);
 		}
