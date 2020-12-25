@@ -5,6 +5,7 @@ import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.TreeMap;
 
 // same as BigIntOrderedMap
@@ -15,6 +16,15 @@ public class Graph extends TreeMap<BigInteger, Node> {
 
 	public Graph() {
 		super(Comparator.reverseOrder());
+	}
+
+	public Graph(Map<BigInteger, Node> graphMap) {
+		this();
+		this.putAll(graphMap);
+	}
+
+	public static BigInteger indexFromString(String index) {
+		return new BigInteger(index.substring(1));  // strip leading slash
 	}
 
 	static class Adapter implements JsonSerializer<Graph>, JsonDeserializer<Graph> {
@@ -44,8 +54,7 @@ public class Graph extends TreeMap<BigInteger, Node> {
 			Graph graph = new Graph();
 			JsonObject graphJson = json.getAsJsonObject();
 			graphJson.entrySet().forEach(graphEntry -> {
-				String indexString = graphEntry.getKey().substring(1); // strip leading slash
-				BigInteger index = new BigInteger(indexString);
+				BigInteger index = Graph.indexFromString(graphEntry.getKey());
 				Node node = context.deserialize(graphEntry.getValue(), Node.class);
 				graph.put(index, node);
 			});
