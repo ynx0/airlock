@@ -329,40 +329,41 @@ public class AirlockChannel {
 							}
 
 							// possible enhancement: add check to ensure that the id received in the eyreResponse matches the one we expect to see
-						}
-
-						switch (eyreResponse.response) {
-							case POKE:
-								var pokeHandler = pokeHandlers.get(eyreResponse.id);
-								if (eyreResponse.ok) {
-									pokeHandler.complete(PokeResponse.SUCCESS);
-								} else {
-									pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
-								}
-								pokeHandlers.remove(eyreResponse.id);
-								break;
-							case SUBSCRIBE:
-								var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								if (eyreResponse.ok) {
-									subscribeHandler.accept(SubscribeEvent.STARTED);
-								} else {
-									subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+							switch (eyreResponse.response) {
+								case POKE:
+									var pokeHandler = pokeHandlers.get(eyreResponse.id);
+									if (eyreResponse.ok) {
+										pokeHandler.complete(PokeResponse.SUCCESS);
+									} else {
+										pokeHandler.complete(PokeResponse.fromFailure(eyreResponse.err));
+									}
+									pokeHandlers.remove(eyreResponse.id);
+									break;
+								case SUBSCRIBE:
+									var subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									if (eyreResponse.ok) {
+										subscribeHandler.accept(SubscribeEvent.STARTED);
+									} else {
+										subscribeHandler.accept(SubscribeEvent.fromFailure(eyreResponse.err));
+										subscribeHandlers.remove(eyreResponse.id);
+									}
+									break;
+								case DIFF:
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
+									break;
+								case QUIT:
+									subscribeHandler = subscribeHandlers.get(eyreResponse.id);
+									subscribeHandler.accept(SubscribeEvent.FINISHED);
 									subscribeHandlers.remove(eyreResponse.id);
-								}
-								break;
-							case DIFF:
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.fromUpdate(eyreResponse.json));
-								break;
-							case QUIT:
-								subscribeHandler = subscribeHandlers.get(eyreResponse.id);
-								subscribeHandler.accept(SubscribeEvent.FINISHED);
-								subscribeHandlers.remove(eyreResponse.id);
-								break;
+									break;
 
-							default:
-								throw new IllegalStateException("Got unknown eyre responseType");
+								default:
+									throw new IllegalStateException("Got unknown eyre responseType");
+							}
 						}
+
+
 					}
 
 					@Override
@@ -375,45 +376,54 @@ public class AirlockChannel {
 						// socket exception occurs because by default, the okhttp sse event client times out after like 500ms
 						// if it hasn't received any data from the connection, even though that's normal when using eyre. this is why we set the timeout really high.
 
-						if (t != null) {
-							System.err.println("Encountered error while doing sse stuff");
-							if (!(t instanceof SocketException)) {
-								throw new RuntimeException(t);
+
+						if (response != null) {
+							if (response.code() == 200) {
+								System.out.println("Got 200 OK on " + response.request().url());
+								System.out.println("Channel canceled by eyre");
+								// at this point, t is normally SocketError because the socket is closed
+								// our channel was canceled normally by eyre; skip rest of code
+								return;
+							} else {
+								System.err.println("Event Source Error: " + response);
 							}
-							System.err.println("Socket error");
 						}
 
-						if (response != null && response.code() != 200) {
-							System.err.println("Event Source Error: " + response);
-							return;
+						if (t != null) {
+							System.err.println("Encountered error while doing sse stuff");
+							throw new RuntimeException(t);
 						}
-						// todo figure out what to do here
-						System.out.println("Got 200 OK on " + requireNonNull(response).request().url());
+
 					}
 
 					@Override
 					public void onClosed(@NotNull EventSource eventSource) {
-						// todo see if more adaptation is needed
-						//  as per https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
+						// reference https://github.com/dclelland/UrsusAirlock/blob/master/Ursus%20Airlock/Airlock.swift#L196
+						// todo test to see when this gets called, and if were are doing the right thing based on it.
 
 						System.out.println("!!!!!!!!!!Closing!!!!!!!!!!!!");
-						tearDown();
+						teardown();  // calling this may cause onFailure, causing it to be called recursively. make sure theres no weird interaction with it.
 					}
 				});
 	}
 
-	// todo change up api. this may be temporary
-	public void tearDown() {
+	public void teardown() {
+		synchronized (channelLock) {
+			// synchronized because otherwise we may accidently clear the pokehandlers whlie the other thread is still using them
+			this.sseClient.cancel();
+			pokeHandlers.clear();
+			subscribeHandlers.clear();
+		}
+
 		channelID = AirlockChannel.uid();
-		this.sseClient.cancel();
-//		this.client.dispatcher().cancelAll(); // todo see if we need this or if it will cause more problems
+		// todo see if we need this or if it will cause more problems
+		// the place i can see it being needed is for things like scry/spider requests
+//		this.client.dispatcher().cancelAll();
 		sseClient = null;
 		requestId = 0;
 		lastSeenEventId = 0;
 		lastAcknowledgedEventId = 0;
-		this.cookie = null;
-		pokeHandlers.clear();
-		subscribeHandlers.clear();
+
 	}
 
 
