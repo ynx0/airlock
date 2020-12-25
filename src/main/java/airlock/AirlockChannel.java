@@ -164,7 +164,8 @@ public class AirlockChannel {
 
 		this.client = new OkHttpClient.Builder()
 				.cookieJar(new JavaNetCookieJar(cookieHandler))
-				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731) // todo possibly adjust timeout duration might be too aggressive
+				// todo possibly adjust timeout duration might be too aggressive, and maybe implement a heartbeat of some kind
+				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731)
 				.build();
 
 		// todo figure out if newly changed `synchronized` blocks break functionality again or not
@@ -213,6 +214,8 @@ public class AirlockChannel {
 	}
 
 	private InMemoryResponseWrapper sendRequest(Request request) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
+		// note: not thread safe with regards to sse event handler thread.
+		// see sendJSONtoChannel instead for the thread safe version
 		Response response;
 
 		try {
