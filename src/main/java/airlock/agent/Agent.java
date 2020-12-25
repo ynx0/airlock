@@ -2,9 +2,9 @@ package airlock.agent;
 
 import airlock.PokeResponse;
 import airlock.AirlockChannel;
-import airlock.errors.AirlockAuthenticationError;
-import airlock.errors.AirlockRequestError;
-import airlock.errors.AirlockResponseError;
+import airlock.errors.channel.AirlockAuthenticationError;
+import airlock.errors.channel.AirlockRequestError;
+import airlock.errors.channel.AirlockResponseError;
 import com.google.gson.JsonObject;
 
 import java.util.concurrent.CompletableFuture;

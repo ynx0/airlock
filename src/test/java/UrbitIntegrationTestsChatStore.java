@@ -5,7 +5,7 @@ import airlock.AirlockChannel;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
 import airlock.agent.chat.MessagePayload;
-import airlock.errors.AirlockChannelError;
+import airlock.errors.channel.AirlockChannelError;
 import com.google.gson.JsonElement;
 import org.junit.jupiter.api.*;
 

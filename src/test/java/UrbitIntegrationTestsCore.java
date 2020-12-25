@@ -1,6 +1,6 @@
 import airlock.InMemoryResponseWrapper;
 import airlock.AirlockChannel;
-import airlock.errors.AirlockChannelError;
+import airlock.errors.channel.AirlockChannelError;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.junit.jupiter.api.*;

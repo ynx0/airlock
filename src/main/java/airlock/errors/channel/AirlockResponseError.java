@@ -1,4 +1,4 @@
-package airlock.errors;
+package airlock.errors.channel;
 
 import airlock.InMemoryResponseWrapper;
 

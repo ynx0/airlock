@@ -1,9 +1,9 @@
 package airlock;
 
-import airlock.errors.AirlockAuthenticationError;
-import airlock.errors.AirlockChannelError;
-import airlock.errors.AirlockRequestError;
-import airlock.errors.AirlockResponseError;
+import airlock.errors.channel.AirlockAuthenticationError;
+import airlock.errors.channel.AirlockChannelError;
+import airlock.errors.channel.AirlockRequestError;
+import airlock.errors.channel.AirlockResponseError;
 import airlock.errors.scry.ScryDataNotFoundException;
 import airlock.errors.scry.ScryFailureException;
 import airlock.errors.spider.SpiderFailureException;

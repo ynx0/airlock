@@ -4,9 +4,9 @@ import airlock.AirlockChannel;
 import airlock.AirlockUtils;
 import airlock.PokeResponse;
 import airlock.agent.group.types.GroupPolicy;
-import airlock.errors.AirlockAuthenticationError;
-import airlock.errors.AirlockRequestError;
-import airlock.errors.AirlockResponseError;
+import airlock.errors.channel.AirlockAuthenticationError;
+import airlock.errors.channel.AirlockRequestError;
+import airlock.errors.channel.AirlockResponseError;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;

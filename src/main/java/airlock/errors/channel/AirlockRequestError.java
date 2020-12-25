@@ -1,4 +1,4 @@
-package airlock.errors;
+package airlock.errors.channel;
 
 /**
  * Thrown when there was a generic problem while making the http request to the ship

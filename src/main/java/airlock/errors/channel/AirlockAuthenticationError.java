@@ -1,4 +1,6 @@
-package airlock.errors;
+package airlock.errors.channel;
+
+import airlock.errors.channel.AirlockChannelError;
 
 /**
  * Thrown when there was a failure to authenticate with the ship,
