@@ -456,9 +456,14 @@ export const createPost = (
 		Map<String, Object> nodes = new HashMap<>();
 //		new Node(post, null);
 
-		Map<Object, Object> postPayload = new HashMap<>();
+		Map<String, Object> postPayload = new HashMap<>();
 		postPayload.put("post", post);
-		postPayload.put("children", null);
+		// todo figure out why {"children": null} works normally, but
+		//  according to lib/graph-store/hoon L315 it wants {"empty": null} ??
+		Map<String, Object> childrenPayload = new HashMap<>();
+		childrenPayload.put("empty", null);
+		postPayload.put("children", childrenPayload);
+
 
 		nodes.put(post.index, map2json(postPayload));
 
