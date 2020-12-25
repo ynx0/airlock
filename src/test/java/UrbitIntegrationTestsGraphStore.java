@@ -1,10 +1,7 @@
 import airlock.AirlockChannel;
 import airlock.PokeResponse;
 import airlock.agent.graph.*;
-import airlock.errors.AirlockAuthenticationError;
 import airlock.errors.AirlockChannelError;
-import airlock.errors.AirlockRequestError;
-import airlock.errors.AirlockResponseError;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -16,7 +13,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
@@ -48,6 +44,11 @@ public class UrbitIntegrationTestsGraphStore {
 
 		// Assumes fake ship zod is booted and running, and group exists named `test-group`
 
+	}
+
+	@AfterAll
+	public static void teardown() {
+		urbit.teardown();
 	}
 
 	@Test

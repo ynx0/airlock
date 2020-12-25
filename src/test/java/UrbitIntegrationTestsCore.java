@@ -91,5 +91,16 @@ public class UrbitIntegrationTestsCore {
 
 	}
 
+	@Test
+	@Order(6)
+	public void tearDownSuccessfully() {
+		await().until(urbit::isConnected);
+		// todo await until all previous tests are finished
+		urbit.teardown();
+		assertTrue(urbit.isAuthenticated()); // we should not lose authentication
+		assertFalse(urbit.isConnected()); // we should no longer be connected
+		// add in test to make sure that we can't send any further requests
+	}
+
 
 }
