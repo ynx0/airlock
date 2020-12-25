@@ -18,4 +18,9 @@ https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
 # publicly hosted javadoc
 https://www.javadoc.io/
 
+# charset
+https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/charset/Charset.html
+https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/charset/CharsetEncoder.html
+
+
  pretty printed html errors with okhttp: https://github.com/dkorobtsov/LoggingInterceptor
