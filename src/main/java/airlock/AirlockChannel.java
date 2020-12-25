@@ -134,7 +134,7 @@ public class AirlockChannel {
 	/**
 	 * Synchronization object used to prevent multithreading errors and incorrectly ordered network calls
 	 */
-	private final Object urbitLock = new Object();
+	private final Object channelLock = new Object();
 
 
 	/**
@@ -149,16 +149,18 @@ public class AirlockChannel {
 	 * @param code     The access code for the ship at that address
 	 */
 	public AirlockChannel(URL url, String shipName, String code) {
-		this.shipName = requireNonNull(shipName);
-		this.code = requireNonNull(code, "Please provide a code");
 		requireNonNull(url, "Please provide a url");
+		requireNonNull(shipName, "Please provide a ship name");
+		requireNonNull(code, "Please provide a code");
+		this.code = code;  // todo: wishlist: validate code format
+		this.shipName = ShipName.withoutSig(shipName); // by default, our ship name should be without a `sig`, as this is what's sent by the payload.
 		this.url = AirlockUtils.normalizeOrBust(url);
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.cookie = null;
 		this.channelID = generateChannelID();
 
-		// init cookie manager to use `InMemoryCookieStore` by providing null
+		// init cookie manager to use `InMemoryCookieStore` by providing a null store
 		CookieHandler cookieHandler = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
 
 
@@ -301,7 +303,7 @@ public class AirlockChannel {
 
 						EyreResponse eyreResponse = AirlockUtils.gson.fromJson(data, EyreResponse.class);
 
-						synchronized (urbitLock) {
+						synchronized (channelLock) {
 							lastSeenEventId = eyreResponse.id;
 
 							System.out.println(",=============Event==============,");
@@ -402,8 +404,6 @@ public class AirlockChannel {
 
 	// todo change up api. this may be temporary
 	public void tearDown() {
-
-
 		channelID = AirlockChannel.uid();
 		this.sseClient.cancel();
 //		this.client.dispatcher().cancelAll(); // todo see if we need this or if it will cause more problems
@@ -430,16 +430,15 @@ public class AirlockChannel {
 	public InMemoryResponseWrapper sendJSONtoChannel(JsonObject jsonData) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
 		JsonArray fullJsonDataArray = new JsonArray();
 		JsonObject fullJsonData = jsonData.deepCopy(); // todo seems like a wasteful way to do it, if outside callers are using this method; possibly refactor
+		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 
 		// `withoutSig` is VERY IMPORTANT. Otherwise, ship returns error 400
-		/// i tried sending a req with {..., ship: "~zod"} on the most basic thing (a helm hi) and it seems to fail
+		// i tried sending a req with {..., ship: "~zod"} on the most basic thing (a helm hi) and it seems to fail
 		// which leads me to believe you really can never have a sig in front of ship at the root object level of the eyre request
 		if (fullJsonData.has("ship")) {
 			// enforce no sig on ship property
 			fullJsonData.addProperty("ship", ShipName.withoutSig(fullJsonData.get("ship").getAsString()));
 		}
-
-		//  if we make this method private then we can avoid this because we are the only ones ever calling the method so we can basically just make sure that we never call it with anything that we use later on that would be affected by the mutability of the json object
 		fullJsonDataArray.add(fullJsonData);
 
 		String jsonString = AirlockUtils.gson.toJson(fullJsonDataArray);
@@ -459,8 +458,7 @@ public class AirlockChannel {
 		System.out.println("Message: " + AirlockUtils.gson.toJson(fullJsonDataArray));
 		System.out.println(".============SendMessage============.");
 
-		synchronized (urbitLock) {
-
+		synchronized (channelLock) {
 			// todo is this correct behavior?? I just adapted it blindly-ish
 			// commenting it out seems to not have an effect, i.e. tests still pass,
 			// but that could simply be because we are not testing rigorously enough. it remains to be seen
@@ -508,7 +506,7 @@ public class AirlockChannel {
 		InMemoryResponseWrapper pokeResponse = this.sendJSONtoChannel(pokeDataObj);
 
 		if (pokeResponse.response.isSuccessful()) {
-			pokeHandlers.put(id, pokeFuture); // just incremented by sendJSONtoChannel
+			pokeHandlers.put(id, pokeFuture);
 		}
 
 		return pokeFuture;
