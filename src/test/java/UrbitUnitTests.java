@@ -1,17 +1,16 @@
 import airlock.AirlockChannel;
+import airlock.AirlockUtils;
 import airlock.agent.chat.ChatUtils;
 import airlock.agent.graph.Resource;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Map;
 
-public class UrbitUnitTests {
+import static airlock.AirlockUtils.gson;
 
-	public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+public class UrbitUnitTests {
 
 	@Test
 	public void chatUtilsCreatesProperPayload() {
