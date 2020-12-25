@@ -1,5 +1,12 @@
 
 
+### Dec 25
+One thing to watch out for is whether you need a `~` or not in a ship name property.
+This is because urbit wants ships with sigs sometimes and sometimes will not. But it will treat them as two different things.
+So it will fail to decode your payload if you accidentally switch it up.
+
+To combat this, payload dataclasses need to make the appropriate calls t o `ShipName.with(out)Sig`
+
 ---
 ### December 23
 
