@@ -1,8 +1,8 @@
 package airlock.agent.graph;
 
+import airlock.AirlockChannel;
 import airlock.AirlockUtils;
 import airlock.PokeResponse;
-import airlock.AirlockChannel;
 import airlock.agent.Agent;
 import airlock.agent.group.GroupUtils;
 import airlock.agent.group.types.GroupPolicy;
@@ -13,14 +13,18 @@ import airlock.errors.scry.ScryDataNotFoundException;
 import airlock.errors.scry.ScryFailureException;
 import airlock.errors.spider.SpiderFailureException;
 import airlock.types.ShipName;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static airlock.AirlockUtils.gson;
 import static airlock.AirlockUtils.map2json;
@@ -28,11 +32,17 @@ import static java.util.Objects.requireNonNullElse;
 
 public class GraphAgent extends Agent {
 
+	private Set<Resource> keys;
+
 	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
 	// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
 	public GraphAgent(AirlockChannel urbit) {
 		// todo handle state
+		// https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/reducers/graph-update.js
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/store/store.ts
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
 		super(urbit, new GraphAgentState());
+		this.keys = new HashSet<>();
 	}
 
 
@@ -73,34 +83,27 @@ export const createBlankNodeWithChildPost = (
 };
 	 */
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
-	public static Map<String, Object> createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
+	public static Node createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "");
 
 		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli()).toString();
 		final var nodeIndex = parentIndex + '/' + date;
 
-		final Map<String, Node> childGraph = new HashMap<>();
-		// the type of this is technically InternalGraph
-		childGraph.put(childIndex, new Node(
-						new Post(
-								ShipName.withSig(shipAuthor),
-								nodeIndex + '/' + childIndex,
-								Instant.now().toEpochMilli(),
-								contents,
-								null,
-								Collections.emptyList()
-						),
-						Graph.EMPTY_GRAPH
-						/*
-						Map.of(
-								"empty", Optional.empty()  // {empty: null}
-						)
-						*/
-				)
-		);
-		return Map.of(
-				"post", new Post(
+		Graph childGraph = new Graph(Map.of(Graph.indexFromString(childIndex), new Node(
+				new Post(
+						ShipName.withSig(shipAuthor),
+						nodeIndex + '/' + childIndex,
+						Instant.now().toEpochMilli(),
+						contents,
+						null,
+						Collections.emptyList()
+				),
+				Graph.EMPTY_GRAPH
+		)));
+
+		return new Node(
+				new Post(
 						ShipName.withSig(shipAuthor),
 						nodeIndex,
 						Instant.now().toEpochMilli(),
@@ -108,7 +111,7 @@ export const createBlankNodeWithChildPost = (
 						null,
 						Collections.emptyList()
 				),
-				"children", childGraph
+				childGraph
 		);
 	}
 
@@ -562,11 +565,31 @@ export const createPost = (
 		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
 
 		// todo implement state handling
+
+		JsonObject graphUpdate = scryResponse.get("graph-update").getAsJsonObject();
+
+		JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
+		// todo custom dataclass for graph-update, keys
 		/*
-		this.store.handleEvent({
-          data: keys
-        });
+		const keys = (json, state) => {
+		  const data = _.get(json, 'keys', false);
+		  if (data) {
+		    state.graphKeys = new Set(data.map((res) => {
+		      let resource = res.ship + '/' + res.name;
+		      return resource;
+		    }));
+		  }
+		};
 		 */
+
+
+		this.keys = StreamSupport.stream(keys.spliterator(), false)
+				.map(resourceEl -> {
+					var resourceObj = resourceEl.getAsJsonObject();
+					return new Resource(resourceObj.get("ship").getAsString(), resourceObj.get("name").getAsString());
+				})
+				.collect(Collectors.toSet());
+
 		return scryResponse;
 	}
 
@@ -587,6 +610,7 @@ export const createPost = (
 	public JsonElement getTags() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
 		// todo state handling
+
 		return scryResponse;
 	}
 
@@ -622,6 +646,111 @@ export const createPost = (
 	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
 		// todo implement state handling
+		/*
+
+
+	const addGraph = (json, state) => {
+
+	  const _processNode = (node) => {
+	    //  is empty
+	    if (!node.children) {
+	      node.children = new BigIntOrderedMap();
+	      return node;
+	    }
+
+	    //  is graph
+	    let converted = new BigIntOrderedMap();
+	    for (let idx in node.children) {
+	      let item = node.children[idx];
+	      let index = bigInt(idx);
+
+	      converted.set(
+	        index,
+	        _processNode(item)
+	      );
+	    }
+	    node.children = converted;
+	    return node;
+	  };
+
+	  const data = _.get(json, 'add-graph', false);
+	  if (data) {
+	    if (!('graphs' in state)) {
+	      state.graphs = {};
+	    }
+
+	    let resource = data.resource.ship + '/' + data.resource.name;
+	    state.graphs[resource] = new BigIntOrderedMap();
+
+	    for (let idx in data.graph) {
+	      let item = data.graph[idx];
+	      let index = bigInt(idx);
+
+	      let node = _processNode(item);
+
+	      state.graphs[resource].set(
+	        index,
+	        node
+	      );
+	    }
+	    state.graphKeys.add(resource);
+	  }
+
+	};
+
+		 */
+
+
+//
+//  Function<Node, Node> processNode = (node) -> {
+//				//  is empty
+//				if (node.children == null) {
+//					node.children = new Graph();
+//					return node;
+//				}
+//
+//				//  is graph
+//	            var converted = new Graph();
+//				for (BigInteger idx : node.children) {
+//					let item = node.children[idx];
+//					let index = bigInt(idx);
+//
+//					converted.set(
+//							index,
+//							_processNode(item)
+//					);
+//				}
+//				node.children = converted;
+//				return node;
+//			};
+//
+//  const data = _.get(json, 'add-graph', false);
+//			if (data) {
+//				if (!('graphs' in state)) {
+//					state.graphs = {};
+//				}
+//
+//				let resource = data.resource.ship + '/' + data.resource.name;
+//				state.graphs[resource] = new BigIntOrderedMap();
+//
+//				for (let idx in data.graph) {
+//					let item = data.graph[idx];
+//					let index = bigInt(idx);
+//
+//					let node = _processNode(item);
+//
+//					state.graphs[resource].set(
+//							index,
+//							node
+//					);
+//				}
+//				state.graphKeys.add(resource);
+//			}
+//
+//		};
+
+
+
 		return scryResponse;
 	}
 
