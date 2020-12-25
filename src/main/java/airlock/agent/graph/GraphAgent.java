@@ -432,7 +432,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addGraph(String ship, String name, Map<String, Object> graph, String mark) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.storeAction(map2json(Map.of(
 				"add-graph", Map.of(
-						"resource", Map.of("ship", ship, "name", name),
+						"resource", new Resource(ship, name),
 						"graph", graph,
 						"mark", mark
 				)
@@ -507,7 +507,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addNodes(String ship, String name, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
-						"resource", Map.of("ship", ship, "name", name),
+						"resource", new Resource(ship, name),
 						"nodes", nodes
 				)
 		));
@@ -540,7 +540,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> removeNodes(String ship, String name, String[] indices) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.hookAction(ship, map2json(Map.of(
 				"remove-nodes", Map.of(
-						"resource", Map.of("ship", ship, "name", name),
+						"resource", new Resource(ship, name),
 						"indices", indices
 				)
 		)));
