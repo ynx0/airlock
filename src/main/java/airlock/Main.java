@@ -97,7 +97,7 @@ public class Main {
 
 		urbit.delete();  // not strictly necessary
 		System.out.println("tearing down");
-		urbit.tearDown();
+		urbit.teardown();
 
 		System.exit(0); // todo for now you need this otherwise it takes like 30 seconds longer to exit
 
