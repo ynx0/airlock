@@ -56,7 +56,7 @@ public class Playground {
 						null
 				)
 		);
-		System.out.println(futurePostResponse.get().toString());
+		assert futurePostResponse.get().success;
 
 
 		// notes dump
