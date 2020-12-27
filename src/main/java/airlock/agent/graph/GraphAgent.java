@@ -18,21 +18,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static airlock.AirlockUtils.gson;
 import static airlock.AirlockUtils.map2json;
 import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.StreamSupport.stream;
 
 public class GraphAgent extends Agent {
 
-	private Set<Resource> keys;
+	private final Set<Resource> keys;
+	private final Map<Resource, Graph> graphs;
 
 	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
 	// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
@@ -43,6 +42,9 @@ public class GraphAgent extends Agent {
 		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
 		super(urbit);
 		this.keys = new HashSet<>();
+		this.graphs = new HashMap<>();
+		// todo potentially use a separate AgentState class. right now we'll just manually implement
+		// todo custom dataclass for graph-update with all derivatives
 	}
 
 
@@ -560,16 +562,6 @@ export const createPost = (
 
 */
 	public JsonObject getKeys() throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonObject scryResponse = this.urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
-		// this should be an object of the form:
-		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
-
-		// todo implement state handling
-
-		JsonObject graphUpdate = scryResponse.get("graph-update").getAsJsonObject();
-
-		JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
-		// todo custom dataclass for graph-update, keys
 		/*
 		const keys = (json, state) => {
 		  const data = _.get(json, 'keys', false);
@@ -582,13 +574,12 @@ export const createPost = (
 		};
 		 */
 
+		JsonObject scryResponse = this.urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
+		// this should be an object of the form:
+		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
+		JsonObject graphUpdate = scryResponse.get("graph-update").getAsJsonObject();
 
-		this.keys = StreamSupport.stream(keys.spliterator(), false)
-				.map(resourceEl -> {
-					var resourceObj = resourceEl.getAsJsonObject();
-					return new Resource(resourceObj.get("ship").getAsString(), resourceObj.get("name").getAsString());
-				})
-				.collect(Collectors.toSet());
+		this.updateState(graphUpdate);
 
 		return scryResponse;
 	}
@@ -608,9 +599,12 @@ export const createPost = (
 */
 
 	public JsonElement getTags() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
-		// todo state handling
+		// old_todo state handling
+		// so apparently, Landscape doesn't do anything with tags yet... we'll also not do anything
+		// there seems to be a similar concept used with group-store tho
 
+		//noinspection UnnecessaryLocalVariable
+		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
 		return scryResponse;
 	}
 
@@ -796,5 +790,41 @@ export const createPost = (
 		return data;
 	}
 
+
+	// could also be called `reduce`
+	private void updateState(JsonObject graphUpdate) {
+		if (graphUpdate.has("keys")) {
+			JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
+			this.keys.clear();
+			/*
+			 * stream(keys) => for each key:
+			 * map(keyObj -> make Resource.class)
+			 * then, collect to a single list
+			 * then, set this.keys to that list
+			 */
+			this.keys.addAll(
+					stream(keys.spliterator(), false)
+							.map(resourceJSON -> AirlockUtils.gson.fromJson(resourceJSON, Resource.class))
+							.collect(Collectors.toSet())
+			);
+		} else if (graphUpdate.has("add-graph")) {
+			JsonObject addGraph = graphUpdate.get("add-graph").getAsJsonObject();
+
+			Resource resource = gson.fromJson(addGraph.get("resource"), Resource.class);
+
+			Graph graph = gson.fromJson(addGraph.get("graph"), Graph.class);
+
+			this.graphs.put(resource, graph);
+		} else if (graphUpdate.has("remove-graph")) {
+			JsonObject removeGraph = graphUpdate.get("remove-graph").getAsJsonObject();
+			Resource resourceToRemove = GroupUtils.makeResource(removeGraph.get("ship").getAsString(), removeGraph.get("name").getAsString());
+			this.graphs.remove(resourceToRemove);
+		} else if (graphUpdate.has("add-nodes")) {
+			JsonObject removeGraph = graphUpdate.get("remove-graph").getAsJsonObject();
+
+		} else {
+			System.out.println("Warning: encountered unknown graph-update payload. Ignoring");
+		}
+	}
 
 }
