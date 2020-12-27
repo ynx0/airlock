@@ -16,6 +16,7 @@ import airlock.types.ShipName;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
@@ -760,7 +761,7 @@ export const createPost = (
 
 
 	// could also be called `reduce`
-	private void updateState(JsonObject graphUpdate) {
+	private void updateState(@NotNull JsonObject graphUpdate) {
 		// expects the object associated with the key "graph-update"
 		if (graphUpdate.has("keys")) {
 			JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
