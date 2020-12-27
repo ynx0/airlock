@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static java.util.stream.StreamSupport.stream;
+
 // same as BigIntOrderedMap
 public class Graph extends TreeMap<BigInteger, Node> {
 
@@ -51,14 +53,24 @@ public class Graph extends TreeMap<BigInteger, Node> {
 
 		@Override
 		public Graph deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-			Graph graph = new Graph();
-			JsonObject graphJson = json.getAsJsonObject();
-			graphJson.entrySet().forEach(graphEntry -> {
-				BigInteger index = Graph.indexFromString(graphEntry.getKey());
-				Node node = context.deserialize(graphEntry.getValue(), Node.class);
-				graph.put(index, node);
-			});
-			return graph;
+			Graph result = new Graph();
+			// this code deserializes 'add-nodes', not 'add-graph'
+//			JsonObject graphJson = json.getAsJsonObject();
+//			graphJson.entrySet().forEach(graphEntry -> {
+//				BigInteger index = Graph.indexFromString(graphEntry.getKey());
+//				Node node = context.deserialize(graphEntry.getValue(), Node.class);
+//				result.put(index, node);
+//			});
+			JsonArray graphArray = json.getAsJsonArray();
+			stream(graphArray.spliterator(), false)
+					.forEach(graphJSON -> {
+						JsonArray graphAsArray = graphJSON.getAsJsonArray();
+						BigInteger index = Graph.indexFromString(graphAsArray.get(0).getAsString());
+						Node node = context.deserialize(graphAsArray.get(1).getAsJsonObject(), Node.class);
+						result.put(index, node);
+					});
+
+			return result;
 		}
 	}
 
