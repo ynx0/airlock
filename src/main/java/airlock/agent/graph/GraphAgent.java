@@ -409,7 +409,6 @@ export const createPost = (
 	public JsonElement groupifyGraph(String ship, String name, String toPath) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
 
-		//GroupUtils::resourceFromPath
 		final Resource to = GroupUtils.resourceFromPath(toPath);
 		return this.viewAction("graph-groupify", map2json(Map.of(
 				"groupify", Map.of(
@@ -519,6 +518,7 @@ export const createPost = (
 		markPending(action['add-nodes'].nodes);
 		action['add-nodes'].resource.ship = action['add-nodes'].resource.ship.slice(1);
 		console.log(action);
+
 		this.store.handleEvent({ data: { 'graph-update': action } });
 		*/
 
@@ -627,8 +627,10 @@ export const createPost = (
 
 */
 	public JsonElement getTagQueries() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		// Landscape doesn't do anything with tagQueries yet either
+
+		//noinspection UnnecessaryLocalVariable
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
-		// todo implement state handling
 		return scryResponse;
 	}
 
@@ -647,109 +649,56 @@ export const createPost = (
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
 		// todo implement state handling
 		/*
+		const addGraph = (json, state) => {
 
+		  const _processNode = (node) => {
+		    //  is empty
+		    if (!node.children) {
+		      node.children = new BigIntOrderedMap();
+		      return node;
+		    }
 
-	const addGraph = (json, state) => {
+		    //  is graph
+		    let converted = new BigIntOrderedMap();
+		    for (let idx in node.children) {
+		      let item = node.children[idx];
+		      let index = bigInt(idx);
 
-	  const _processNode = (node) => {
-	    //  is empty
-	    if (!node.children) {
-	      node.children = new BigIntOrderedMap();
-	      return node;
-	    }
+		      converted.set(
+		        index,
+		        _processNode(item)
+		      );
+		    }
+		    node.children = converted;
+		    return node;
+		  };
 
-	    //  is graph
-	    let converted = new BigIntOrderedMap();
-	    for (let idx in node.children) {
-	      let item = node.children[idx];
-	      let index = bigInt(idx);
+		  const data = _.get(json, 'add-graph', false);
+		  if (data) {
+		    if (!('graphs' in state)) {
+		      state.graphs = {};
+		    }
 
-	      converted.set(
-	        index,
-	        _processNode(item)
-	      );
-	    }
-	    node.children = converted;
-	    return node;
-	  };
+		    let resource = data.resource.ship + '/' + data.resource.name;
+		    state.graphs[resource] = new BigIntOrderedMap();
 
-	  const data = _.get(json, 'add-graph', false);
-	  if (data) {
-	    if (!('graphs' in state)) {
-	      state.graphs = {};
-	    }
+		    for (let idx in data.graph) {
+		      let item = data.graph[idx];
+		      let index = bigInt(idx);
 
-	    let resource = data.resource.ship + '/' + data.resource.name;
-	    state.graphs[resource] = new BigIntOrderedMap();
+		      let node = _processNode(item);
 
-	    for (let idx in data.graph) {
-	      let item = data.graph[idx];
-	      let index = bigInt(idx);
+		      state.graphs[resource].set(
+		        index,
+		        node
+		      );
+		    }
+		    state.graphKeys.add(resource);
+		  }
 
-	      let node = _processNode(item);
-
-	      state.graphs[resource].set(
-	        index,
-	        node
-	      );
-	    }
-	    state.graphKeys.add(resource);
-	  }
-
-	};
+		};
 
 		 */
-
-
-//
-//  Function<Node, Node> processNode = (node) -> {
-//				//  is empty
-//				if (node.children == null) {
-//					node.children = new Graph();
-//					return node;
-//				}
-//
-//				//  is graph
-//	            var converted = new Graph();
-//				for (BigInteger idx : node.children) {
-//					let item = node.children[idx];
-//					let index = bigInt(idx);
-//
-//					converted.set(
-//							index,
-//							_processNode(item)
-//					);
-//				}
-//				node.children = converted;
-//				return node;
-//			};
-//
-//  const data = _.get(json, 'add-graph', false);
-//			if (data) {
-//				if (!('graphs' in state)) {
-//					state.graphs = {};
-//				}
-//
-//				let resource = data.resource.ship + '/' + data.resource.name;
-//				state.graphs[resource] = new BigIntOrderedMap();
-//
-//				for (let idx in data.graph) {
-//					let item = data.graph[idx];
-//					let index = bigInt(idx);
-//
-//					let node = _processNode(item);
-//
-//					state.graphs[resource].set(
-//							index,
-//							node
-//					);
-//				}
-//				state.graphKeys.add(resource);
-//			}
-//
-//		};
-
-
 
 		return scryResponse;
 	}
@@ -764,6 +713,8 @@ export const createPost = (
 	public void getNewest(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var data = this.urbit.scryRequest("graph-store", "/newest/" + ship + "/" + resource + "/" + count + index);
 		// todo state handling
+		// thing to do: look at example payload and how it is used
+		// there is only one usage, which is here: https://github.com/urbit/urbit/blob/master/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
 	}
 
 	/*
@@ -780,6 +731,7 @@ export const createPost = (
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + ship + "/" + resource + "/" + count + idx);
 		// todo handle effect
+
 	}
 
 	/*
