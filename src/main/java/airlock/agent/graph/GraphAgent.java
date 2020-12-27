@@ -18,6 +18,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -47,43 +48,50 @@ public class GraphAgent extends Agent {
 		// todo custom dataclass for graph-update with all derivatives
 	}
 
+	@Override
+	public String toString() {
+		return "GraphAgent{" +
+				"keys=" + keys +
+				", graphs=" + graphs +
+				'}';
+	}
 
 	/*
 
-export const createBlankNodeWithChildPost = (
-  parentIndex: string = '',
-  childIndex: string = '',
-  contents: Content[]
-) => {
-  const date = unixToDa(Date.now()).toString();
-  const nodeIndex = parentIndex + '/' + date;
+	export const createBlankNodeWithChildPost = (
+	  parentIndex: string = '',
+	  childIndex: string = '',
+	  contents: Content[]
+	) => {
+	  const date = unixToDa(Date.now()).toString();
+	  const nodeIndex = parentIndex + '/' + date;
 
-  const childGraph = {};
-  childGraph[childIndex] = {
-    post: {
-      author: `~${window.ship}`,
-      index: nodeIndex + '/' + childIndex,
-      'time-sent': Date.now(),
-      contents,
-      hash: null,
-      signatures: []
-    },
-    children: null
-  };
+	  const childGraph = {};
+	  childGraph[childIndex] = {
+		post: {
+		  author: `~${window.ship}`,
+		  index: nodeIndex + '/' + childIndex,
+		  'time-sent': Date.now(),
+		  contents,
+		  hash: null,
+		  signatures: []
+		},
+		children: null
+	  };
 
-  return {
-    post: {
-      author: `~${window.ship}`,
-      index: nodeIndex,
-      'time-sent': Date.now(),
-      contents: [],
-      hash: null,
-      signatures: []
-    },
-    children: childGraph
-  };
-};
-	 */
+	  return {
+		post: {
+		  author: `~${window.ship}`,
+		  index: nodeIndex,
+		  'time-sent': Date.now(),
+		  contents: [],
+		  hash: null,
+		  signatures: []
+		},
+		children: childGraph
+	  };
+	};
+		 */
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
 	public static Node createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
 		parentIndex = requireNonNullElse(parentIndex, "");
@@ -92,7 +100,14 @@ export const createBlankNodeWithChildPost = (
 		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli()).toString();
 		final var nodeIndex = parentIndex + '/' + date;
 
-		Graph childGraph = new Graph(Map.of(Graph.indexFromString(childIndex), new Node(
+		List<BigInteger> parsedIndexArray = Graph.indexListFromString(childIndex);
+		if (parsedIndexArray.size() != 1) {
+			// see if we want to keep  this or not
+			throw new IllegalArgumentException("invalid index provided");
+		}
+		BigInteger index = parsedIndexArray.get(0);
+
+		Graph childGraph = new Graph(Map.of(index, new Node(
 				new Post(
 						ShipName.withSig(shipAuthor),
 						nodeIndex + '/' + childIndex,
@@ -515,7 +530,6 @@ export const createPost = (
 
 		CompletableFuture<PokeResponse> future = this.hookAction(ship, payload);
 
-		// todo implement other client-side effects to handle state
 		/*
 		markPending(action['add-nodes'].nodes);
 		action['add-nodes'].resource.ship = action['add-nodes'].resource.ship.slice(1);
@@ -523,6 +537,7 @@ export const createPost = (
 
 		this.store.handleEvent({ data: { 'graph-update': action } });
 		*/
+		this.updateState(payload); // we are consuming our own update in this case
 
 		return future;
 	}
@@ -603,8 +618,9 @@ export const createPost = (
 		// so apparently, Landscape doesn't do anything with tags yet... we'll also not do anything
 		// there seems to be a similar concept used with group-store tho
 
-		//noinspection UnnecessaryLocalVariable
+
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
+		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
 
@@ -623,7 +639,6 @@ export const createPost = (
 	public JsonElement getTagQueries() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// Landscape doesn't do anything with tagQueries yet either
 
-		//noinspection UnnecessaryLocalVariable
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
 		return scryResponse;
 	}
@@ -641,59 +656,7 @@ export const createPost = (
 */
 	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
-		// todo implement state handling
-		/*
-		const addGraph = (json, state) => {
-
-		  const _processNode = (node) => {
-		    //  is empty
-		    if (!node.children) {
-		      node.children = new BigIntOrderedMap();
-		      return node;
-		    }
-
-		    //  is graph
-		    let converted = new BigIntOrderedMap();
-		    for (let idx in node.children) {
-		      let item = node.children[idx];
-		      let index = bigInt(idx);
-
-		      converted.set(
-		        index,
-		        _processNode(item)
-		      );
-		    }
-		    node.children = converted;
-		    return node;
-		  };
-
-		  const data = _.get(json, 'add-graph', false);
-		  if (data) {
-		    if (!('graphs' in state)) {
-		      state.graphs = {};
-		    }
-
-		    let resource = data.resource.ship + '/' + data.resource.name;
-		    state.graphs[resource] = new BigIntOrderedMap();
-
-		    for (let idx in data.graph) {
-		      let item = data.graph[idx];
-		      let index = bigInt(idx);
-
-		      let node = _processNode(item);
-
-		      state.graphs[resource].set(
-		        index,
-		        node
-		      );
-		    }
-		    state.graphKeys.add(resource);
-		  }
-
-		};
-
-		 */
-
+		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
 
@@ -706,7 +669,7 @@ export const createPost = (
 
 	public void getNewest(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var data = this.urbit.scryRequest("graph-store", "/newest/" + ship + "/" + resource + "/" + count + index);
-		// todo state handling
+		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		// thing to do: look at example payload and how it is used
 		// there is only one usage, which is here: https://github.com/urbit/urbit/blob/master/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
 	}
@@ -724,8 +687,7 @@ export const createPost = (
 	public void getOlderSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + ship + "/" + resource + "/" + count + idx);
-		// todo handle effect
-
+		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
 	/*
@@ -743,8 +705,7 @@ export const createPost = (
 	public void getYoungerSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + count + idx);
-		// todo handle storage
-
+		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
 	/*
@@ -762,7 +723,7 @@ export const createPost = (
 */
 	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + ship + "/" + resource + "/" + end + "/" + "start");
-		// todo handle storage
+		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
 
@@ -784,15 +745,23 @@ export const createPost = (
 }
 */
 	public JsonElement getNode(String ship, String resource, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		// todo unpack the following mystery meat code for idx
+		//  it is unclear to me what the inputs and outputs to this are, reading it like 2 days later
+		// it would be best to see what the source is actually doing and replicate that rather than just blindly translating
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
+		// i think this is because index can be something like 1 turns to 2
+		// source (unix timestamp): 16555555555/2
+		// processed (@da timestamp): /17055555555555555555555555555555/2
+		//
 		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + idx);
-		// todo handle storage
+		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		return data;
 	}
 
 
 	// could also be called `reduce`
 	private void updateState(JsonObject graphUpdate) {
+		// expects the object associated with the key "graph-update"
 		if (graphUpdate.has("keys")) {
 			JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
 			this.keys.clear();
@@ -808,23 +777,100 @@ export const createPost = (
 							.collect(Collectors.toSet())
 			);
 		} else if (graphUpdate.has("add-graph")) {
+
 			JsonObject addGraph = graphUpdate.get("add-graph").getAsJsonObject();
-
 			Resource resource = gson.fromJson(addGraph.get("resource"), Resource.class);
+			Graph newGraph = gson.fromJson(addGraph.get("graph"), Graph.class);
 
-			Graph graph = gson.fromJson(addGraph.get("graph"), Graph.class);
+			Graph processedNewGraph = new Graph();
 
-			this.graphs.put(resource, graph);
+
+			// it seems like all it does is ensure all childrenNodes have at least a nonnull
+			// `children` property that is init with an empty graph
+			newGraph.forEach((index, node) -> {
+				node.ensureAllChildrenHaveGraph();
+				processedNewGraph.put(index, node);
+			});
+
+			this.graphs.put(resource, processedNewGraph);
+			this.keys.add(resource);
+
 		} else if (graphUpdate.has("remove-graph")) {
-			JsonObject removeGraph = graphUpdate.get("remove-graph").getAsJsonObject();
-			Resource resourceToRemove = GroupUtils.makeResource(removeGraph.get("ship").getAsString(), removeGraph.get("name").getAsString());
-			this.graphs.remove(resourceToRemove);
+
+			JsonObject removeGraphObj = graphUpdate.get("remove-graph").getAsJsonObject();
+			Resource resource = gson.fromJson(removeGraphObj, Resource.class);
+
+			if (!this.graphs.containsKey(resource)) {
+				System.out.println("Warning: Tried to remove non-existent graph");
+			} else {
+				this.keys.remove(resource);
+				this.graphs.remove(resource);
+			}
+
 		} else if (graphUpdate.has("add-nodes")) {
-			JsonObject removeGraph = graphUpdate.get("remove-graph").getAsJsonObject();
+
+			JsonObject addNodesObj = graphUpdate.getAsJsonObject("add-nodes");
+			JsonObject nodesObj = addNodesObj.getAsJsonObject("nodes");
+			Resource resource = gson.fromJson(addNodesObj.getAsJsonObject("resource"), Resource.class);
+
+			// todo implement _addNodes. that method is kinda weird
+
+			if (this.graphs.isEmpty()) {
+				return;
+			}
+
+			if (!this.graphs.containsKey(resource)) {
+				this.graphs.put(resource, new Graph());
+			}
+
+			Graph targetGraph = this.graphs.get(resource);
+			this.keys.add(resource);
+
+			nodesObj.entrySet().forEach(indexNodeEntry -> {
+				// note: landscape is more flexible in regards to malformed index strings.
+				// i.e., if an index doesn't parse it just stops parsing further entries
+				// and returns without fanfare.
+				// however, the behavior here is to just completely halt execution and throw an exception
+				// when the BigInt parsing inevitably fails
+				DeepIndex deepIndex = Graph.indexListFromString(indexNodeEntry.getKey());
+				if (deepIndex.size() == 0) {
+					return;
+				}
+				Node node = gson.fromJson(indexNodeEntry.getValue().getAsJsonObject(), Node.class);
+				this.graphs.get(resource).addNode(deepIndex, node);
+			});
+		} else if (graphUpdate.has("remove-nodes")) {
+			// indices != index.
+			// index = "/1767324682374638723487987324"
+			// indices = "/1767324682374638723487987324/1/4"
+			// since index is a List<BigInteger>,
+			// `indices` would be List<List<BigInteger>>
+			// List{BitInt(1767324682374638723487987324), BigInt(1), BigInt(4)}
+			JsonObject removeNodesObj = graphUpdate.getAsJsonObject("remove-nodes");
+			JsonArray indicesObj = removeNodesObj.getAsJsonArray("indices");
+			List<DeepIndex> indices =
+					stream(indicesObj.spliterator(), false)
+							.map(indexObj -> Graph.indexListFromString(indexObj.getAsString()))
+							.collect(Collectors.toList());
+
+
+			Resource resource = gson.fromJson(removeNodesObj.getAsJsonObject("resource"), Resource.class);
+			if (!this.graphs.containsKey(resource)) {
+				return;
+			}
+
+			for (DeepIndex index : indices) {
+				if (index.isEmpty()) {
+					System.out.println("Warning, encountered empty index: " + index);
+					return;
+				}
+				this.graphs.get(resource).removeNode(index);
+			}
 
 		} else {
 			System.out.println("Warning: encountered unknown graph-update payload. Ignoring");
 		}
+		// no further code should be written here because it would be skipped by early exits
 	}
 
 }

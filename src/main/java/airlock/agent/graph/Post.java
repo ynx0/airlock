@@ -23,4 +23,16 @@ public class Post {
 		this.hash = hash;
 		this.signatures = signatures;
 	}
+
+	@Override
+	public String toString() {
+		return "Post{" +
+				"author='" + author + '\'' +
+				", index='" + index + '\'' +
+				", timeSent=" + timeSent +
+				", contents=" + contents +
+				", hash='" + hash + '\'' +
+				", signatures=" + signatures +
+				'}';
+	}
 }
