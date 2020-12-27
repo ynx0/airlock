@@ -15,9 +15,8 @@ public abstract class Agent {
 	protected final AirlockChannel urbit;
 
 	// adapted from https://github.com/dclelland/UrsusAPI/
-	protected Agent(AirlockChannel urbit, AgentState state) {
+	protected Agent(AirlockChannel urbit) {
 		this.urbit = urbit;
-//		this.state = state;
 	}
 
 	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {

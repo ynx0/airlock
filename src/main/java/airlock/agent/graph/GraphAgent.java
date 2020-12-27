@@ -41,7 +41,7 @@ public class GraphAgent extends Agent {
 		// https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/reducers/graph-update.js
 		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/store/store.ts
 		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
-		super(urbit, new GraphAgentState());
+		super(urbit);
 		this.keys = new HashSet<>();
 	}
 

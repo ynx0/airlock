@@ -6,7 +6,7 @@ import airlock.agent.AgentState;
 
 public class ContactAgent extends Agent {
 	protected ContactAgent(AirlockChannel urbit, AgentState state) {
-		super(urbit, state);
+		super(urbit);
 	}
 
 
