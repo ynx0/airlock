@@ -383,12 +383,11 @@ export const createPost = (
     });
   }
 */
-	public JsonElement joinGraph(String ship, String name) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var resource = GroupUtils.makeResource(ship, name);
+	public JsonElement joinGraph(Resource resource) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		return this.viewAction("graph-join", map2json(Map.of(
 				"join", Map.of(
 						"resource", resource,
-						"ship", ship
+						"ship", resource.ship
 				)
 		)));
 	}
@@ -422,8 +421,7 @@ export const createPost = (
   }
 
 */
-	public JsonElement leaveGraph(String ship, String name) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
+	public JsonElement leaveGraph(Resource resource) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		return this.viewAction("graph-leave", map2json(Map.of("leave", resource)));
 	}
 
@@ -442,20 +440,23 @@ export const createPost = (
   }
 
 */
-	public JsonElement groupifyGraph(String ship, String name, String toPath) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
+	public JsonElement groupifyGraph(Resource resource, @Nullable String toPath) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		Resource to = null;
+		if (toPath != null) {
+			to = GroupUtils.resourceFromPath(toPath);
+		}
+		// we have to use direct hashmap because Map.of doesn't support nulls
+		Map<String, Object> groupifyObj = new HashMap<>();
+		groupifyObj.put("resource", resource);
+		groupifyObj.put("to", to);
 
-		final Resource to = GroupUtils.resourceFromPath(toPath);
 		return this.viewAction("graph-groupify", map2json(Map.of(
-				"groupify", Map.of(
-						"resource", resource,
-						"to", to
-				)
+				"groupify", groupifyObj
 		)));
 	}
 
-	public JsonElement groupifyGraph(String ship, String name) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		return this.groupifyGraph(ship, name, null);
+	public JsonElement groupifyGraph(Resource resource) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		return this.groupifyGraph(resource, null);
 	}
 
 	/*
@@ -470,10 +471,10 @@ export const createPost = (
     });
   }
   */
-	public CompletableFuture<PokeResponse> addGraph(String ship, String name, Map<String, Object> graph, String mark) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addGraph(Resource resource, Graph graph, String mark) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.storeAction(map2json(Map.of(
 				"add-graph", Map.of(
-						"resource", new Resource(ship, name),
+						"resource", resource,
 						"graph", graph,
 						"mark", mark
 				)
@@ -493,9 +494,9 @@ export const createPost = (
     return this.addNodes(ship, name, nodes);
   }
   */
-	public CompletableFuture<PokeResponse> addPost(String ship, String name, Post post) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addPost(Resource resource, Post post) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
-		return this.addNodes(ship, name, Map.of(
+		return this.addNodes(resource, Map.of(
 				post.index, new Node(post, Graph.EMPTY_GRAPH)
 		));
 
@@ -513,12 +514,12 @@ export const createPost = (
     return this.addNodes(ship, name, nodes);
   }
 */
-	public CompletableFuture<PokeResponse> addNode(String ship, String name, Node node) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addNode(Resource resource, Node node) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		Map<String, Object> nodes = new HashMap<>();
 
 		nodes.put(node.post.index, node);
 
-		return this.addNodes(ship, name, nodes);
+		return this.addNodes(resource, nodes);
 
 	}
 
@@ -542,23 +543,22 @@ export const createPost = (
 
 	/**
 	 *
-	 * @param ship The ship where the resource (graph) is located
-	 * @param name The name of the resource
+	 * @param resource The destination resource to add the nodes to
 	 * @param nodes The nodes to add
 	 * @return A future poke response
 	 * @throws AirlockResponseError
 	 * @throws AirlockRequestError
 	 * @throws AirlockAuthenticationError
 	 */
-	public CompletableFuture<PokeResponse> addNodes(String ship, String name, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addNodes(Resource resource, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
-						"resource", new Resource(ship, name),
+						"resource", resource,
 						"nodes", nodes
 				)
 		));
 
-		CompletableFuture<PokeResponse> future = this.hookAction(ship, payload);
+		CompletableFuture<PokeResponse> future = this.hookAction(resource.ship, payload);
 
 		/*
 		markPending(action['add-nodes'].nodes);
@@ -584,10 +584,10 @@ export const createPost = (
     });
   }
 */
-	public CompletableFuture<PokeResponse> removeNodes(String ship, String name, String[] indices) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		return this.hookAction(ship, map2json(Map.of(
+	public CompletableFuture<PokeResponse> removeNodes(Resource resource, String[] indices) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+		return this.hookAction(resource.ship, map2json(Map.of(
 				"remove-nodes", Map.of(
-						"resource", new Resource(ship, name),
+						"resource", resource,
 						"indices", indices
 				)
 		)));
