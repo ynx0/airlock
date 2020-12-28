@@ -5,10 +5,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class Node {
 
-	Post post;
-	@Nullable Graph children; // technically internal graph
+	public final @NotNull Post post;
+	public @Nullable Graph children; // technically internal graph
 
-	public Node(Post post, @Nullable Graph children) {
+	public Node(@NotNull Post post, @Nullable Graph children) {
 		this.post = post;
 		this.children = children;
 	}

@@ -9,13 +9,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class Post {
-	final String author;
-	final String index;
+	public final String author;
+	public final String index;
 	@SerializedName("time-sent")
-	final long timeSent;
-	final List<GraphContent> contents;
-	final @Nullable String hash;
-	final List<String> signatures; // todo narrow by creating signature type
+	public final long timeSent;
+	public final List<GraphContent> contents;
+	public final @Nullable String hash;
+	public final List<String> signatures; // todo narrow by creating signature type
 
 	public Post(String author, String index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
 		this.author = ShipName.withSig(author);
