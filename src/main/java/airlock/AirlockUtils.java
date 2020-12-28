@@ -1,6 +1,7 @@
 package airlock;
 
 import airlock.agent.graph.types.Graph;
+import airlock.agent.graph.types.content.GraphContent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -21,6 +22,7 @@ public class AirlockUtils {
 			.setPrettyPrinting()  // disable in production
 			.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
 			.registerTypeAdapter(Graph.class, Graph.ADAPTER)
+			.registerTypeAdapter(GraphContent.class, GraphContent.ADAPTER)
 			.serializeNulls() // necessary for certain payloads that we send
 			.create();
 
