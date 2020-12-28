@@ -4,6 +4,8 @@ import airlock.AirlockChannel;
 import airlock.AirlockUtils;
 import airlock.PokeResponse;
 import airlock.agent.Agent;
+import airlock.agent.graph.types.*;
+import airlock.agent.graph.types.content.GraphContent;
 import airlock.agent.group.GroupUtils;
 import airlock.agent.group.types.GroupPolicy;
 import airlock.errors.channel.AirlockAuthenticationError;

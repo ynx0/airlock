@@ -1,4 +1,4 @@
-package airlock.agent.graph;
+package airlock.agent.graph.types;
 
 import airlock.types.ShipName;
 
@@ -12,6 +12,14 @@ public class Resource {
 		this.ship = ShipName.withSig(ship);
 		System.out.println(ship);
 		this.name = name;
+	}
+
+	/**
+	 * Turns a resource into a string in the form of "~bitbet-botbel/urbit-community"
+	 * @return the url form of the resource
+	 */
+	public String urlForm() {
+		return this.ship + "/" + this.name;
 	}
 
 	// I can't wait for record classes

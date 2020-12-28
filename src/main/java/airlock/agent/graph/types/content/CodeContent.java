@@ -1,4 +1,4 @@
-package airlock.agent.graph;
+package airlock.agent.graph.types.content;
 
 public class CodeContent extends GraphContent {
 	public final String expression;

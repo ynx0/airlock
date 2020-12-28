@@ -1,6 +1,8 @@
 import airlock.AirlockChannel;
 import airlock.PokeResponse;
 import airlock.agent.graph.*;
+import airlock.agent.graph.types.Resource;
+import airlock.agent.graph.types.content.TextContent;
 import airlock.errors.channel.AirlockChannelError;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;

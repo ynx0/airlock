@@ -1,7 +1,6 @@
 import airlock.AirlockChannel;
-import airlock.AirlockUtils;
 import airlock.agent.chat.ChatUtils;
-import airlock.agent.graph.Resource;
+import airlock.agent.graph.types.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

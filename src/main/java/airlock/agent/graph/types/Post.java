@@ -1,9 +1,11 @@
-package airlock.agent.graph;
+package airlock.agent.graph.types;
 
+import airlock.agent.graph.types.content.GraphContent;
 import airlock.types.ShipName;
 import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Post {
@@ -22,6 +24,10 @@ public class Post {
 		this.contents = contents;
 		this.hash = hash;
 		this.signatures = signatures;
+	}
+
+	public Post(String author, String index, long timeSent, List<GraphContent> contents) {
+		this(author, index, timeSent, contents, null, Collections.emptyList());
 	}
 
 	@Override

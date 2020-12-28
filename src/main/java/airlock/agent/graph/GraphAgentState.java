@@ -1,6 +1,7 @@
 package airlock.agent.graph;
 
 import airlock.agent.AgentState;
+import airlock.agent.graph.types.Graph;
 
 import java.util.List;
 

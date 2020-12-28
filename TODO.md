@@ -8,25 +8,27 @@
 - cleanup Main.java. make it simpler
 
 ## Current Focus
-- deduplicate code in urbit
 
 - `graph-store`
-	- make type adapters for various new types?
-	- make types based on sur/graph-store and whatnot
-	- moar integration tests. i.e. full coverage of the new methods on the agent
-	
-
-- add documentation / comments for graph-store updates (will happen last after everything is stabilized)
-
+    - write manual use case that models basic user flow from landscape 
+    - **Integration Tests**
+      - use manual use case as starting point
+      - full coverage of the new methods on the agent
+    - add documentation / comments for graph-store updates (will happen last after everything is stabilized)
+    - [optional] make language-generic guide on using graph-store
+    - [optional] add experimental methods which are in hoon but not in Landscape
+    
 ## Completed Items
+- [Dec 27] make types based on sur/graph-store and whatnot
+- [Dec 27] make type adapters for various new types? (sufficiently done)
+- [Dec 25] deduplicate code in urbit
+- [Dec 25] split up unit tests by "basic functionality" and by the agent (i.e. chat store/graph store etc.) (connect, auth, poke subscribe scry spider)
 - [Dec 23] refactor out integration tests per-agent. keep the main one solely for the urbit client
-  - split up unit tests by "basic functionality" and by the agent (i.e. chat store/graph store etc.) (connect, auth, poke subscribe scry spider)
 - [Dec 23] prefer using the unit tests as examples
 - [Dec 23] refactor out url stuff to util class
 - [Dec 23] atom public no aura only bigint, protected access to aura, refactor later to abstract class AtomBase, atom, etc.
 
 # Ideas
-
 
 - [Wish] Implement the aura system in Java
 	- also maybe the `++dime` and `++cord` stuff?

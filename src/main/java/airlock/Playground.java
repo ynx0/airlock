@@ -1,14 +1,14 @@
 package airlock;
 
 import airlock.agent.graph.GraphAgent;
-import airlock.agent.graph.Resource;
-import airlock.agent.graph.TextContent;
+import airlock.agent.graph.types.Resource;
+import airlock.agent.graph.types.content.TextContent;
 import airlock.agent.group.GroupUtils;
 import airlock.types.ShipName;
 
 import java.net.URL;
 import java.time.Instant;
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class Playground {

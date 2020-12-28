@@ -1,6 +1,6 @@
 package airlock.agent.group;
 
-import airlock.agent.graph.Resource;
+import airlock.agent.graph.types.Resource;
 
 public class GroupUtils {
 

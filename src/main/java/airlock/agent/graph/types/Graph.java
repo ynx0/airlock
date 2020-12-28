@@ -1,4 +1,4 @@
-package airlock.agent.graph;
+package airlock.agent.graph.types;
 
 import com.google.gson.*;
 

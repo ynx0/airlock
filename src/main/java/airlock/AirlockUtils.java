@@ -1,7 +1,6 @@
 package airlock;
 
-import airlock.agent.graph.Graph;
-import airlock.agent.graph.Node;
+import airlock.agent.graph.types.Graph;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
