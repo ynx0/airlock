@@ -24,15 +24,32 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		this.putAll(graphMap);
 	}
 
-	public static DeepIndex indexListFromString(String indexStr) {
-		return (DeepIndex) Arrays
-				.stream(indexStr.split("/"))    // for each index split by a slash
-				.skip(1)                            // skip the first empty element
-				.map(BigInteger::new)                 // convert the indexStr to a bigint
-				.collect(Collectors.toList());        // and collect the results
+	/**
+	 * N.B: this method returns a List\<BigInteger\>, not a BigInteger even though it is dealing with a single index
+	 * This is because it is a more general method which is actually dealing with what I'm gonna call "DeepIndex"'s
+	 * (you can also think of it as a multi-level index)
+	 * Basically, they are supposed to model a nested index, such as "/17239874987324798432/4/1"
+	 * which becomes List(BigInt(17239874987324798432), BigInt(4), BigInt(1))
+	 * @param indexStr the index string to parse
+	 * @return the resulting "deep index"
+	 */
+	public static List<BigInteger> indexListFromString(String indexStr) {
+		return Arrays
+				.stream(indexStr.split("/"))
+				.skip(1)
+				.map(BigInteger::new)
+				.collect(Collectors.toList())
+				;
 	}
 
-	public void addNode(DeepIndex deepIndex, Node node) {
+	/*
+	// todo potentially use wrapper method like this to clean up other code
+	public BigInteger indexFromString(String indexStr) {
+		return indexListFromString(indexStr).get(0);
+	}
+	*/
+
+	public void addNode(List<BigInteger> deepIndex, Node node) {
 		// adapted from https://github.com/urbit/urbit/blob/598a46d1f7520ed3a2fa990d223b05139a2fe344/pkg/interface/src/logic/reducers/graph-update.js#L98
 		// okay so the code there is confusing, because BigIntOrderedMap.ts is mutable
 		// but they treat it as if it were immutable in this equivalent function
@@ -58,12 +75,12 @@ public class Graph extends TreeMap<BigInteger, Node> {
 			Node parentNode = this.get(index);
 			parentNode.ensureChildGraph();
 			assert parentNode.children != null;
-			parentNode.children.addNode((DeepIndex) deepIndex.subList(1, indexLen), node);
+			parentNode.children.addNode(deepIndex.subList(1, indexLen), node);
 			// this.set(index, parentNode); (see above comment to why this commented out)
 		}
 	}
 	// traverses the graph, trying to find the node specified by the deepIndex
-	public void removeNode(DeepIndex deepIndex) {
+	public void removeNode(List<BigInteger> deepIndex) {
 		int indexLen = deepIndex.size();
 		BigInteger currentIndex = deepIndex.get(0);
 
@@ -74,7 +91,7 @@ public class Graph extends TreeMap<BigInteger, Node> {
 			child.ensureChildGraph();
 
 			if (child.children != null) {
-				child.children.removeNode((DeepIndex) deepIndex.subList(1, indexLen));
+				child.children.removeNode(deepIndex.subList(1, indexLen));
 			} else {
 				System.out.println("Warning, child graph does not exist, unable to delete node");
 			}

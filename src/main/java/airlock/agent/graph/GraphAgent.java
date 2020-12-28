@@ -868,7 +868,7 @@ export const createPost = (
 				// and returns without fanfare.
 				// however, the behavior here is to just completely halt execution and throw an exception
 				// when the BigInt parsing inevitably fails
-				DeepIndex deepIndex = Graph.indexListFromString(indexNodeEntry.getKey());
+				List<BigInteger> deepIndex = Graph.indexListFromString(indexNodeEntry.getKey());
 				if (deepIndex.size() == 0) {
 					return;
 				}
@@ -884,7 +884,7 @@ export const createPost = (
 			// List{BitInt(1767324682374638723487987324), BigInt(1), BigInt(4)}
 			JsonObject removeNodesObj = graphUpdate.getAsJsonObject("remove-nodes");
 			JsonArray indicesObj = removeNodesObj.getAsJsonArray("indices");
-			List<DeepIndex> indices =
+			List<List<BigInteger>> indices =
 					stream(indicesObj.spliterator(), false)
 							.map(indexObj -> Graph.indexListFromString(indexObj.getAsString()))
 							.collect(Collectors.toList());
@@ -895,7 +895,7 @@ export const createPost = (
 				return;
 			}
 
-			for (DeepIndex index : indices) {
+			for (List<BigInteger> index : indices) {
 				if (index.isEmpty()) {
 					System.out.println("Warning, encountered empty index: " + index);
 					return;
