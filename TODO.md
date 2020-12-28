@@ -6,6 +6,9 @@
 - upload junit report test.html as github actions artifact
 - clean up tests
 - cleanup Main.java. make it simpler
+- see if i want dataclasses to be immutable,  use getters, or just completely public access to instance variables
+    - for now, just to get things working, i will make the mpublic
+      but in the future i should make getters for them or make them immutable copies style modifications.
 
 ## Current Focus
 
