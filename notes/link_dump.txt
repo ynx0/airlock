@@ -24,3 +24,11 @@ https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/nio/charset/Ch
 
 
  pretty printed html errors with okhttp: https://github.com/dkorobtsov/LoggingInterceptor
+
+
+FUUUUUUUUUUUUUUUU JAVA MAKES ME WANNA GAME END.
+no typedefs so I can't do somtehing like
+typedef DeepIndex = List<BigInteger>
+typedef Indices = List<List<BigInteger>>
+cause other wise it's confusing as hell
+fml

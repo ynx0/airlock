@@ -10,12 +10,19 @@
 ## Current Focus
 
 - `graph-store`
-    - write manual use case that models basic user flow from landscape 
+    - write manual use case that models basic user flow from landscape
+    - update to be in sync with master. current code is porting outdated `graph.ts`
     - **Integration Tests**
       - use manual use case as starting point
       - full coverage of the new methods on the agent
     - add documentation / comments for graph-store updates (will happen last after everything is stabilized)
     - [optional] make language-generic guide on using graph-store
+        - use curl
+        - go step by step:
+            - assume a group has already been created (for managed graph). group-store/contact-view is out of scope 
+            - basic chat example
+            - basic links example
+            - basic publish example
     - [optional] add experimental methods which are in hoon but not in Landscape
     
 ## Completed Items

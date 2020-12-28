@@ -29,6 +29,7 @@ public class GroupUtils {
 
 
 	public static Resource makeResource(String shipName, String name) {
+		// todo do I even need this? it just calls a constructor
 		return new Resource(
 				shipName,
 				name

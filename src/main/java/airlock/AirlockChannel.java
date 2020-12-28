@@ -170,6 +170,8 @@ public class AirlockChannel {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731)
 				.build();
 
+		// todo add a AirlockCredentials obj?
+
 		// todo figure out if newly changed `synchronized` blocks break functionality again or not
 		//  i basically removed what i thought would not be affected by inter-thread bugs (i.e. only local thread data stuff outside of synchronized
 		//  but there may still be problems which will only arise after testing
