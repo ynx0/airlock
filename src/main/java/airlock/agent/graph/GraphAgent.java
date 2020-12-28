@@ -673,6 +673,7 @@ export const createPost = (
 		// Landscape doesn't do anything with tagQueries yet either
 
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
+		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
 
