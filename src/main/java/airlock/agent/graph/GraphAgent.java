@@ -456,6 +456,12 @@ export const createPost = (
 		return this.groupifyGraph(resource, null);
 	}
 
+	public JsonElement eval(String cord) throws AirlockResponseError, AirlockAuthenticationError, SpiderFailureException, AirlockRequestError {
+		return this.urbit.spiderRequest("graph-view-action", "tang", "graph-eval", map2json(Map.of(
+				"eval", cord
+		)));
+	}
+
 	/*
 
   addGraph(ship: Patp, name: string, graph: any, mark: any) {
