@@ -846,22 +846,24 @@ export const createPost = (
 			}
 
 		} else if (graphUpdate.has("add-nodes")) {
-
 			JsonObject addNodesObj = graphUpdate.getAsJsonObject("add-nodes");
 			JsonObject nodesObj = addNodesObj.getAsJsonObject("nodes");
 			Resource resource = gson.fromJson(addNodesObj.getAsJsonObject("resource"), Resource.class);
 
 			System.out.println("Debug: Adding nodes");
 
+			/*
+			// I think that translating if (!this.graphs) { return; } as the following code is erroneus
+			// so i have commented it out
 			if (this.graphs.isEmpty()) {
+				System.out.println("Warn: got add-nodes but graphs is empty");
 				return;
 			}
-
+			*/
 			if (!this.graphs.containsKey(resource)) {
 				this.graphs.put(resource, new Graph());
 			}
 
-			Graph targetGraph = this.graphs.get(resource);
 			this.keys.add(resource);
 
 			nodesObj.entrySet().forEach(indexNodeEntry -> {
@@ -874,7 +876,8 @@ export const createPost = (
 				if (deepIndex.size() == 0) {
 					return;
 				}
-				Node node = gson.fromJson(indexNodeEntry.getValue().getAsJsonObject(), Node.class);
+				JsonObject nodeObj = indexNodeEntry.getValue().getAsJsonObject();
+				Node node = gson.fromJson(nodeObj, Node.class);
 				this.graphs.get(resource).addNode(deepIndex, node);
 			});
 		} else if (graphUpdate.has("remove-nodes")) {
