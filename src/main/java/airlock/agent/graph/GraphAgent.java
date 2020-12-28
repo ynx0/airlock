@@ -132,6 +132,17 @@ public class GraphAgent extends Agent {
 	}
 
 
+	public static void markPending(List<Node> nodes) {
+		nodes.forEach(node -> {
+			node.post.author = ShipName.withoutSig(node.post.author); // todo see if this is even necessary
+			node.post.pending = true;
+			if (node.children != null) {
+				markPending((List<Node>) node.children.values());
+			}
+		});
+	}
+
+
 	/*
 	* function markPending(nodes: any) {
   _.forEach(nodes, node => {
@@ -501,7 +512,7 @@ export const createPost = (
   }
 */
 	public CompletableFuture<PokeResponse> addNode(Resource resource, Node node) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		Map<String, Object> nodes = new HashMap<>();
+		Map<String, Node> nodes = new HashMap<>();
 
 		nodes.put(node.post.index, node);
 
@@ -536,7 +547,7 @@ export const createPost = (
 	 * @throws AirlockRequestError
 	 * @throws AirlockAuthenticationError
 	 */
-	public CompletableFuture<PokeResponse> addNodes(Resource resource, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addNodes(Resource resource, Map<String, Node> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
 						"resource", resource,
@@ -553,6 +564,7 @@ export const createPost = (
 
 		this.store.handleEvent({ data: { 'graph-update': action } });
 		*/
+		markPending((List<Node>) nodes.values());
 		this.updateState(payload); // we are consuming our own update in this case
 
 		return future;
