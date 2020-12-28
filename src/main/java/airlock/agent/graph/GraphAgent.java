@@ -178,7 +178,7 @@ export const createPost = (
 */
 
 	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable String parentIndex, @Nullable String childIndex) {
-		// todo make this api design more idiomatic by adding overloaded method for nullable params
+		// todo make this api design more idiomatic by using alternative to requireNonNull api
 
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "DATE_PLACEHOLDER");
@@ -798,6 +798,8 @@ export const createPost = (
 	// could also be called `reduce`
 	private void updateState(@NotNull JsonObject graphUpdate) {
 		// expects the object associated with the key "graph-update"
+		System.out.println("Debug: Got graphUpdate obj:");
+		System.out.println(graphUpdate);
 		if (graphUpdate.has("keys")) {
 			JsonArray keys = graphUpdate.get("keys").getAsJsonArray();
 			this.keys.clear();
@@ -849,7 +851,7 @@ export const createPost = (
 			JsonObject nodesObj = addNodesObj.getAsJsonObject("nodes");
 			Resource resource = gson.fromJson(addNodesObj.getAsJsonObject("resource"), Resource.class);
 
-			// todo implement _addNodes. that method is kinda weird
+			System.out.println("Debug: Adding nodes");
 
 			if (this.graphs.isEmpty()) {
 				return;
