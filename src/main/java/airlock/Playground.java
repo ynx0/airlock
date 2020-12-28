@@ -3,7 +3,6 @@ package airlock;
 import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.types.Resource;
 import airlock.agent.graph.types.content.TextContent;
-import airlock.agent.group.GroupUtils;
 import airlock.types.ShipName;
 
 import java.net.URL;
@@ -32,13 +31,12 @@ public class Playground {
 		String ship = ShipName.withSig(urbit.getShipName());
 
 //		String groupName = "test-group-" + NOW;
-		String groupName = "my-own-stuff";
-//		ContactUtils.createNewGroup(urbit, groupName, new InvitePolicy(Collections.emptySet()), "Test Group", "test group description");
+		//		ContactUtils.createNewGroup(urbit, groupName, new InvitePolicy(Collections.emptySet()), "Test Group", "test group description");
 
-		String graphName = "test-graph-" + NOW;
-		Resource testGroupResource = GroupUtils.makeResource(ship, groupName);
+		Resource testGroupResource = new Resource(ship, "my-own-stuff");
+		Resource testGraphResource = new Resource(ship, "test-graph-" + NOW);
 		agent.createManagedGraph(
-				graphName,
+				testGraphResource.name,
 				"Title of graph" + NOW,
 				"description",
 				testGroupResource,
@@ -48,8 +46,7 @@ public class Playground {
 
 		CompletableFuture<PokeResponse> futurePostResponse =
 				agent.addPost(
-						ship,
-						graphName,
+						testGraphResource,
 						GraphAgent.createPost(
 								ship,
 								List.of(new TextContent("hey " + Instant.now()))
@@ -58,11 +55,9 @@ public class Playground {
 
 		assert futurePostResponse.get().success;
 
-		Resource testGraphResource = new Resource(ship, graphName);
 		System.out.println("Current graph of the test resource");
 		System.out.println(agent.getCurrentGraphs());
 		agent.getNewest(testGraphResource, 15);
-
 
 		urbit.teardown();
 //		System.exit(0); // need this for some reason because process never ends
