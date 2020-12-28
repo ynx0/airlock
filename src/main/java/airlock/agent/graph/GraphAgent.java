@@ -53,21 +53,7 @@ public class GraphAgent extends Agent {
 		// todo custom dataclass for graph-update with all derivatives
 	}
 
-	public Map<Resource, Graph> getCurrentGraphs() {
-		return graphs;
-	}
 
-	public Set<Resource> getCurrentKeys() {
-		return this.keys;
-	}
-
-	@Override
-	public String toString() {
-		return "GraphAgent{" +
-				"keys=" + keys +
-				", graphs=" + graphs +
-				'}';
-	}
 
 	/*
 
@@ -645,7 +631,6 @@ export const createPost = (
 
 	public JsonElement getTags() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// old_todo state handling
-		// so apparently, Landscape doesn't do anything with tags yet... we'll also not do anything
 		// there seems to be a similar concept used with group-store tho
 
 
@@ -912,6 +897,22 @@ export const createPost = (
 			System.out.println("Warning: encountered unknown graph-update payload. Ignoring");
 		}
 		// no further code should be written here because it would be skipped by early exits
+	}
+
+	public Map<Resource, Graph> getCurrentGraphs() {
+		return graphs;
+	}
+
+	public Set<Resource> getCurrentKeys() {
+		return this.keys;
+	}
+
+	@Override
+	public String toString() {
+		return "GraphAgent{" +
+				"keys=" + keys +
+				", graphs=" + graphs +
+				'}';
 	}
 
 }
