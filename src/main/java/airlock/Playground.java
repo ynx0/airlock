@@ -36,30 +36,36 @@ public class Playground {
 //		ContactUtils.createNewGroup(urbit, groupName, new InvitePolicy(Collections.emptySet()), "Test Group", "test group description");
 
 		String graphName = "test-graph-" + NOW;
-		Resource testGroup = GroupUtils.makeResource(ship, groupName);
+		Resource testGroupResource = GroupUtils.makeResource(ship, groupName);
 		agent.createManagedGraph(
 				graphName,
 				"Title of graph" + NOW,
 				"description",
-				testGroup,
+				testGroupResource,
 				GraphAgent.Module.CHAT
 		);
 
 
-		CompletableFuture<PokeResponse> futurePostResponse = agent.addPost(
-				ship,
-				graphName,
-				GraphAgent.createPost(
+		CompletableFuture<PokeResponse> futurePostResponse =
+				agent.addPost(
 						ship,
-						Collections.singletonList(new TextContent("Hello " + NOW)),
-						null,
-						null
-				)
-		);
+						graphName,
+						GraphAgent.createPost(
+								ship,
+								List.of(new TextContent("hey " + Instant.now()))
+						)
+				);
+
 		assert futurePostResponse.get().success;
 
-		urbit.teardown();
+		Resource testGraphResource = new Resource(ship, graphName);
+		System.out.println("Current graph of the test resource");
+		System.out.println(agent.getCurrentGraphs());
+		agent.getNewest(testGraphResource, 15);
 
+
+		urbit.teardown();
+//		System.exit(0); // need this for some reason because process never ends
 
 		// notes dump
 		/*

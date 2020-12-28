@@ -34,6 +34,8 @@ import static java.util.stream.StreamSupport.stream;
 
 public class GraphAgent extends Agent {
 
+
+
 	private final Set<Resource> keys;
 	private final Map<Resource, Graph> graphs;
 
@@ -49,6 +51,14 @@ public class GraphAgent extends Agent {
 		this.graphs = new HashMap<>();
 		// todo potentially use a separate AgentState class. right now we'll just manually implement
 		// todo custom dataclass for graph-update with all derivatives
+	}
+
+	public Map<Resource, Graph> getCurrentGraphs() {
+		return graphs;
+	}
+
+	public Set<Resource> getCurrentKeys() {
+		return this.keys;
 	}
 
 	@Override
@@ -186,6 +196,12 @@ export const createPost = (
 		);
 
 	}
+
+	public static Post createPost(String shipAuthor, List<GraphContent> contents) {
+		return GraphAgent.createPost(shipAuthor, contents, null, null);
+	}
+
+
 
 	/*
 	function moduleToMark(mod: string): string | undefined {
@@ -523,6 +539,17 @@ export const createPost = (
     return promise;
   }
 */
+
+	/**
+	 *
+	 * @param ship The ship where the resource (graph) is located
+	 * @param name The name of the resource
+	 * @param nodes The nodes to add
+	 * @return A future poke response
+	 * @throws AirlockResponseError
+	 * @throws AirlockRequestError
+	 * @throws AirlockAuthenticationError
+	 */
 	public CompletableFuture<PokeResponse> addNodes(String ship, String name, Map<String, Object> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
@@ -670,12 +697,18 @@ export const createPost = (
   }
 	*/
 
-	public void getNewest(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var data = this.urbit.scryRequest("graph-store", "/newest/" + ship + "/" + resource + "/" + count + index);
+	public void getNewest(Resource resource, int count) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		getNewest(resource, count, "");
+	}
+
+	public void getNewest(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		final var data = this.urbit.scryRequest("graph-store", "/newest/" + resource.urlForm() + "/" + count + index);
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		// thing to do: look at example payload and how it is used
 		// there is only one usage, which is here: https://github.com/urbit/urbit/blob/master/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
 	}
+	
+	
 
 	/*
 
