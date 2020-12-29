@@ -16,9 +16,9 @@ public class Playground {
 
 
 		AirlockCredentials zodCreds = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
-		AirlockCredentials sipfynCreds = new AirlockCredentials(new URL("http://localhost:80"), "sipfyn-pidmex", "toprus-dopsul-dozmep-hocbep")
+		AirlockCredentials sipfynCreds = new AirlockCredentials(new URL("http://localhost:80"), "sipfyn-pidmex", "toprus-dopsul-dozmep-hocbep");
 		AirlockChannel urbit = new AirlockChannel(sipfynCreds);
-		
+
 		urbit.authenticate();
 		urbit.connect();
 

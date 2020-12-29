@@ -20,10 +20,6 @@ public class Main {
 	private static final List<SubscribeEvent> chatViewEvents = new ArrayList<>();
 
 	public static void main(String[] args) throws Exception {
-		URL url = new URL("http://localhost:8080");
-		String shipName = "zod";
-		String code = "lidlut-tabwed-pillex-ridrup";
-
 
 		// SETUP
 		// The following example assumes you have:
@@ -32,7 +28,8 @@ public class Main {
 
 
 		// MARK - ship setup
-		AirlockChannel urbit = new AirlockChannel(url, shipName, code);
+		AirlockCredentials zodCredentials = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		AirlockChannel urbit = new AirlockChannel(zodCredentials);
 		urbit.authenticate(); // submit the code to the ship for authentication. must be done before anything else
 		urbit.connect();      // establishes the ServerSideEvent (SSE) client. this is what is used to receive all responses from the ship
 

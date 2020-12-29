@@ -692,11 +692,10 @@ public class AirlockChannel {
 	 * @param name Name of the ship e.g. zod
 	 * @param code Code to log in
 	 */
-	@SuppressWarnings("unused")
 	@NotNull
 	public static AirlockChannel onArvoNetwork(String name, String code) {
 		try {
-			return new AirlockChannel(URI.create("https://" + name + ".arvo.network").toURL(), name, code);
+			return new AirlockChannel(new AirlockCredentials(URI.create("https://" + name + ".arvo.network").toURL(), name, code));
 		} catch (MalformedURLException e) {
 			throw new IllegalStateException("Unable to create proper url from arvo.network");
 		}

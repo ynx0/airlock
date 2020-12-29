@@ -1,3 +1,4 @@
+import airlock.AirlockCredentials;
 import airlock.InMemoryResponseWrapper;
 import airlock.AirlockChannel;
 import airlock.errors.channel.AirlockChannelError;
@@ -27,12 +28,8 @@ public class UrbitIntegrationTestsCore {
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException {
-		int port = 8080;
-		URL url = new URL("http://localhost:" + port);
-		String shipName = "zod";
-		String code = "lidlut-tabwed-pillex-ridrup";
-
-		urbit = new AirlockChannel(url, shipName, code);
+		AirlockCredentials zodCredentials = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		urbit = new AirlockChannel(zodCredentials);
 
 		// Assumes fake ship zod is booted and running
 

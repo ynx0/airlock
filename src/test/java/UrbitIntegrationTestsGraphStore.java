@@ -1,8 +1,7 @@
 import airlock.AirlockChannel;
-import airlock.PokeResponse;
-import airlock.agent.graph.*;
+import airlock.AirlockCredentials;
+import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.types.Resource;
-import airlock.agent.graph.types.content.TextContent;
 import airlock.errors.channel.AirlockChannelError;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -12,9 +11,7 @@ import org.junit.jupiter.api.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
@@ -34,12 +31,8 @@ public class UrbitIntegrationTestsGraphStore {
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
-		int port = 8080;
-		URL url = new URL("http://localhost:" + port);
-		String shipName = "zod";
-		String code = "lidlut-tabwed-pillex-ridrup";
-
-		urbit = new AirlockChannel(url, shipName, code);
+		AirlockCredentials zodCredentials = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		urbit = new AirlockChannel(zodCredentials);
 		urbit.authenticate();
 		urbit.connect();
 		graphStoreAgent = new GraphAgent(urbit);

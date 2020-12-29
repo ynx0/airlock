@@ -1,7 +1,4 @@
-import airlock.AirlockUtils;
-import airlock.PokeResponse;
-import airlock.SubscribeEvent;
-import airlock.AirlockChannel;
+import airlock.*;
 import airlock.agent.chat.ChatUpdate;
 import airlock.agent.chat.ChatUtils;
 import airlock.agent.chat.MessagePayload;
@@ -40,15 +37,10 @@ public class UrbitIntegrationTestsChatStore {
 					&& subscribeEvent.updateJson.getAsJsonObject("chat-update").has("message");
 
 
-
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
-		int port = 8080;
-		URL url = new URL("http://localhost:" + port);
-		String shipName = "zod";
-		String code = "lidlut-tabwed-pillex-ridrup";
-
-		urbit = new AirlockChannel(url, shipName, code);
+		AirlockCredentials zodCredentials = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		urbit = new AirlockChannel(zodCredentials);
 		urbit.authenticate();
 		urbit.connect();
 
