@@ -144,17 +144,15 @@ public class AirlockChannel {
 	 * Please note that the connection times out after 1 day of not having received any events from a ship
 	 * </p>
 	 *
-	 * @param url      The URL (with protocol and port) of the ship to be accessed
-	 * @param shipName The name of the ship to connect to (@p)
-	 * @param code     The access code for the ship at that address
+	 * @param credentials The credentials of the ship to create a channel with
 	 */
-	public AirlockChannel(URL url, String shipName, String code) {
-		requireNonNull(url, "Please provide a url");
-		requireNonNull(shipName, "Please provide a ship name");
-		requireNonNull(code, "Please provide a code");
-		this.code = code;  // todo: wishlist: validate code format
-		this.shipName = ShipName.withoutSig(shipName); // by default, our ship name should be without a `sig`, as this is what's sent by the payload.
-		this.url = AirlockUtils.normalizeOrBust(url);
+	public AirlockChannel(AirlockCredentials credentials) {
+		requireNonNull(credentials.url, "Please provide a url");
+		requireNonNull(credentials.ship, "Please provide a ship name");
+		requireNonNull(credentials.code, "Please provide a code");
+		this.code = credentials.code;  // todo: wishlist: validate code format
+		this.shipName = ShipName.withoutSig(credentials.ship); // by default, our ship name should be without a `sig`, as this is what's sent by the payload.
+		this.url = AirlockUtils.normalizeOrBust(credentials.url);
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.cookie = null;

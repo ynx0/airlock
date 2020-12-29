@@ -15,13 +15,10 @@ public class Playground {
 	public static void main(String[] args) throws Exception {
 
 
-//		String url = "http://localhost:8080";
-//		String shipName = "zod";
-//		String code = "lidlut-tabwed-pillex-ridrup";
-		String url = "http://localhost:80";
-		String shipName = "sipfyn-pidmex";
-		String code = "toprus-dopsul-dozmep-hocbep";
-		AirlockChannel urbit = new AirlockChannel(new URL(url), shipName, code);
+		AirlockCredentials zodCreds = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		AirlockCredentials sipfynCreds = new AirlockCredentials(new URL("http://localhost:80"), "sipfyn-pidmex", "toprus-dopsul-dozmep-hocbep")
+		AirlockChannel urbit = new AirlockChannel(sipfynCreds);
+		
 		urbit.authenticate();
 		urbit.connect();
 
