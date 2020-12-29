@@ -650,7 +650,8 @@ export const createPost = (
 	public JsonElement getTags() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// old_todo state handling
 		// there seems to be a similar concept used with group-store tho
-
+		// for now, the only place i see using tags is
+		// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/apps/publish/components/Writers.js
 
 		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
