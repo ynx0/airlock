@@ -35,20 +35,19 @@ import static java.util.stream.StreamSupport.stream;
 public class GraphAgent extends Agent {
 
 
-
 	private final Set<Resource> keys;
 	private final Map<Resource, Graph> graphs;
 
-	// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
-	// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
+
 	public GraphAgent(AirlockChannel urbit) {
-		// todo handle state
-		// https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/reducers/graph-update.js
-		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/store/store.ts
-		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
 		super(urbit);
 		this.keys = new HashSet<>();
 		this.graphs = new HashMap<>();
+		// adapting from new landscape api https://github.com/urbit/urbit/blob/1895e807fdccd669dd0b514dff1c07aa3bfe7449/pkg/interface/src/logic/api/graph.ts
+		// and also https://github.com/urbit/urbit/blob/51fd47e886092a842341df9da549f77442c56866/pkg/interface/src/types/graph-update.ts
+		// https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/reducers/graph-update.js
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/store/store.ts
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
 		// todo potentially use a separate AgentState class. right now we'll just manually implement
 		// todo custom dataclass for graph-update with all derivatives
 	}
