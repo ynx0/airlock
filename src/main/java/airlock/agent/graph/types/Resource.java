@@ -4,6 +4,9 @@ import airlock.types.ShipName;
 
 import java.util.Objects;
 
+/**
+ * It's easier to think of this as a reference to a resource rather then the actual reference itself
+ */
 public class Resource {
 	public final String ship; // technically this is defined as =entity, which is a tagged union of just ship right now
 	public final String name; // term
