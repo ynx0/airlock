@@ -724,9 +724,10 @@ export const createPost = (
     this.store.handleEvent({ data });
   }
 */
-	public void getOlderSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+	// todo fix and ensure that getOlderSiblings/getYoungerSiblings both work
+	public void getOlderSiblings(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + ship + "/" + resource + "/" + count + idx);
+		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + resource.urlForm() + "/" + count + idx);
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
@@ -742,9 +743,9 @@ export const createPost = (
   }
 	*/
 
-	public void getYoungerSiblings(String ship, String resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+	public void getYoungerSiblings(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + count + idx);
+		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + resource.urlForm() + "/" + count + idx);
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
