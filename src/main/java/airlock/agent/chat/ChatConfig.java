@@ -1,6 +1,7 @@
 package airlock.agent.chat;
 
-public class ChatConfig {
+@Deprecated
+class ChatConfig {
 	public final int length;
 	public final int read;
 

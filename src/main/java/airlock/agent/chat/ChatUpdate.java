@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
+@Deprecated
 public class ChatUpdate {
 	public @Nullable
 	final

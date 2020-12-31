@@ -4,6 +4,7 @@ import airlock.AirlockChannel;
 
 import java.time.Instant;
 
+@Deprecated
 public class ChatUtils {
 
 	/**
