@@ -18,18 +18,16 @@ public class Playground {
 
 		AirlockCredentials zodCreds = new AirlockCredentials(new URL("http://localhost:8080" ), "zod", "lidlut-tabwed-pillex-ridrup" );
 		AirlockCredentials sipfynCreds = new AirlockCredentials(new URL("http://localhost:80" ), "sipfyn-pidmex", "toprus-dopsul-dozmep-hocbep" );
-		AirlockChannel urbit = new AirlockChannel(sipfynCreds);
-		String ship = urbit.getShipName();
-		urbit.authenticate();
-		urbit.connect();
+		AirlockChannel channel = new AirlockChannel(sipfynCreds);
+		String ship = channel.getShipName();
+		channel.authenticate();
+		channel.connect();
 
-		GraphAgent agent = new GraphAgent(urbit);
+		GraphAgent agent = new GraphAgent(channel);
 
 
 		long NOW = Instant.now().toEpochMilli();
-		Resource testGroup = new Resource(ship, "my-own-stuff" ); // we are assuming this has been created for us
-
-
+		Resource testGroup = new Resource(ship, "my-own-stuff" ); // we are assuming this group already exists
 
 
 		// MARK - Chat
@@ -160,7 +158,7 @@ public class Playground {
 
 		 */
 
-		CompletableFuture<PokeResponse> addLinkResponse =
+		CompletableFuture<PokeResponse> notebookPostResponse =
 				agent.addPost(
 						notebookGraph,
 						GraphAgent.createPost(
@@ -172,7 +170,7 @@ public class Playground {
 						)
 				);
 
-		assert addLinkResponse.get().success;
+		assert notebookPostResponse.get().success;
 		System.out.println(agent.getCurrentGraphs());
 
 		// 3. get latest content
@@ -180,8 +178,8 @@ public class Playground {
 
 		// no need to repeat the others
 
-		// MARK - tear down
-		urbit.teardown();
+		// MARK - tear down urbit instance
+		channel.teardown();
 
 	}
 
