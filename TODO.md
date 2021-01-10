@@ -23,32 +23,35 @@
 - create helper for creating blog posts
 
 - replicate all basic user flows
-    - assume group exists
+    - Assumption: group exists
 
-    * chat
-        * create new chat [done]
-        * post a message to the chat [done]
-        * get newer and older siblings [done]
-    * collections
-        * create new collection
-        * post a new link
-        * update link
-        * post comment
-        * update comment
-        * delete comment
-        * delete link
-        * get newer/older links in collection (if different)
-    * publish
-        * create new notebook
-        * create and add new post
-        * update post
-        * create comment
-        * update comment
-        * delete comment
-        * delete post
-        * get newer and older siblings
-    * all
-        * delete all graphs
+    - [x] chat 
+        - [x] create new chat
+        - [x] post a message to the chat
+        - [x] get newest
+    - [ ] collections
+        - [x] create new collection
+        - [x] post a new link
+        - [ ] update link
+        - [ ] post comment 
+        - [ ] update comment
+        - [ ] delete comment
+        - [ ] delete link
+    - [ ] publish
+        - [ ] create new notebook
+        - [ ] create and add new post
+        - [ ] update post
+        - [ ] create comment
+        - [ ] update comment
+        - [ ] delete comment
+        - [ ] delete post
+    
+    - [ ] all
+        - [ ] get newer and older siblings
+            - [ ] chat
+            - [ ] collections
+            - [ ] publish
+        - [x] delete all graphs
 
 - copy above to main
 - clean up main
