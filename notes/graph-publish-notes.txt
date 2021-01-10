@@ -1,0 +1,83 @@
+
+
+:: definition of indexed-post in sur/post.hoon
++$  indexed-post  [a=atom p=post]
+
+:: structural definition of publish in mar/graph/validator/publish.hoon
+++  noun
+    |=  p=*
+    =/  ip  ;;(indexed-post p)
+    ?+    index.p.ip  !!
+    ::  top level post must have no content
+        [@ ~]
+      ?>  ?=(~ contents.p.ip)
+      ip
+    ::  container for revisions
+    ::
+        [@ %1 ~]
+      ?>  ?=(~ contents.p.ip)
+      ip
+    ::  specific revision
+    ::  first content is the title
+    ::  revisions are numbered by the revision count
+    ::  starting at one
+        [@ %1 @ ~]
+      ?>  ?=([* * *] contents.p.ip)
+      ?>  ?=(%text -.i.contents.p.ip)
+      ip
+    ::  container for comments
+    ::
+        [@ %2 ~]
+      ?>  ?=(~ contents.p.ip)
+      ip
+    ::  container for comment revisions
+    ::
+        [@ %2 @ ~]
+      ?>  ?=(~ contents.p.ip)
+      ip
+    ::  specific comment revision
+    ::
+        [@ %2 @ @ ~]
+      ?>  ?=(^ contents.p.ip)
+      ip
+    ==
+  --
+:::::::::::::::::::::::::
+
+# the only publish related code in app/graph-store.hoon
+++  convert-publish
+      %+  gas:orm  *graph:store
+      %+  turn  (tap:orm graph)
+      |=  [=atom =node:store]
+      ^-  [^atom node:store]
+      ::  top-level
+      ::
+      :+  atom  post.node
+      ?:  ?=(%empty -.children.node)
+        [%empty ~]
+      :-  %graph
+      %+  gas:orm  *graph:store
+      %+  turn  (tap:orm p.children.node)
+      |=  [=^atom =node:store]
+      ^-  [^^atom node:store]
+      ::  existing container for publish note revisions
+      ::
+      ?+    atom  !!
+          %1  [atom node]
+          %2
+        :+  atom  post.node
+        ?:  ?=(%empty -.children.node)
+          [%empty ~]
+        :-  %graph
+        %+  gas:orm  *graph:store
+        %+  turn  (tap:orm p.children.node)
+        |=  [=^^atom =node:store]
+        ^-  [^^^atom node:store]
+        :+  atom  post.node(contents ~, hash ~)
+        :-  %graph
+        %+  gas:orm  *graph:store
+        :_  ~  :-  %1
+        :_  [%empty ~]
+        post.node(index (snoc index.post.node atom), hash ~)
+      ==
+    --
