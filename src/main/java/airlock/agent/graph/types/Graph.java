@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static java.util.stream.StreamSupport.stream;
 
@@ -40,6 +41,25 @@ public class Graph extends TreeMap<BigInteger, Node> {
 				.map(BigInteger::new)
 				.collect(Collectors.toList())
 				;
+	}
+
+	public static String indexListToString(BigInteger index) {
+		return indexListToString(Collections.singletonList(index));
+	}
+
+	public static String indexListToString(List<BigInteger> indexList) {
+		return indexList.stream()       // 1
+				.map(Objects::toString) // 2
+				.collect(Collectors.joining("/", "/", "")) // 3
+				;
+		// 1. For each BigInteger index
+		// 2. convert index to a string
+		// 3. join the resulting string list into one string
+		//    that is separated by slashes, has a slash at the start, and does not have anything at the end
+
+		// example: [17012348792174, 1, 170812937724, 2] -> "/17012348792174/1/170812937724/2"
+
+
 	}
 
 	/*
