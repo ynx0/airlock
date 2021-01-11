@@ -9,6 +9,7 @@ import lombok.With;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,6 +67,10 @@ public class Post {
 
 	public Post(String author, Index indexList, long timeSent, List<GraphContent> contents) {
 		this(author, indexList, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
+	}
+
+	public static Post buntPost() {
+		return new Post("", new Index(), 0, Collections.emptyList());
 	}
 
 	public boolean isPending() {
