@@ -18,6 +18,9 @@ public class Publisher {
 		this.channel = channel;
 	}
 
+	// this class ports the file logic/lib/publish.ts found at:
+	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/lib/publish.ts#L7
+
 
 	public NodeMap newPost(String title, String body, long epochCreated) {
 		// adaptation of https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/lib/publish.ts#L7
@@ -67,7 +70,6 @@ public class Publisher {
 	}
 
 
-
 	public NodeMap editPost(BigInteger revision, BigInteger noteId, String title, String body, long epochCreated) {
 		// implements lib/logic/publish.ts:editPost
 		Post newRevision = new Post(
@@ -88,6 +90,7 @@ public class Publisher {
 	}
 
 	public BigInteger getLatestRevisionNum(Node node) {
+		// input node: the root blogpost node
 		// todo refactor keys with special schema names
 		Node revisions = node.children.get(BigInteger.ONE);
 		if (revisions == null) {
@@ -114,14 +117,15 @@ public class Publisher {
 
 		return node.children.get(latestRevisionKey);
 	}
+	// todo could combine above methods into one method which returns a nodemap which has a single entry key of id and value of Post/Node
 
 
 
 
 
 
-	// todo adapt rest of stuff like editpost here from liblogicpublish
-	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/lib/publish.ts#L7
 	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/apps/publish/components/EditPost.tsx#L36
+	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/components/Comments.tsx#L33
+
 
 }
