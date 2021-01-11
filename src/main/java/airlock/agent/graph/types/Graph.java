@@ -4,7 +4,9 @@ import com.google.gson.*;
 
 import java.lang.reflect.Type;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static java.util.stream.StreamSupport.stream;
 
@@ -37,17 +39,18 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		// also, there is a call to graph.set(index, parNode)
 		// which doesn't make sense since the graph already has the node at that index
 		// and Node is mutable so it is already changed ???
-		BigInteger indexSingleton = index.get(0); // todo come up with a better name
+		BigInteger nodeId = index.get(0); // todo come up with a better name
 		int indexLen = index.size();
 		if (indexLen == 1) {
-			this.put(indexSingleton, node);
+			this.put(nodeId, node);
 		} else {
-			if (!this.containsKey(indexSingleton)) {
+			if (!this.containsKey(nodeId)) {
 				// todo see if we want to be this strict or just silently ignore like landscape does
+				// i think silently ignoring is fine but idk man
 				throw new IllegalStateException("parent node doesn't exist, can't add child");
 			}
 			// todo test thoroughly
-			Node parentNode = this.get(indexSingleton);
+			Node parentNode = this.get(nodeId);
 			parentNode.ensureChildGraph();
 			assert parentNode.children != null;
 			parentNode.children.addNode((Index) index.subList(1, indexLen), node);
