@@ -120,8 +120,39 @@ public class Publisher {
 	// todo could combine above methods into one method which returns a nodemap which has a single entry key of id and value of Post/Node
 
 
+	public BigInteger getLatestCommentRevisionNum(Node node) {
+		// input node: root comment node which stores all child revisions
+		if (node.children == null || node.children.isEmpty()) {
+			return BigInteger.ONE;
+		}
+		Map.Entry<BigInteger, Node> revision = node.children.firstEntry();
+		if (revision.getValue() == null) {
+			return BigInteger.ONE; // again, this if guard is a blind port of landscape. i don't know if it makes sense to even test for this
+		}
+
+		return revision.getKey();
+	}
+
+	public Node getLatestCommentRevision(Node node) {
+		// input node: root comment node which stores all child revisions
+		BigInteger latestCommentRevisionNum = getLatestCommentRevisionNum(node);
+		if (node.children == null) {
+			return null;
+		}
+		return node.children.get(latestCommentRevisionNum);
+	}
 
 
+	public Node getComments(Node node) {
+		// input: root blogPost node
+
+		var comments = node.children.get(BigInteger.TWO);
+		if (node.children == null) {
+			return new Node(Post.buntPost(), new Graph());
+		}
+		return comments;
+	}
+	// only thing remaining as of jan 11 is `getSnippet`
 
 
 	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/apps/publish/components/EditPost.tsx#L36
