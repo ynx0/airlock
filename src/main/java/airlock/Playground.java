@@ -7,7 +7,6 @@ import airlock.agent.graph.types.content.UrlContent;
 import airlock.apps.publish.Publisher;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
-import lombok.val;
 
 import java.math.BigInteger;
 import java.net.URL;
@@ -201,6 +200,16 @@ public class Playground {
 		assert notebookPostResponse.get().success;
 
 		// 3. update post
+		// adapted from https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/apps/publish/components/EditPost.tsx#L36
+		Node blogRoot = newPublishPost.values().iterator().next();  // get first (and only) node of our node map which corresponds tho the root blog
+		BigInteger latestRevisionNum = publisher.getLatestRevisionNum(blogRoot);
+		Node latestRevision = publisher.getLatestRevision(blogRoot);
+
+		var newRevision = latestRevisionNum.add(BigInteger.ONE);
+		var updatedNodes = publisher.editPost(newRevision, $, "New Title", "New Body");
+		agent.addNodes(notebookGraph, updatedNodes);
+
+		// todo check that latest is post revision is now ours
 
 
 		// 4. add a comment
