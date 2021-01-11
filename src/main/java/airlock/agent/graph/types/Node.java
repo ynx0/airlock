@@ -1,12 +1,18 @@
 package airlock.agent.graph.types;
 
+import airlock.types.ShipName;
+import lombok.With;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@With
 public class Node {
 
-	public final @NotNull Post post;
-	public @Nullable Graph children; // technically internal graph
+	public final @NotNull
+	Post post;
+	public @Nullable
+	Graph children; // technically internal graph
+
 
 	public Node(@NotNull Post post, @Nullable Graph children) {
 		this.post = post;
@@ -21,6 +27,7 @@ public class Node {
 				'}';
 	}
 
+	// MODIFIES INSTANCE
 	public void ensureChildGraph() {
 		if (this.children == null) {
 			this.children = new Graph();
@@ -28,13 +35,15 @@ public class Node {
 	}
 
 	// todo come up with a better name lol.
-	public void ensureAllChildrenHaveGraph() {
+	// MODIFIES INSTANCE
+	public void ensureAllChildrenNonEmpty() {
 		// implements the following function found in `addGraph`
 		// https://github.com/urbit/urbit/blob/598a46d1f7520ed3a2fa990d223b05139a2fe344/pkg/interface/src/logic/reducers/graph-update.js#L98
 		this.ensureChildGraph();
 		assert this.children != null;
+		// if the children graph is empty then we will stop the recursion
 		for (Node childNode : this.children.values()) {
-			childNode.ensureAllChildrenHaveGraph();
+			childNode.ensureAllChildrenNonEmpty();
 		}
 		/*
 		const _processNode = (node) => {
@@ -59,6 +68,16 @@ public class Node {
 		    return node;
 		  };
 		 */
+	}
+
+	public void markPending() {
+		this.post.author = ShipName.withoutSig(this.post.author); // todo see if this is even necessary
+		this.post.setPending(true);
+		if (this.children != null) {
+			for (Node node : this.children.values()) {
+				node.markPending();
+			}
+		}
 	}
 
 
