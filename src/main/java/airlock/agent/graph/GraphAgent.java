@@ -498,9 +498,9 @@ export const createPost = (
   */
 	public CompletableFuture<PokeResponse> addPost(Resource resource, Post post) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
-		return this.addNodes(resource, Map.of(
-				post.index, new Node(post, Graph.EMPTY_GRAPH)
-		));
+		return this.addNodes(resource, new NodeMap(Map.of(
+				Graph.indexListFromString(post.index), new Node(post, Graph.EMPTY_GRAPH)
+		)));
 
 	}
 
@@ -517,9 +517,9 @@ export const createPost = (
   }
 */
 	public CompletableFuture<PokeResponse> addNode(Resource resource, Node node) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		Map<String, Node> nodes = new HashMap<>();
+		NodeMap nodes = new NodeMap();
 
-		nodes.put(node.post.index, node);
+		nodes.put(Graph.indexListFromString(node.post.index), node);
 
 		return this.addNodes(resource, nodes);
 
@@ -552,7 +552,7 @@ export const createPost = (
 	 * @throws AirlockRequestError
 	 * @throws AirlockAuthenticationError
 	 */
-	public CompletableFuture<PokeResponse> addNodes(Resource resource, Map<String, Node> nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> addNodes(Resource resource, NodeMap nodes) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		final var payload = map2json(Map.of(
 				"add-nodes", Map.of(
 						"resource", resource,
@@ -574,6 +574,11 @@ export const createPost = (
 
 		return future;
 	}
+
+	public CompletableFuture<PokeResponse> addNodes(Resource resource, Graph graph) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+		return addNodes(resource, graph.toNodeMap());
+	}
+
 
 	/*
 
@@ -831,7 +836,7 @@ export const createPost = (
 			// it seems like all it does is ensure all childrenNodes have at least a nonnull
 			// `children` property that is init with an empty graph
 			newGraph.forEach((index, node) -> {
-				node.ensureAllChildrenHaveGraph();
+				node.ensureAllChildrenNonEmpty();
 				processedNewGraph.put(index, node);
 			});
 
