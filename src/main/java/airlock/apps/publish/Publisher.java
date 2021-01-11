@@ -87,7 +87,7 @@ public class Publisher {
 		return nodes;
 	}
 
-	public BigInteger getLatestRevisionKey(Node node) {
+	public BigInteger getLatestRevisionNum(Node node) {
 		// todo refactor keys with special schema names
 		Node revisions = node.children.get(BigInteger.ONE);
 		if (revisions == null) {
@@ -106,7 +106,7 @@ public class Publisher {
 	}
 
 	public Node getLatestRevision(Node node) {
-		BigInteger latestRevisionKey = getLatestRevisionKey(node);
+		BigInteger latestRevisionKey = getLatestRevisionNum(node);
 
 		if (node.children == null) {
 			return null;
