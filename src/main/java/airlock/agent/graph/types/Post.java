@@ -2,10 +2,13 @@ package airlock.agent.graph.types;
 
 import airlock.agent.graph.types.content.GraphContent;
 import airlock.types.ShipName;
+import com.google.gson.*;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import lombok.With;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,25 +32,26 @@ import java.util.List;
 public class Post {
 	// todo make author final somehow?? please???
 	public String author;
-	public final String index; // can be indexList i.e. List<BigInteger>
+	public final Index index;
 	@SerializedName("time-sent")
 	public final long timeSent;
 	public final List<GraphContent> contents;
-	public final @Nullable String hash;
+	public final @Nullable
+	String hash;
 	public final List<String> signatures; // todo narrow by creating signature type
 
 	// strictly part of landscape, not part of urbit, so not received in serialized object
 	// only modified by `GraphAgent.markPending`
 	private boolean pending;
 
-	private Post(String author, String index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures, boolean pending) {
+	private Post(String author, Index indexList, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures, boolean pending) {
 		// okay, slight wtf moment but although I'm pretty sure
 		// all posts are supposed to come with the ship having a sig,
 		// the `api/graph.ts:markPending` function explicitly modifies a node's post's author
 		// to be without a sig. so i am like uh wtf. maybe this is wrong???
 		// and i don't know what it means for serialization either
 		this.author = ShipName.withSig(author);
-		this.index = index;
+		this.index = indexList;
 		this.timeSent = timeSent;
 		this.contents = contents;
 		this.hash = hash;
@@ -56,12 +60,12 @@ public class Post {
 	}
 
 
-	public Post(String author, String index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
-		this(author, index, timeSent, contents, hash, signatures, false); // by default, posts are not pending
+	public Post(String author, Index indexList, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
+		this(author, indexList, timeSent, contents, hash, signatures, false); // by default, posts are not pending
 	}
 
-	public Post(String author, String index, long timeSent, List<GraphContent> contents) {
-		this(author, index, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
+	public Post(String author, Index indexList, long timeSent, List<GraphContent> contents) {
+		this(author, indexList, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
 	}
 
 	public boolean isPending() {
@@ -70,6 +74,41 @@ public class Post {
 
 	public void setPending(boolean pending) {
 		this.pending = pending;
+	}
+
+
+	public static class Adapter implements JsonSerializer<Post>, JsonDeserializer<Post> {
+		@Override
+		public Post deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			JsonObject postObj = json.getAsJsonObject();
+			Type contentList = new TypeToken<List<GraphContent>>() {
+			}.getType();
+			Type signatureList = new TypeToken<List<String>>() {
+			}.getType();
+			return new Post(
+					postObj.get("author").getAsString(),
+					Index.fromString(postObj.get("index").getAsString()),
+					postObj.get("time-sent").getAsLong(),
+					context.deserialize(postObj.get("contents").getAsJsonArray(), contentList),
+					postObj.get("hash").getAsString(),
+					context.deserialize(postObj.get("signatures").getAsJsonArray(), signatureList)
+			);
+		}
+
+		@Override
+		public JsonElement serialize(Post src, Type typeOfSrc, JsonSerializationContext context) {
+			JsonObject result = new JsonObject();
+
+
+			result.addProperty("author", src.author);
+			result.addProperty("index", Index.toString(src.index));
+			result.addProperty("time-sent", src.timeSent);
+			result.add("contents", context.serialize(src.contents));
+			result.addProperty("hash", src.hash);
+			result.add("signatures", context.serialize(src.signatures));
+
+			return result;
+		}
 	}
 
 
