@@ -3,9 +3,7 @@ package airlock.agent.graph.types;
 import com.google.gson.*;
 
 import java.lang.reflect.Type;
-import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -13,13 +11,13 @@ import java.util.Map;
  * Represents the `nodes` object which you get from `payload["json"]["add-nodes"]["nodes"]`
  *
  */
-public class NodeMap extends HashMap<List<BigInteger>, Node> {
+public class NodeMap extends HashMap<Index, Node> {
 
 	public NodeMap() {
 		super();
 	}
 
-	public NodeMap(Map<? extends List<BigInteger>, ? extends Node> m) {
+	public NodeMap(Map<? extends Index, ? extends Node> m) {
 		super(m);
 	}
 
@@ -35,7 +33,7 @@ public class NodeMap extends HashMap<List<BigInteger>, Node> {
 			NodeMap result = new NodeMap();
 			JsonObject nodeMapObj = json.getAsJsonObject();
 			nodeMapObj.entrySet().forEach(indexNodeObjEntry -> {
-				List<BigInteger> indexList = Graph.indexListFromString(indexNodeObjEntry.getKey());
+				Index indexList = Index.fromString(indexNodeObjEntry.getKey());
 				Node nodeObj = context.deserialize(indexNodeObjEntry.getValue(), Node.class);
 				result.put(indexList, nodeObj);
 			});
@@ -47,7 +45,7 @@ public class NodeMap extends HashMap<List<BigInteger>, Node> {
 		public JsonElement serialize(NodeMap src, Type typeOfSrc, JsonSerializationContext context) {
 			JsonObject result = new JsonObject();
 			src.forEach((index, node) -> {
-				String indexStr = Graph.indexListToString(index);
+				String indexStr = Index.toString(index);
 				JsonElement nodeObj = context.serialize(node, Node.class);
 				result.add(indexStr, nodeObj);
 			});
