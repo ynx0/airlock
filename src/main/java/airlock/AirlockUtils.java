@@ -1,6 +1,7 @@
 package airlock;
 
 import airlock.agent.graph.types.Graph;
+import airlock.agent.graph.types.Index;
 import airlock.agent.graph.types.NodeMap;
 import airlock.agent.graph.types.content.GraphContent;
 import com.google.gson.Gson;
@@ -19,12 +20,13 @@ public class AirlockUtils {
 
 	public static final BigInteger DA_UNIX_EPOCH = new BigInteger("170141184475152167957503069145530368000"); // `@ud` ~1970.1.1
 	public static final BigInteger DA_SECOND = new BigInteger("18446744073709551616"); // `@ud` ~s1
-	public static final Gson gson = new GsonBuilder()
+	public static final Gson gson = new GsonBuilder() // todo add some sort of lint to make sure there are no unused ADAPTER objects
 			.setPrettyPrinting()  // disable in production
 			.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
 			.registerTypeAdapter(Graph.class, Graph.ADAPTER)
 			.registerTypeAdapter(GraphContent.class, GraphContent.ADAPTER)
 			.registerTypeAdapter(NodeMap.class, NodeMap.ADAPTER)
+			.registerTypeAdapter(Index.class, Index.ADAPTER)
 			.serializeNulls() // necessary because certain payloads that we send / receive need explicit nulls. by default gson just omits the properties which will not work
 			.create();
 
