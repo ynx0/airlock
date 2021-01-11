@@ -1,15 +1,23 @@
 package airlock.agent.graph.types;
 
+import com.google.gson.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Index extends ArrayList<BigInteger>  {
 
+	// todo will empty serialize properly? (i.e. an empty Index should serialize to empty string `""`) 
+
+	/**
+	 * Create an empty index
+	 */
 	public Index() {
 	}
+
 
 	public Index(@NotNull Collection<? extends BigInteger> c) {
 		super(c);
@@ -57,5 +65,19 @@ public class Index extends ArrayList<BigInteger>  {
 		return new Index(intermediate);
 	}
 
+	public static class Adapter implements JsonSerializer<Index>, JsonDeserializer<Index> {
+		@Override
+		public Index deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+			String indexStr = json.getAsJsonPrimitive().getAsString();
+			return Index.fromString(indexStr);
+		}
+
+		@Override
+		public JsonElement serialize(Index src, Type typeOfSrc, JsonSerializationContext context) {
+			return new JsonPrimitive(this.toString());
+		}
+	}
+
+	public static final Adapter ADAPTER = new Adapter();
 
 }
