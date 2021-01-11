@@ -91,6 +91,7 @@ public class GraphAgent extends Agent {
 	};
 		 */
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
+	// todo migrate these index strings to actual `Index`
 	public static Node createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
 		parentIndex = requireNonNullElse(parentIndex, "");
 		childIndex = requireNonNullElse(childIndex, "");
@@ -98,7 +99,7 @@ public class GraphAgent extends Agent {
 		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli()).toString();
 		final var nodeIndex = parentIndex + '/' + date;
 
-		List<BigInteger> parsedIndexArray = Graph.indexListFromString(childIndex);
+		Index parsedIndexArray = Index.fromString(childIndex);
 		if (parsedIndexArray.size() != 1) {
 			// see if we want to keep  this or not
 			throw new IllegalArgumentException("invalid index provided");
@@ -108,7 +109,7 @@ public class GraphAgent extends Agent {
 		Graph childGraph = new Graph(Map.of(index, new Node(
 				new Post(
 						ShipName.withSig(shipAuthor),
-						nodeIndex + '/' + childIndex,
+						Index.fromString(nodeIndex + '/' + childIndex),
 						Instant.now().toEpochMilli(),
 						contents,
 						null,
@@ -120,7 +121,7 @@ public class GraphAgent extends Agent {
 		return new Node(
 				new Post(
 						ShipName.withSig(shipAuthor),
-						nodeIndex,
+						Index.fromString(nodeIndex),
 						Instant.now().toEpochMilli(),
 						Collections.emptyList(),
 						null,
@@ -180,7 +181,7 @@ export const createPost = (
 
 		return new Post(
 				shipAuthor,
-				parentIndex + "/" + childIndex,
+				Index.fromString(parentIndex + "/" + childIndex),
 				Instant.now().toEpochMilli(),
 				contents,
 				null,
@@ -495,7 +496,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addPost(Resource resource, Post post) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
 		return this.addNodes(resource, new NodeMap(Map.of(
-				Graph.indexListFromString(post.index), new Node(post, Graph.EMPTY_GRAPH)
+				post.index, new Node(post, Graph.EMPTY_GRAPH)
 		)));
 
 	}
@@ -515,7 +516,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addNode(Resource resource, Node node) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		NodeMap nodes = new NodeMap();
 
-		nodes.put(Graph.indexListFromString(node.post.index), node);
+		nodes.put(node.post.index, node);
 
 		return this.addNodes(resource, nodes);
 
@@ -569,10 +570,6 @@ export const createPost = (
 		this.updateState(payload); // we are consuming our own update in this case
 
 		return future;
-	}
-
-	public CompletableFuture<PokeResponse> addNodes(Resource resource, Graph graph) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		return addNodes(resource, graph.toNodeMap());
 	}
 
 
@@ -878,13 +875,13 @@ export const createPost = (
 				// and returns without fanfare.
 				// however, the behavior here is to just completely halt execution and throw an exception
 				// when the BigInt parsing inevitably fails
-				List<BigInteger> deepIndex = Graph.indexListFromString(indexNodeEntry.getKey());
-				if (deepIndex.size() == 0) {
+				Index index = Index.fromString(indexNodeEntry.getKey());
+				if (index.size() == 0) {
 					return;
 				}
 				JsonObject nodeObj = indexNodeEntry.getValue().getAsJsonObject();
 				Node node = gson.fromJson(nodeObj, Node.class);
-				this.graphs.get(resource).addNode(deepIndex, node);
+				this.graphs.get(resource).addNode(index, node);
 			});
 		} else if (graphUpdate.has("remove-nodes")) {
 			// indices != index.
@@ -895,9 +892,9 @@ export const createPost = (
 			// List{BitInt(1767324682374638723487987324), BigInt(1), BigInt(4)}
 			JsonObject removeNodesObj = graphUpdate.getAsJsonObject("remove-nodes");
 			JsonArray indicesObj = removeNodesObj.getAsJsonArray("indices");
-			List<List<BigInteger>> indices =
+			List<Index> indices =
 					stream(indicesObj.spliterator(), false)
-							.map(indexObj -> Graph.indexListFromString(indexObj.getAsString()))
+							.map(indexObj -> Index.fromString(indexObj.getAsString()))
 							.collect(Collectors.toList());
 
 
@@ -906,7 +903,7 @@ export const createPost = (
 				return;
 			}
 
-			for (List<BigInteger> index : indices) {
+			for (Index index : indices) {
 				if (index.isEmpty()) {
 					System.out.println("Warning, encountered empty index: " + index);
 					return;
