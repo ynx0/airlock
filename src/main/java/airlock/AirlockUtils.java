@@ -1,6 +1,7 @@
 package airlock;
 
 import airlock.agent.graph.types.Graph;
+import airlock.agent.graph.types.NodeMap;
 import airlock.agent.graph.types.content.GraphContent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -23,7 +24,8 @@ public class AirlockUtils {
 			.registerTypeAdapter(EyreResponse.class, EyreResponse.ADAPTER)
 			.registerTypeAdapter(Graph.class, Graph.ADAPTER)
 			.registerTypeAdapter(GraphContent.class, GraphContent.ADAPTER)
-			.serializeNulls() // necessary for certain payloads that we send
+			.registerTypeAdapter(NodeMap.class, NodeMap.ADAPTER)
+			.serializeNulls() // necessary because certain payloads that we send / receive need explicit nulls. by default gson just omits the properties which will not work
 			.create();
 
 	public static String decToUd(String ud) {
