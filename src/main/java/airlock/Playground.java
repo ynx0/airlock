@@ -1,16 +1,18 @@
 package airlock;
 
 import airlock.agent.graph.GraphAgent;
-import airlock.agent.graph.types.Resource;
+import airlock.agent.graph.types.*;
 import airlock.agent.graph.types.content.TextContent;
 import airlock.agent.graph.types.content.UrlContent;
+import airlock.apps.publish.Publisher;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import lombok.val;
 
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.Instant;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("DuplicatedCode")
@@ -27,6 +29,7 @@ public class Playground {
 		channel.connect();
 
 		GraphAgent agent = new GraphAgent(channel);
+		Publisher publisher = new Publisher(channel);
 
 
 		long NOW = Instant.now().toEpochMilli();
@@ -186,19 +189,19 @@ public class Playground {
 		// 2. publish to the notebook
 
 		// a. create post
-		// $CODE_TO_CREATE_POST
+		long timeSent = Instant.now().toEpochMilli();
+		NodeMap newPublishPost = publisher.newPost("Title of My Blog Post", "Body Content", timeSent);
 
 		// b. add notebook post
-		long timeSent = Instant.now().toEpochMilli();
-		BigInteger rootIndex = AirlockUtils.unixToDa(timeSent);
 		CompletableFuture<PokeResponse> notebookPostResponse =
-				agent.addPost(
+				agent.addNodes(
 						notebookGraph,
-						null // todo fill in post here
+						newPublishPost
 				);
 		assert notebookPostResponse.get().success;
 
 		// 3. update post
+
 
 		// 4. add a comment
 
