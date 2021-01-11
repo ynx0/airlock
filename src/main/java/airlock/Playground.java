@@ -201,27 +201,36 @@ public class Playground {
 
 		// 3. update post
 		// adapted from https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/apps/publish/components/EditPost.tsx#L36
-		Node blogRoot = newPublishPost.values().iterator().next();  // get first (and only) node of our node map which corresponds tho the root blog
-		BigInteger latestRevisionNum = publisher.getLatestRevisionNum(blogRoot);
-		Node latestRevision = publisher.getLatestRevision(blogRoot);
+		Node blogPostRoot = newPublishPost.values().iterator().next();  // get first (and only) node of our node map which corresponds tho the root blog
+		BigInteger blogPostId = newPublishPost.keySet().iterator().next().get(0); // get the index of the blog root, then get the id which is the 0th element of the index
+		BigInteger latestRevisionNum = publisher.getLatestRevisionNum(blogPostRoot);
+		Node latestRevision = publisher.getLatestRevision(blogPostRoot);
 
 		var newRevision = latestRevisionNum.add(BigInteger.ONE);
-		var updatedNodes = publisher.editPost(newRevision, $, "New Title", "New Body");
+		var updatedNodes = publisher.editPost(newRevision, blogPostId, "New Title", "New Body", NOW);
 		agent.addNodes(notebookGraph, updatedNodes);
 
 		// todo check that latest is post revision is now ours
 
 
 		// 4. add a comment
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/components/Comments.tsx#L33
+		// for now, we will not be handling mentions
+
+
 
 		// 5. update comment
+		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/views/components/Comments.tsx#L53
+
 
 		// 6. delete comment
+		// https://github.com/urbit/urbit/blob/03eb12698a5ccb9675dd3e638c89bfc78266a22b/pkg/interface/src/views/components/CommentItem.tsx#L39
+
 
 		// 7. delete post
 			// so CommentItem, apps/link/LinkItem, publish/Note, all use removeNodes, which means deleting them is well defined for landscape
 			// however, what about chat? todo experiment
-		// agent.removeNodes();
+		// https://github.com/urbit/urbit/blob/2d6913794f611093feefc8895294dcb2d07ec7a0/pkg/interface/src/views/apps/publish/components/Note.tsx#L38
 
 
 
