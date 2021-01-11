@@ -132,13 +132,9 @@ public class GraphAgent extends Agent {
 
 
 	public static void markPending(List<Node> nodes) {
-		nodes.forEach(node -> {
-			node.post.author = ShipName.withoutSig(node.post.author); // todo see if this is even necessary
-			node.post.pending = true;
-			if (node.children != null) {
-				markPending((List<Node>) node.children.values());
-			}
-		});
+		for (Node node : nodes) {
+			node.markPending();
+		}
 	}
 
 
