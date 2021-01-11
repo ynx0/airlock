@@ -127,6 +127,10 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		}
 	}
 
+	// idk if this is actually semantically valid
+	public NodeMap toNodeMap() {
+		return new NodeMap(this);
+	}
 
 	static class Adapter implements JsonSerializer<Graph>, JsonDeserializer<Graph> {
 
