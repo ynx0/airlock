@@ -6,7 +6,6 @@ import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.util.stream.StreamSupport.stream;
 
@@ -43,7 +42,11 @@ public class Graph extends TreeMap<BigInteger, Node> {
 				;
 	}
 
-	public static String indexListToString(BigInteger index) {
+	public static BigInteger indexFromString(String index) {
+		return indexListFromString(index).get(0); // can be null and bubble up, but we'll cross that bridge when we get to it
+	}
+
+	public static String indexToString(BigInteger index) {
 		return indexListToString(Collections.singletonList(index));
 	}
 
@@ -61,6 +64,7 @@ public class Graph extends TreeMap<BigInteger, Node> {
 
 
 	}
+
 
 	/*
 	// todo potentially use wrapper method like this to clean up other code
