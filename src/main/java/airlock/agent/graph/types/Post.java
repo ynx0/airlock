@@ -9,7 +9,6 @@ import lombok.With;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Type;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,13 +41,13 @@ public class Post {
 	// it still is possible to make an immutable copy
 
 	public String author;
-	public final Index index;
+	public Index index;
 	@SerializedName("time-sent")
-	public final long timeSent;
-	public final List<GraphContent> contents;
-	public final @Nullable
+	public long timeSent;
+	public List<GraphContent> contents;
+	public @Nullable
 	String hash;
-	public final List<String> signatures; // todo narrow by creating signature type
+	public List<String> signatures; // todo narrow by creating signature type
 
 	// strictly part of landscape, not part of urbit, so not received in serialized object
 	// only modified by `GraphAgent.markPending`
