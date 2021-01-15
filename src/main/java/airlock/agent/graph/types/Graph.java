@@ -10,22 +10,44 @@ import java.util.TreeMap;
 
 import static java.util.stream.StreamSupport.stream;
 
-// same as BigIntOrderedMap<Node>
+// same as BigIntOrderedMap<Node> from Landscape
 public class Graph extends TreeMap<BigInteger, Node> {
 
 
 	public static final Graph EMPTY_GRAPH = new Graph();
 
+	/**
+	 * Create a new (empty) graph.
+	 */
 	public Graph() {
 		super(Comparator.reverseOrder());
+		// we choose reverse ordering as the comparator for the TreeMap
+		// this ends up being greatest-to-least sorting of BigIntegers because that is our key
+		// this is how a graph is implemented in hoon;
+		// it is a `mop` (ordered map),
+		// where the keys are atoms (big ints),
+		// the values are nodes,
+		// and the entries are sorted by greatest valued key first
+		// it is represented succinctly by the statement (mop (atom node) gth).
 	}
 
+	/**
+	 * Create a new graph from a map. Convenience constructor
+	 *
+	 * @param graphMap The graph in {@link Map} form.
+	 */
 	public Graph(Map<BigInteger, Node> graphMap) {
 		this();
 		this.putAll(graphMap);
 	}
 
 
+	/**
+	 * Add a node to the graph at the specified index
+	 *
+	 * @param index The index specifying where to add the node
+	 * @param node  The node to add
+	 */
 	public void addNode(Index index, Node node) {
 		// adapted from https://github.com/urbit/urbit/blob/598a46d1f7520ed3a2fa990d223b05139a2fe344/pkg/interface/src/logic/reducers/graph-update.js#L98
 		// okay so the code there is confusing, because BigIntOrderedMap.ts is mutable
@@ -57,7 +79,12 @@ public class Graph extends TreeMap<BigInteger, Node> {
 			// this.set(index, parentNode); (see above comment to why this commented out)
 		}
 	}
-	// traverses the graph, trying to find the node specified by the index
+
+	/**
+	 * traverses the graph, trying to find the node specified by the index, then removes it
+	 *
+	 * @param index The index specifying the node to remove.
+	 */
 	public void removeNode(Index index) {
 		int indexLen = index.size();
 		BigInteger currentIndex = index.get(0);
@@ -86,6 +113,9 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		@Override
 		public JsonElement serialize(Graph src, Type typeOfSrc, JsonSerializationContext context) {
 			if (src.equals(EMPTY_GRAPH)) {
+				// the superclass of graph, TreeMap, properly implements `equals`
+				// by comparing each Entry for equality, rather than falling back to (Object.equals) (reference equality)
+				// so the above code should be valid
 				return JsonNull.INSTANCE; // results in {..., "children": null}
 			} else {
 				JsonArray serializedGraph = new JsonArray();
