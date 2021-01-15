@@ -9,14 +9,22 @@ import java.util.Map;
 
 /**
  * Represents the `nodes` object which you get from `payload["json"]["add-nodes"]["nodes"]`
- *
+ * Basically a flatmap version of {@link Graph}.
+ * That is, a map of Indexes and Nodes, without preserving graph structure.
  */
 public class NodeMap extends HashMap<Index, Node> {
 
+	/**
+	 * Construct an empty NodeMap
+	 */
 	public NodeMap() {
 		super();
 	}
 
+	/**
+	 * Construct a NodeMap from from a {@link Map}. Convenience constructor.
+	 * @param m The source map
+	 */
 	public NodeMap(Map<? extends Index, ? extends Node> m) {
 		super(m);
 	}
