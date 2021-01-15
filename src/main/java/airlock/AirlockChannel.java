@@ -359,6 +359,8 @@ public class AirlockChannel {
 									break;
 
 								default:
+									// todo, we could turn this into an AirlockException to make it catchable or silently log / ignore like channel.js does
+									// but that might be more canceratic idk
 									throw new IllegalStateException("Got unknown eyre responseType");
 							}
 						}

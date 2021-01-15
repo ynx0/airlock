@@ -22,6 +22,10 @@ public class Publisher {
 	// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/lib/publish.ts#L7
 
 
+	// todo take a look at mar/graph/validator/link.hoon
+	// impl `indexed-post`. i think class IndexedPost extends Map.Entry<BigInteger, Post>
+
+
 	public NodeMap newPost(String title, String body, long epochCreated) {
 		// adaptation of https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/lib/publish.ts#L7
 		var nowDa = AirlockUtils.unixToDa(epochCreated);
