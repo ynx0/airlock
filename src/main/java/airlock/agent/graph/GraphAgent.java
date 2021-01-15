@@ -135,7 +135,7 @@ public class GraphAgent extends Agent {
 						null,
 						Collections.emptyList()
 				),
-				Graph.EMPTY_GRAPH
+				new Graph()
 		)));
 
 		return new Node(
@@ -550,7 +550,7 @@ export const createPost = (
 	public CompletableFuture<PokeResponse> addPost(Resource resource, Post post) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
 		return this.addNodes(resource, new NodeMap(Map.of(
-				post.index, new Node(post, Graph.EMPTY_GRAPH)
+				post.index, new Node(post, new Graph())
 		)));
 
 	}
