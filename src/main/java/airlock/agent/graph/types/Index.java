@@ -8,6 +8,13 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * An index is a list of one or more `uid`s (atoms) that point to a unique {@link Node} within a graph.
+ * It can be seen as a unique path to the address the node with.
+ * When dealing with a single node, such as adding or removing a specific node on a graph,
+ * The index takes the form of "/17700000/1/2", or [17700000, 1, 2].
+ * However, most {@link Index}es will be a list of length 1, because they are simply representing the current node, not a nested node.
+ */
 public class Index extends ArrayList<BigInteger>  {
 
 	// todo will empty serialize properly? (i.e. an empty Index should serialize to empty string `""`) 
