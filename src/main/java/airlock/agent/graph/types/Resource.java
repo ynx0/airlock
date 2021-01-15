@@ -5,12 +5,22 @@ import airlock.types.ShipName;
 import java.util.Objects;
 
 /**
- * It's easier to think of this as a reference to a resource rather then the actual reference itself
+ * This class represents a reference to some object on a ship.
+ * It is specified by the ship where the underlying resource is located on,
+ * and the name of the resource.
+ *
+ * Somewhat confusingly, the hoon type for a reference to a resource is `resource`.
+ * We have chosen to stick with that.
  */
 public class Resource {
 	public final String ship; // technically this is defined as =entity, which is a tagged union of just ship right now
 	public final String name; // term
 
+	/**
+	 * Construct a resource with the specified ship and name.
+	 * @param ship The ship where the underlying resource is hosted
+	 * @param name The name of the resource
+	 */
 	public Resource(String ship, String name) {
 		this.ship = ShipName.withSig(ship);
 		System.out.println(ship);
