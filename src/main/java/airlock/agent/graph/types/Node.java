@@ -5,10 +5,14 @@ import lombok.With;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+
+/**
+ * This class represents a particular node of a graph.
+ */
 @With
 public class Node {
 
-	public final @NotNull
+	public @NotNull
 	Post post;
 	public @Nullable
 	Graph children; // technically internal graph
@@ -27,7 +31,6 @@ public class Node {
 				'}';
 	}
 
-	// MODIFIES INSTANCE
 	public void ensureChildGraph() {
 		if (this.children == null) {
 			this.children = new Graph();
@@ -35,7 +38,10 @@ public class Node {
 	}
 
 	// todo come up with a better name lol.
-	// MODIFIES INSTANCE
+
+	/**
+	 * Recursively ensure that no node in any of the children has a {@code null} child.
+	 */
 	public void ensureAllChildrenNonEmpty() {
 		// implements the following function found in `addGraph`
 		// https://github.com/urbit/urbit/blob/598a46d1f7520ed3a2fa990d223b05139a2fe344/pkg/interface/src/logic/reducers/graph-update.js#L98
@@ -70,6 +76,9 @@ public class Node {
 		 */
 	}
 
+	/**
+	 * Mark the current post as pending. Directly ported from Landscape
+	 */
 	public void markPending() {
 		this.post.author = ShipName.withoutSig(this.post.author); // todo see if this is even necessary
 		this.post.setPending(true);
