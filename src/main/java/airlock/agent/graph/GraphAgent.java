@@ -634,10 +634,7 @@ export const createPost = (
 	 * @throws AirlockRequestError
 	 * @throws AirlockAuthenticationError
 	 */
-    });
-  }
-*/
-	public CompletableFuture<PokeResponse> removeNodes(Resource resource, String[] indices) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
+	public CompletableFuture<PokeResponse> removeNodes(Resource resource, List<String> indices) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 		return this.hookAction(resource.ship, map2json(Map.of(
 				"remove-nodes", Map.of(
 						"resource", resource,
@@ -701,16 +698,6 @@ export const createPost = (
 		return scryResponse;
 	}
 
-	/*
-
-  getTagQueries() {
-    return this.scry<any>('graph-store', '/tag-queries')
-      .then((tagQueries) => {
-        this.store.handleEvent({
-          data: tagQueries
-        });
-      });
-  }
 
 	/**
 	 * Get all tag queries.
@@ -739,19 +726,12 @@ export const createPost = (
 	 * @throws AirlockResponseError
 	 * @throws AirlockRequestError
 	 */
-*/
-	public JsonElement getGraph(String ship, String resourceName) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + ship + "/" + resourceName);
+	public JsonElement getGraph(Resource resource) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + resource.urlForm());
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
 
-	/*
-  async getNewest(ship: string, resource: string, count: number, index = '') {
-    const data = await this.scry<any>('graph-store', `/newest/${ship}/${resource}/${count}${index}`);
-    this.store.handleEvent({ data });
-  }
-	*/
 
 	public void getNewest(Resource resource, int count) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		getNewest(resource, count, "");
@@ -827,8 +807,8 @@ export const createPost = (
     });
   }
 */
-	public JsonElement getGraphSubset(String ship, String resource, String start, String end) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + ship + "/" + resource + "/" + end + "/" + "start");
+	public JsonElement getGraphSubset(Resource resource, String start, String end) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + resource.urlForm() + "/" + end + "/" + start);
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
