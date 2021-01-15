@@ -29,9 +29,18 @@ import java.util.List;
 // it was also hard to decide what to keep mutable and what to keep immutable
 // for example, i ended up keeping graph mutable because im not about to have 15 deep-copies of a freaking graph floating around
 // but at the same time it makes a lot of sense to make `Post` and `Node` mostly immutable
+
+/**
+ * This class represents a Post as part of %graph-store.
+ */
 @With
 public class Post {
-	// todo make author final somehow?? please???
+
+	// todo make the fields private with getter/setters?
+	// for now, i am completely foregoing immutability on the instance variables
+	// ill keep the `@With` property so that when we want to make a post based on a derivative post,
+	// it still is possible to make an immutable copy
+
 	public String author;
 	public final Index index;
 	@SerializedName("time-sent")
@@ -69,6 +78,10 @@ public class Post {
 		this(author, indexList, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
 	}
 
+	/**
+	 * Create a completely blank post. No author, empty index, no contents, and sent at unix epoch 0.
+	 * @return a freshly created bunt post
+	 */
 	public static Post buntPost() {
 		return new Post("", new Index(), 0, Collections.emptyList());
 	}
