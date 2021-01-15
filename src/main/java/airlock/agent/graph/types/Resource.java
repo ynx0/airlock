@@ -23,7 +23,6 @@ public class Resource {
 	 */
 	public Resource(String ship, String name) {
 		this.ship = ShipName.withSig(ship);
-		System.out.println(ship);
 		this.name = name;
 	}
 
