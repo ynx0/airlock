@@ -53,14 +53,14 @@ public class Post {
 	// only modified by `GraphAgent.markPending`
 	private boolean pending;
 
-	private Post(String author, Index indexList, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures, boolean pending) {
+	private Post(String author, Index index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures, boolean pending) {
 		// okay, slight wtf moment but although I'm pretty sure
 		// all posts are supposed to come with the ship having a sig,
 		// the `api/graph.ts:markPending` function explicitly modifies a node's post's author
 		// to be without a sig. so i am like uh wtf. maybe this is wrong???
 		// and i don't know what it means for serialization either
 		this.author = ShipName.withSig(author);
-		this.index = indexList;
+		this.index = index;
 		this.timeSent = timeSent;
 		this.contents = contents;
 		this.hash = hash;
@@ -69,12 +69,12 @@ public class Post {
 	}
 
 
-	public Post(String author, Index indexList, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
-		this(author, indexList, timeSent, contents, hash, signatures, false); // by default, posts are not pending
+	public Post(String author, Index index, long timeSent, List<GraphContent> contents, @Nullable String hash, List<String> signatures) {
+		this(author, index, timeSent, contents, hash, signatures, false); // by default, posts are not pending
 	}
 
-	public Post(String author, Index indexList, long timeSent, List<GraphContent> contents) {
-		this(author, indexList, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
+	public Post(String author, Index index, long timeSent, List<GraphContent> contents) {
+		this(author, index, timeSent, contents, null, Collections.emptyList()); // no hash, and no signatures
 	}
 
 	/**
