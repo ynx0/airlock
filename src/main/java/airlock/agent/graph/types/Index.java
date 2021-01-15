@@ -23,6 +23,7 @@ public class Index extends ArrayList<BigInteger>  {
 	 * Create an empty index
 	 */
 	public Index() {
+		super();
 	}
 
 
@@ -49,7 +50,8 @@ public class Index extends ArrayList<BigInteger>  {
 				;
 	}
 
-	public static String toString(Index indexList) {
+
+	public static String asString(Index indexList) {
 		return indexList.stream()       // 1
 				.map(Objects::toString) // 2
 				.collect(Collectors.joining("/", "/", "")) // 3
@@ -81,7 +83,7 @@ public class Index extends ArrayList<BigInteger>  {
 
 		@Override
 		public JsonElement serialize(Index src, Type typeOfSrc, JsonSerializationContext context) {
-			return new JsonPrimitive(this.toString());
+			return new JsonPrimitive(Index.asString(src));
 		}
 	}
 
