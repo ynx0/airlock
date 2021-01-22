@@ -16,9 +16,37 @@
 
 ## Current Focus — `%graph-store`
 
-### development roadmap
+### Development Roadmap
+
+#### Jan 22
+
+##### Milestone 2
+- fix up test environment
+- make sure tests still work
+- refactor graph store api if necessary
+- cleanup documentation
+- add examples for just graph-store to main
+- tagged release to finalize milestone 2
+
+- (optional) try using the standalone jar in another project, fix if it doesn't work 
+- (optional) publish test report html artifact
+
+##### Milestone 3
+
+To fulfill this milestone there needs to be 2 gall agents. 
+Right now, I've chosen group-store and metadata-store, but I may need to re-evaluate that.
+Also, there is a new agent to consider, settings-store. 
+Something to consider is that metadata-store is in the process of a rewrite (see PR: metadata-store: modernisation)
+
+- `%group-store`
+- `%metadata-store`
 
 
+
+
+#### after miles stone 3
+
+**Graph Store Stuff**
 - create helper for creating link entries
 - create helper for creating blog posts
 
@@ -63,7 +91,7 @@
 - tag
 - automate boot pill creation of master or updating os from master for environment
 
-### graph-store guide outline
+##### graph-store apps guide outline
 
 (should be platform-independent)
 
@@ -106,8 +134,8 @@
 
 - talk (briefly) about state management
 
-
-
+##### graph-store guide -- imgb0rd 
+TODO
 
 ## Completed Items
 
