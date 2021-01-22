@@ -5,9 +5,11 @@ VERSION_NUM=v1.0-rc1
 URBIT_VERSION=urbit-$VERSION_NUM-$PLATFORM  # example output: urbit-v1.0-rc1-linux64
 FAKEZOD_TAR=fakezod-init.tar.gz
 LOGFILE=fakeship_output.log
-
+OTA_PATH=./urbit
 
 #cd test_environment || exit
+
+die() { echo "$*" 1>&2 ; exit 1; }
 
 function downloadUrbitRuntime() {
   echo "Downloading Urbit Runtime"
@@ -18,6 +20,13 @@ function downloadUrbitRuntime() {
   # from https://unix.stackexchange.com/a/11019
   mkdir $URBIT_VERSION
   tar xzvf $URBIT_VERSION.tgz -C $URBIT_VERSION --strip-components 1
+}
+
+function downloadLatestOTA() {
+  # this function is necessary for fakezods because they are created from the latest boot pill, not the latest ota
+  # however, if you are targeting the latest ota, you will not be able to get it because of the fact that you are a fake ship
+  # this function clones urbit/urbit
+  git clone --depth 1 --branch master https://github.com/urbit/urbit $OTA_PATH
 }
 
 
@@ -52,7 +61,14 @@ function killShip() {
 function make_fakezod() {
   rm -rf ./zod  # remove if existing fakezod
   echo "Creating fakezod"
-  screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod # https://stackoverflow.com/a/15026227
+  # screen command adapted from https://stackoverflow.com/a/15026227
+  if [[ "$OTA" == true ]]; then
+    [[ ! -f $OTA_PATH ]] && die "Could not find folder containing urbit repo"
+    echo "Using latest ota"
+    screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod -B "urbit/bin/solid.pill" -A "urbit/pkg/arvo"
+  else
+    screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod
+  fi
   wait4boot
   echo "Fakezod created"
   send2ship "^D"

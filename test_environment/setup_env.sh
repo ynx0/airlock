@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 
-
 # shellcheck disable=SC2164
 cd "$(dirname "$0")"  # ensure that the current directory is where the script is located
+source ./setup_env_lib.sh
 
+########################################
+# this script sets up a pristine fakezod
+########################################
 
 REBUILD=false
-source ./setup_env_lib.sh
+OTA=false
 
 cleanup  # always start fresh. if we are in the setup, we'll never use a running fakezod directory
 
-# this script sets up a pristine fakezod
+# download the urbit runtime if it doesn't exist
 if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
 fi
+
+if [[ $OTA == true ]]; then
+  downloadLatestOTA
+fi
+
 
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
   echo "REBUILD: $REBUILD"
