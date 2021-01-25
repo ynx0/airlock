@@ -27,9 +27,18 @@ jobs:
       # not strictly necessary because the ci instance is spun down anyways but i guess its handy if it does something in the future
     - name: Teardown test environment
       run: ./test_environment/teardown_fakezod.sh
+
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v1
       with:
           report_paths: '**/build/test-results/test/TEST-*.xml'
           github_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-report
+        path: build/reports/tests/test/*
+        retention-days: 30
+
 
