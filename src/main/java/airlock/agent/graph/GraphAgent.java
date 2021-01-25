@@ -114,7 +114,7 @@ public class GraphAgent extends Agent {
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
 	// todo move this to node? it could make more sense there
 	// todo make this a set of overloaded methods instead of using `requireNonNullElse`
-	public static Node createBlankNodeWithChildPost(String shipAuthor, List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
+	public Node createBlankNodeWithChildPost(List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
 		parentIndex = requireNonNullElse(parentIndex, Index.createEmptyIndex());
 		childIndex = requireNonNullElse(childIndex, Index.createEmptyIndex());
 
@@ -130,7 +130,7 @@ public class GraphAgent extends Agent {
 
 		Graph childGraph = new Graph(Map.of(index, new Node(
 				new Post(
-						ShipName.withSig(shipAuthor),
+						ShipName.withSig(this.channel.getShipName()),
 						Index.fromIndex(nodeIndex, childIndex),
 						Instant.now().toEpochMilli(),
 						contents,
@@ -142,7 +142,7 @@ public class GraphAgent extends Agent {
 
 		return new Node(
 				new Post(
-						ShipName.withSig(shipAuthor),
+						ShipName.withSig(this.channel.getShipName()),
 						nodeIndex,
 						Instant.now().toEpochMilli(),
 						Collections.emptyList(),
@@ -184,13 +184,12 @@ export const createPost = (
 
 	/**
 	 * Create a post with the given author, contents, and indices.
-	 * @param shipAuthor
 	 * @param contents
 	 * @param parentIndex
 	 * @param childIndex
 	 * @return The newly created post
 	 */
-	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
+	public Post createPost(List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
 		// todo make this api design more idiomatic by using alternative to requireNonNull api
 		// todo move this into the `Post` class instead??
 		parentIndex = requireNonNullElse(parentIndex, new Index());
@@ -200,7 +199,7 @@ export const createPost = (
 		}
 
 		return new Post(
-				shipAuthor,
+				this.channel.getShipName(),
 				Index.fromIndex(parentIndex, childIndex),
 				Instant.now().toEpochMilli(),
 				contents,
@@ -210,8 +209,8 @@ export const createPost = (
 
 	}
 
-	public static Post createPost(String shipAuthor, List<GraphContent> contents) {
-		return GraphAgent.createPost(shipAuthor, contents, null, null);
+	public Post createPost(List<GraphContent> contents) {
+		return this.createPost(contents, null, null);
 	}
 
 
