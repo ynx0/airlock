@@ -147,6 +147,7 @@ public class AirlockChannel {
 	 * @param credentials The credentials of the ship to create a channel with
 	 */
 	public AirlockChannel(AirlockCredentials credentials) {
+		// todo refactor out normalization and stuff to AirlockCredentials
 		requireNonNull(credentials.url, "Please provide a url");
 		requireNonNull(credentials.ship, "Please provide a ship name");
 		requireNonNull(credentials.code, "Please provide a code");
