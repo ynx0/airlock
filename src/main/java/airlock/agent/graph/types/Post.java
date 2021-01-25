@@ -131,6 +131,8 @@ public class Post {
 		}
 	}
 
+	public static final Adapter ADAPTER = new Adapter();
+
 
 	@Override
 	public String toString() {
