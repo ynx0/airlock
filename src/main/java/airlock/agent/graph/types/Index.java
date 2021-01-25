@@ -53,7 +53,7 @@ public class Index extends ArrayList<BigInteger>  {
 	}
 
 	/**
-	 * N.B: this method returns a List\<BigInteger\>, not a BigInteger even though it is dealing with a single index
+	 * N.B: this method returns a List&lt;BigInteger&gt;, not a BigInteger even though it is dealing with a single index
 	 * This is because it is a more general method which is actually dealing with what I'm gonna call "DeepIndex"'s
 	 * (you can also think of it as a multi-level index)
 	 * Basically, they are supposed to model a nested index, such as "/17239874987324798432/4/1"
@@ -116,9 +116,10 @@ public class Index extends ArrayList<BigInteger>  {
 	/**
 	 * Construct an {@link Index} using an existing index as a base and a list of big integers to concatenate.
 	 *
+	 * <p>
 	 * Example:
 	 * Index.fromIndex([17007777], [1, 2]) => [17007777, 1, 2]
-	 *
+	 * </p>
 	 *
 	 * @param baseIndex The index to append to
 	 * @param otherIndex The index to append
