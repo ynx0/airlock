@@ -619,7 +619,7 @@ export const createPost = (
 
 		this.store.handleEvent({ data: { 'graph-update': action } });
 		*/
-		markPending((List<Node>) nodes.values());
+		markPending(new ArrayList<>(nodes.values()));
 		this.updateState(payload); // we are consuming our own update in this case
 
 		return future;
@@ -927,7 +927,7 @@ export const createPost = (
 				// however, the behavior here is to just completely halt execution and throw an exception
 				// when the BigInt parsing inevitably fails
 				Index index = Index.fromString(indexNodeEntry.getKey());
-				if (index.size() == 0) {
+				if (index.isEmpty()) {
 					return;
 				}
 				JsonObject nodeObj = indexNodeEntry.getValue().getAsJsonObject();
