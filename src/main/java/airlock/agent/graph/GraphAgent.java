@@ -114,42 +114,6 @@ public class GraphAgent extends Agent {
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
 	// todo move this to node? it could make more sense there
 	// todo make this a set of overloaded methods instead of using `requireNonNullElse`
-	/*
-
-		export const createBlankNodeWithChildPost = (
-		  parentIndex: string = '',
-		  childIndex: string = '',
-		  contents: Content[]
-		) => {
-		  const date = unixToDa(Date.now()).toString();
-		  const nodeIndex = parentIndex + '/' + date;
-
-		  const childGraph = {};
-		  childGraph[childIndex] = {
-			post: {
-			  author: `~${window.ship}`,
-			  index: nodeIndex + '/' + childIndex,
-			  'time-sent': Date.now(),
-			  contents,
-			  hash: null,
-			  signatures: []
-			},
-			children: null
-		  };
-
-		  return {
-			post: {
-			  author: `~${window.ship}`,
-			  index: nodeIndex,
-			  'time-sent': Date.now(),
-			  contents: [],
-			  hash: null,
-			  signatures: []
-			},
-			children: childGraph
-		  };
-		};
-			 */
 	public static Node createBlankNodeWithChildPost(String shipAuthor, List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
 		parentIndex = requireNonNullElse(parentIndex, Index.createEmptyIndex());
 		childIndex = requireNonNullElse(childIndex, Index.createEmptyIndex());

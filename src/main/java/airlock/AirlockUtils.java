@@ -18,6 +18,8 @@ import java.util.Objects;
 
 public class AirlockUtils {
 
+	// todo since we use `Instant.now().toEpochMilli` a lot, maybe just extract that out to a method here
+
 	public static final BigInteger DA_UNIX_EPOCH = new BigInteger("170141184475152167957503069145530368000"); // `@ud` ~1970.1.1
 	public static final BigInteger DA_SECOND = new BigInteger("18446744073709551616"); // `@ud` ~s1
 	public static final Gson gson = new GsonBuilder() // todo add some sort of lint to make sure there are no unused ADAPTER objects
