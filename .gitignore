@@ -1,6 +1,8 @@
 .gradle/
 build/
 
+notes/*.har
+
 test_environment/zod
 test_environment/old_logs/
 test_environment/fakeship_output.log
