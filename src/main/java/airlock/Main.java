@@ -31,7 +31,7 @@ public class Main {
 
 		GraphAgent agent = new GraphAgent(channel);
 		long NOW = Instant.now().toEpochMilli();
-		Resource testGroup = new Resource(channel.getShipName(), "my-own-stuff"); // we are assuming this group already exists
+		Resource testGroup = new Resource(channel.getShipName(), "test-group"); // we are assuming this group already exists
 
 		// 1. create a chat
 		Resource chatGraph = new Resource(channel.getShipName(), "test-graph-" + NOW); // we are gonna be creating it so we need a unique name
@@ -65,5 +65,5 @@ public class Main {
 		System.exit(0); // todo for now you need this otherwise it takes like 30 seconds longer to exit
 
 	}
-	
+
 }
