@@ -2,18 +2,21 @@
 
 PLATFORM=linux64
 VERSION_NUM=v1.0-rc1
-URBIT_VERSION=urbit-$VERSION_NUM-$PLATFORM  # example output: urbit-v1.0-rc1-linux64
+URBIT_VERSION=urbit-$VERSION_NUM-$PLATFORM # example output: urbit-v1.0-rc1-linux64
 FAKEZOD_TAR=fakezod-init.tar.gz
 LOGFILE=fakeship_output.log
 OTA_PATH=./urbit
 
 #cd test_environment || exit
 
-die() { echo "$*" 1>&2 ; exit 1; }
+die() {
+  echo "$*" 1>&2
+  exit 1
+}
 
 function downloadUrbitRuntime() {
   echo "Downloading Urbit Runtime"
-  curl -o $URBIT_VERSION.tgz https://bootstrap.urbit.org/$URBIT_VERSION.tgz  # force filename to be $URBIT_VERSION
+  curl -o $URBIT_VERSION.tgz https://bootstrap.urbit.org/$URBIT_VERSION.tgz # force filename to be $URBIT_VERSION
   # we need to strip one directory inside and just get the binary files directly,
   # then extract them to the known folder name using the -C flag
   # this is because there is inconsistent naming of the tgz vs the internal folder so the script breaks without this
@@ -26,9 +29,8 @@ function downloadLatestOTA() {
   # this function is necessary for fakezods because they are created from the latest boot pill, not the latest ota
   # however, if you are targeting the latest ota, you will not be able to get it because of the fact that you are a fake ship
   # this function clones urbit/urbit
-  git clone --depth 1 --branch master https://github.com/urbit/urbit $OTA_PATH
+  git lfs clone --depth 1 --branch master https://github.com/urbit/urbit $OTA_PATH
 }
-
 
 # MARK - live ship management
 function start_ship() {
@@ -46,29 +48,36 @@ function getLastNLines() {
 }
 
 function wait4boot() {
+  echo "Waiting for zod to boot: "
   until [[ "$(tail -n1 fakeship_output.log)" =~ "~zod:dojo>" ]]; do
-    echo "Waiting for zod to boot: "
     getLastNLines 2
     sleep 10s
   done
 }
 
 function killShip() {
-  screen -S fakeship -X quit 2> /dev/null # ok if it doesn't exist
+  screen -S fakeship -X quit 2>/dev/null # ok if it doesn't exist
 }
 
 # MARK - ship creation/deletion + boot
 function make_fakezod() {
-  rm -rf ./zod  # remove if existing fakezod
+  rm -rf ./zod # remove if existing fakezod
   echo "Creating fakezod"
   # screen command adapted from https://stackoverflow.com/a/15026227
-  if [[ "$OTA" == true ]]; then
-    [[ ! -f $OTA_PATH ]] && die "Could not find folder containing urbit repo"
-    echo "Using latest ota"
-    screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod -B "urbit/bin/solid.pill" -A "urbit/pkg/arvo"
-  else
-    screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod
-  fi
+  screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod
+  wait4boot
+  echo "Fakezod created"
+  send2ship "^D"
+  sleep 5s
+}
+
+function make_fakezod_ota() {
+  # this function is equivalent to the make_fakezod, but uses the boot pill and arvo kernel from `urbit/urbit/master`
+  # the reason for duplication is simply to keep state out of the lib script
+  rm -rf ./zod # remove if existing fakezod
+  echo "Creating fakezod using latest ota"
+  [[ ! -d $OTA_PATH ]] && die "Could not find folder containing urbit repo"
+  screen -d -m -S fakeship -L -Logfile "$LOGFILE" ./$URBIT_VERSION/urbit -F zod -B "urbit/bin/solid.pill" -A "urbit/pkg/arvo"
   wait4boot
   echo "Fakezod created"
   send2ship "^D"
@@ -84,8 +93,8 @@ function boot_fakezod() {
 function tar_fakezod_state() {
   echo "Saving pristine fakezod state"
   if [ -d ./zod ]; then
-#    rm ./zod/.urb/.http.ports
-#    rm ./zod/.urb/.vere.lock
+    #    rm ./zod/.urb/.http.ports
+    #    rm ./zod/.urb/.vere.lock
     tar cvzf $FAKEZOD_TAR zod
   else
     echo "Could not save ./zod. Does not exist"
@@ -97,12 +106,11 @@ function untar_fakezod_state() {
   tar xvf ./$FAKEZOD_TAR
 }
 
-
 function cleanup() {
   killShip
   mkdir -p ./old_logs
   mv "$LOGFILE" "./old_logs/${LOGFILE}_$(date -Iminutes).old.log"
-  rm -rf ./zod >> /dev/null 2>&1
+  rm -rf ./zod >>/dev/null 2>&1
   rm -f $URBIT_VERSION.tgz
 }
 

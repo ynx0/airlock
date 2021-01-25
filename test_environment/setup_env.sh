@@ -18,14 +18,16 @@ if [ ! -d "./$URBIT_VERSION/" ]; then
   downloadUrbitRuntime
 fi
 
-if [[ $OTA == true ]]; then
-  downloadLatestOTA
-fi
-
 
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
   echo "REBUILD: $REBUILD"
-  make_fakezod
+  if [[ $OTA == true ]]; then
+    downloadLatestOTA
+    make_fakezod_ota
+  else
+    make_fakezod
+  fi
+
   tar_fakezod_state
 else
   untar_fakezod_state
