@@ -278,7 +278,7 @@ export const createPost = (
 	 * @throws AirlockAuthenticationError
 	 */
 	private JsonElement viewAction(String threadName, JsonObject payload) throws AirlockResponseError, AirlockRequestError, SpiderFailureException, AirlockAuthenticationError {
-		return this.urbit.spiderRequest("graph-view-action", threadName, "json", payload);
+		return this.channel.spiderRequest("graph-view-action", threadName, "json", payload);
 	}
 
 	/*
@@ -347,7 +347,7 @@ export const createPost = (
 	public JsonElement createManagedGraph(String name, String title, String description, Resource groupResource, Module module) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// todo note: name should be url safe. also, landscape tends to replace spaces and other characters with dashes, but we aren't doing that yet
 		final var associated = Map.of("group", groupResource);
-		final var resource = GroupUtils.makeResource(ShipName.withSig(this.urbit.getShipName()), name);
+		final var resource = GroupUtils.makeResource(ShipName.withSig(this.channel.getShipName()), name);
 
 		JsonObject createPayload = gson.toJsonTree(Map.of(
 				"create", Map.of(
@@ -403,7 +403,7 @@ export const createPost = (
 		S;
 
 		 */
-		final var resource = GroupUtils.makeResource(urbit.getShipName(), name);
+		final var resource = GroupUtils.makeResource(channel.getShipName(), name);
 		return this.viewAction("graph-create", map2json(Map.of(
 				"create", Map.of(
 						"resource", resource,
@@ -446,7 +446,7 @@ export const createPost = (
 	 * @throws AirlockRequestError
 	 */
 	public JsonElement deleteGraph(String name) throws SpiderFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var resource = GroupUtils.makeResource(this.urbit.getShipName(), name);
+		final var resource = GroupUtils.makeResource(this.channel.getShipName(), name);
 		return this.viewAction("graph-delete", map2json(Map.of(
 				"delete", resource
 		)));
@@ -501,7 +501,7 @@ export const createPost = (
 	}
 
 	public JsonElement eval(String cord) throws AirlockResponseError, AirlockAuthenticationError, SpiderFailureException, AirlockRequestError {
-		return this.urbit.spiderRequest("graph-view-action", "tang", "graph-eval", map2json(Map.of(
+		return this.channel.spiderRequest("graph-view-action", "tang", "graph-eval", map2json(Map.of(
 				"eval", cord
 		)));
 	}
@@ -669,7 +669,7 @@ export const createPost = (
 		};
 		 */
 
-		JsonObject scryResponse = this.urbit.scryRequest("graph-store", "/keys").getAsJsonObject();
+		JsonObject scryResponse = this.channel.scryRequest("graph-store", "/keys").getAsJsonObject();
 		// this should be an object of the form:
 		// {"graph-update": "keys": [{"name: "test", "ship": "zod"}, ...]}
 		JsonObject graphUpdate = scryResponse.get("graph-update").getAsJsonObject();
@@ -695,7 +695,7 @@ export const createPost = (
 		// for now, the only place i see using tags is
 		// https://github.com/urbit/urbit/blob/531f406222c15116c2ff4ccc6622f1eae4f2128f/pkg/interface/src/views/apps/publish/components/Writers.js
 
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tags");
+		JsonElement scryResponse = this.channel.scryRequest("graph-store", "/tags");
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
@@ -713,7 +713,7 @@ export const createPost = (
 	public JsonElement getTagQueries() throws ScryFailureException, ScryDataNotFoundException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// Landscape doesn't do anything with tagQueries yet either
 
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/tag-queries");
+		JsonElement scryResponse = this.channel.scryRequest("graph-store", "/tag-queries");
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
@@ -729,7 +729,7 @@ export const createPost = (
 	 * @throws AirlockRequestError
 	 */
 	public JsonElement getGraph(Resource resource) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph/" + resource.urlForm());
+		JsonElement scryResponse = this.channel.scryRequest("graph-store", "/graph/" + resource.urlForm());
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
@@ -750,7 +750,7 @@ export const createPost = (
 	 */
 	public void getNewest(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		// todo document this better. I don't even know what it does myself
-		final var data = this.urbit.scryRequest("graph-store", "/newest/" + resource.urlForm() + "/" + count + index.asString());
+		final var data = this.channel.scryRequest("graph-store", "/newest/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		// thing to do: look at example payload and how it is used
 		// there is only one usage, which is here: https://github.com/urbit/urbit/blob/master/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
@@ -771,7 +771,7 @@ export const createPost = (
   }
 */
 	public void getOlderSiblings(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + resource.urlForm() + "/" + count + index.asString());
+		final var data = this.channel.scryRequest("graph-store", "/node-siblings/older/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
@@ -788,7 +788,7 @@ export const createPost = (
 	*/
 
 	public void getYoungerSiblings(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + resource.urlForm() + "/" + count + index.asString());
+		final var data = this.channel.scryRequest("graph-store", "/node-siblings/younger/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
@@ -806,7 +806,7 @@ export const createPost = (
   }
 */
 	public JsonElement getGraphSubset(Resource resource, String start, String end) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		JsonElement scryResponse = this.urbit.scryRequest("graph-store", "/graph-subset/" + resource.urlForm() + "/" + end + "/" + start);
+		JsonElement scryResponse = this.channel.scryRequest("graph-store", "/graph-subset/" + resource.urlForm() + "/" + end + "/" + start);
 		this.updateState(scryResponse.getAsJsonObject().getAsJsonObject("graph-update"));
 		return scryResponse;
 	}
@@ -829,7 +829,7 @@ export const createPost = (
 }
 */
 	public JsonElement getNode(String ship, String resource, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + index.asString());
+		final var data = this.channel.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		return data;
 	}

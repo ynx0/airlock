@@ -12,23 +12,23 @@ import java.util.concurrent.CompletableFuture;
 public abstract class Agent {
 
 
-	protected final AirlockChannel urbit;
+	protected final AirlockChannel channel;
 
 	// adapted from https://github.com/dclelland/UrsusAPI/
-	protected Agent(AirlockChannel urbit) {
-		this.urbit = urbit;
+	protected Agent(AirlockChannel channel) {
+		this.channel = channel;
 	}
 
 	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data, String ship) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		return this.urbit.poke(ship, app, mark, data);
+		return this.channel.poke(ship, app, mark, data);
 	}
 
 	protected CompletableFuture<PokeResponse> action(String app, String mark, JsonObject data) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		return this.urbit.poke(this.urbit.getShipName(), app, mark, data);
+		return this.channel.poke(this.channel.getShipName(), app, mark, data);
 	}
 
 	void unsubscribe(int subscriptionID) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
-		this.urbit.unsubscribe(subscriptionID);
+		this.channel.unsubscribe(subscriptionID);
 	}
 
 
