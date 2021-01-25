@@ -9,7 +9,7 @@ source ./setup_env_lib.sh
 ########################################
 
 REBUILD=false
-OTA=false
+OTA=true
 
 cleanup  # always start fresh. if we are in the setup, we'll never use a running fakezod directory
 
@@ -21,6 +21,7 @@ fi
 
 if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
   echo "REBUILD: $REBUILD"
+
   if [[ $OTA == true ]]; then
     downloadLatestOTA
     make_fakezod_ota
