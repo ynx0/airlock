@@ -53,7 +53,7 @@ public class NodeMap extends HashMap<Index, Node> {
 		public JsonElement serialize(NodeMap src, Type typeOfSrc, JsonSerializationContext context) {
 			JsonObject result = new JsonObject();
 			src.forEach((index, node) -> {
-				String indexStr = Index.asString(index);
+				String indexStr = index.asString();
 				JsonElement nodeObj = context.serialize(node, Node.class);
 				result.add(indexStr, nodeObj);
 			});

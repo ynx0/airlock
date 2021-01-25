@@ -118,7 +118,7 @@ public class Post {
 
 
 			result.addProperty("author", src.author);
-			result.addProperty("index", Index.asString(src.index));
+			result.addProperty("index", src.index.asString());
 			result.addProperty("time-sent", src.timeSent);
 			result.add("contents", context.serialize(src.contents));
 			result.addProperty("hash", src.hash);

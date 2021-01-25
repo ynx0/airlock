@@ -33,12 +33,12 @@ public class Publisher {
 
 		Post rootPost = new Post(
 				channel.getShipName(),
-				Index.fromString(nowDa.toString()),
+				new Index(nowDa),
 				epochCreated,
 				Collections.emptyList()
 		);
 
-		Index revisionIndex = Index.fromIndex(rootPost.index, BigInteger.ONE); // e.x: "/17007777" -> "/17007777/1"
+		Index revisionIndex = Index.fromIndex(rootPost.index, BigInteger.ONE);
 		Index commentsIndex = Index.fromIndex(rootPost.index, BigInteger.TWO);
 
 		Post revisionsContainer = rootPost.withIndex(revisionIndex);
