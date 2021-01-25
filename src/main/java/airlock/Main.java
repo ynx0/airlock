@@ -20,7 +20,7 @@ public class Main {
 		// SETUP
 		// The following example assumes you have:
 		// - a ship named 'zod' running
-		// - a chat channel called 'test' (you must manually create this)
+		// - a group called 'test-group' (you must manually create this beforehand)
 
 
 		// MARK - ship setup
