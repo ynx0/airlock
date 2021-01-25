@@ -1,7 +1,7 @@
 package airlock.agent.chat;
 
 @Deprecated
-class Envelope {
+public class Envelope {
 	/**
 	 * UID of the envelope
 	 */

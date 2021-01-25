@@ -1,7 +1,7 @@
 package airlock.agent.chat;
 
 @Deprecated
-class Message {
+public class Message {
 	public final Envelope envelope;
 	public final String path;
 
