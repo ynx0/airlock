@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
  */
 public class Index extends ArrayList<BigInteger>  {
 
-	// todo will empty serialize properly? (i.e. an empty Index should serialize to empty string `""`) 
 
 	/**
 	 * Create an empty index
@@ -74,20 +73,21 @@ public class Index extends ArrayList<BigInteger>  {
 
 	/**
 	 * Get the canonical/serialized string representation of an index
-	 * @param index The index to convert
 	 * @return the canonical/serialized string representation of an index
 	 */
-	public static String asString(Index index) {
-		if (index.size() == 0) {
-			return ""; // special case: size zero index serializes to an empty string
+	public String asString() {
+		if (this.isEmpty()) {
+			// special case: empty index serializes to an empty string,
+			// not "/" as it would with code below
+			return "";
 		}
 
-		return index.stream()       // 1
-				.map(Objects::toString) // 2
+		return this.stream()               // 1
+				.map(BigInteger::toString) // 2
 				.collect(Collectors.joining("/", "/", "")) // 3
 				;
-		// 1. For each BigInteger index
-		// 2. convert index to a string
+		// 1. For each BigInteger uid in index
+		// 2. convert uid to a string
 		// 3. join the resulting string list into one string
 		//    that is separated by slashes, has a slash at the start, and does not have anything at the end
 
@@ -110,8 +110,15 @@ public class Index extends ArrayList<BigInteger>  {
 		return new Index(intermediate);
 	}
 
+
+	// todo consider renaming this to `.of` i.e. Index.of()
 	/**
-	 * Construct an {@link Index} using an existing index as a base and a list of big integers to concatenate
+	 * Construct an {@link Index} using an existing index as a base and a list of big integers to concatenate.
+	 *
+	 * Example:
+	 * Index.fromIndex([17007777], [1, 2]) => [17007777, 1, 2]
+	 *
+	 *
 	 * @param baseIndex The index to append to
 	 * @param otherIndex The index to append
 	 * @return The combination of `baseIndex` with the `restOfTheIndex`
@@ -132,7 +139,7 @@ public class Index extends ArrayList<BigInteger>  {
 
 		@Override
 		public JsonElement serialize(Index src, Type typeOfSrc, JsonSerializationContext context) {
-			return new JsonPrimitive(Index.asString(src));
+			return new JsonPrimitive(src.asString());
 		}
 	}
 
