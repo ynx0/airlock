@@ -1,7 +1,9 @@
 import airlock.AirlockChannel;
 import airlock.AirlockCredentials;
+import airlock.PokeResponse;
 import airlock.agent.graph.GraphAgent;
 import airlock.agent.graph.types.Resource;
+import airlock.agent.graph.types.content.TextContent;
 import airlock.errors.channel.AirlockChannelError;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -11,10 +13,13 @@ import org.junit.jupiter.api.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -28,6 +33,7 @@ public class UrbitIntegrationTestsGraphStore {
 	public static final String GRAPH_TITLE = "Test Graph Created " + NOW;
 	public static final String GRAPH_DESCRIPTION = "graph for testing only! having fun strictly prohibited";
 	public static final Resource ASSOCIATED_GROUP = new Resource("~zod", "test-group");
+	public static final Resource GRAPH_RESOURCE = new Resource("~zod", GRAPH_NAME);
 
 	@BeforeAll
 	public static void setup() throws MalformedURLException, AirlockChannelError {
@@ -74,26 +80,34 @@ public class UrbitIntegrationTestsGraphStore {
 
 	@Test
 	@Order(2)
-	@Disabled("As of v1.0-rc1, the fakezod creation process is broken, causing this test to fail")
 	public void canSendChatOnGraph() throws Exception {
-		String shipName = urbit.getShipName();
-/*
 		CompletableFuture<PokeResponse> futureResponse = graphStoreAgent.addPost(
-				shipName,
-				GRAPH_NAME,
-				GraphAgent.createPost(
-						shipName,
-						Collections.singletonList(new TextContent("hello world")),
-						null,
-						null
-				)
+				GRAPH_RESOURCE,
+				graphStoreAgent.createPost(Collections.singletonList(new TextContent("hello world")))
 		);
-*/
-//		PokeResponse response = futureResponse.get();
-//
-//		assertTrue(response.success);
-
+		PokeResponse response = futureResponse.get();
+		assertTrue(response.success);
+		assertFalse(graphStoreAgent.getCurrentGraphs().isEmpty());
 	}
+
+
+
+//		JsonArray graphKeys = agent.getKeys().getAsJsonObject()
+//				.get("graph-update").getAsJsonObject()
+//				.get("keys").getAsJsonArray();
+//		JsonObject graphOwnedByMe = StreamSupport.stream(graphKeys.spliterator(), false)
+//				.map(JsonElement::getAsJsonObject)
+//				.filter(key -> key.get("ship").getAsString().equals("sipfyn-pidmex"))
+//				.filter(key -> !key.get("name").getAsString().contains("dm--"))
+//				.filter(key -> key.get("name").getAsString().contains("2"))
+//				.findFirst().orElseThrow().getAsJsonObject();
+//
+//		System.out.println(graphKeys);
+//		System.out.println(graphOwnedByMe);
+//		JsonElement graphUpdate = agent.getGraph(ShipName.withSig(graphOwnedByMe.get("ship").getAsString()),graphOwnedByMe.get("name").getAsString());
+//		System.out.println(AirlockUtils.gson.toJson(graphUpdate));
+
+
 
 	/* TODOs
 	// todo make test that gets all of these
@@ -113,22 +127,8 @@ public class UrbitIntegrationTestsGraphStore {
 	 */
 
 	/*
-	// todo potentially do something with this code
 
-//		JsonArray graphKeys = agent.getKeys().getAsJsonObject()
-//				.get("graph-update").getAsJsonObject()
-//				.get("keys").getAsJsonArray();
-//		JsonObject graphOwnedByMe = StreamSupport.stream(graphKeys.spliterator(), false)
-//				.map(JsonElement::getAsJsonObject)
-//				.filter(key -> key.get("ship").getAsString().equals("sipfyn-pidmex"))
-//				.filter(key -> !key.get("name").getAsString().contains("dm--"))
-//				.filter(key -> key.get("name").getAsString().contains("2"))
-//				.findFirst().orElseThrow().getAsJsonObject();
-//
-//		System.out.println(graphKeys);
-//		System.out.println(graphOwnedByMe);
-//		JsonElement graphUpdate = agent.getGraph(ShipName.withSig(graphOwnedByMe.get("ship").getAsString()),graphOwnedByMe.get("name").getAsString());
-//		System.out.println(AirlockUtils.gson.toJson(graphUpdate));
+
 	 */
 
 
