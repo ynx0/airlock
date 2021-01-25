@@ -27,10 +27,31 @@ public class Index extends ArrayList<BigInteger>  {
 	}
 
 
-	public Index(@NotNull Collection<? extends BigInteger> c) {
-		super(c);
+	/**
+	 * Create an index from a list of uids
+	 * @param uids The uids to create an index from
+	 */
+	public Index(@NotNull Collection<? extends BigInteger> uids) {
+		super(uids);
 	}
 
+	/**
+	 * Create an index from a single uid (BigInteger)
+	 * @param singleUID The uid to create the index from
+	 */
+	public Index(BigInteger singleUID) {
+		this(List.of(singleUID));
+	}
+
+
+	/**
+	 * Wrapper method around empty index constructor. Exists for readability
+	 * @return The freshly created empty index
+	 */
+	public static Index createEmptyIndex() {
+		// todo come up with a better name
+		return new Index();
+	}
 
 	/**
 	 * N.B: this method returns a List\<BigInteger\>, not a BigInteger even though it is dealing with a single index
@@ -51,8 +72,17 @@ public class Index extends ArrayList<BigInteger>  {
 	}
 
 
-	public static String asString(Index indexList) {
-		return indexList.stream()       // 1
+	/**
+	 * Get the canonical/serialized string representation of an index
+	 * @param index The index to convert
+	 * @return the canonical/serialized string representation of an index
+	 */
+	public static String asString(Index index) {
+		if (index.size() == 0) {
+			return ""; // special case: size zero index serializes to an empty string
+		}
+
+		return index.stream()       // 1
 				.map(Objects::toString) // 2
 				.collect(Collectors.joining("/", "/", "")) // 3
 				;
@@ -67,12 +97,31 @@ public class Index extends ArrayList<BigInteger>  {
 	}
 
 
+	/**
+	 * Construct an {@link Index} using an existing index as a base and a list of big integers to concatenate
+	 * @param baseIndex The index to append to
+	 * @param restOfTheIndex The list of uids to append to the base index
+	 * @return The combination of `baseIndex` with the `restOfTheIndex`
+	 */
 	public static Index fromIndex(Index baseIndex, BigInteger... restOfTheIndex) {
 		List<BigInteger> intermediate = new ArrayList<>(baseIndex);
 		intermediate.addAll(Arrays.asList(restOfTheIndex));
 
 		return new Index(intermediate);
 	}
+
+	/**
+	 * Construct an {@link Index} using an existing index as a base and a list of big integers to concatenate
+	 * @param baseIndex The index to append to
+	 * @param otherIndex The index to append
+	 * @return The combination of `baseIndex` with the `restOfTheIndex`
+	 */
+	public static Index fromIndex(Index baseIndex, Index otherIndex) {
+		return fromIndex(baseIndex, otherIndex.toArray(BigInteger[]::new));
+	}
+
+
+
 
 	public static class Adapter implements JsonSerializer<Index>, JsonDeserializer<Index> {
 		@Override
