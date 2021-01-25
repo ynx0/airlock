@@ -21,11 +21,11 @@
 #### Jan 22
 
 ##### Milestone 2
-- fix up test environment
-- make sure tests still work
-- refactor graph store api if necessary
-- cleanup documentation
-- add examples for just graph-store to main
+- fix up test environment (done jan 25)
+- make sure tests still work (done jan 25 yay)
+- refactor graph store api if necessary (done jan 25)
+- cleanup documentation (sufficiently done jan 25)
+- add simple example for just graph-store to main (done jan 25)
 - tagged release to finalize milestone 2
 
 - (optional) try using the standalone jar in another project, fix if it doesn't work 
