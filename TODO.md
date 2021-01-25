@@ -29,7 +29,7 @@
 - tagged release to finalize milestone 2
 
 - (optional) try using the standalone jar in another project, fix if it doesn't work 
-- (optional) publish test report html artifact
+- (optional) publish test report html artifact (done jan 25)
 
 ##### Milestone 3
 
@@ -44,7 +44,7 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 
 
 
-#### after miles stone 3
+#### After Milestone 3
 
 **Graph Store Stuff**
 - create helper for creating link entries
