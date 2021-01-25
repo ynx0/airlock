@@ -56,8 +56,7 @@ public class Playground {
 		CompletableFuture<PokeResponse> futurePostResponse =
 				agent.addPost(
 						chatGraph,
-						GraphAgent.createPost(
-								ship,
+						agent.createPost(
 								List.of(new TextContent("hey " + Instant.now()))
 						)
 				);
@@ -104,8 +103,7 @@ public class Playground {
 		CompletableFuture<PokeResponse> addLinkResponse =
 				agent.addPost(
 						linksGraph,
-						GraphAgent.createPost(
-								ship,
+						agent.createPost(
 								List.of(
 										new TextContent("Title of my link"),
 										new UrlContent("https://urbit.org")
