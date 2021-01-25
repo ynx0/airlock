@@ -29,6 +29,9 @@ function downloadLatestOTA() {
   # this function is necessary for fakezods because they are created from the latest boot pill, not the latest ota
   # however, if you are targeting the latest ota, you will not be able to get it because of the fact that you are a fake ship
   # this function clones urbit/urbit
+  # # #
+#  curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash  # uncomment for latest version
+  sudo apt-get install git-lfs
   git lfs install --skip-repo  # need lfs for solid.pill
   git clone --depth 1 --branch master https://github.com/urbit/urbit $OTA_PATH
 }
