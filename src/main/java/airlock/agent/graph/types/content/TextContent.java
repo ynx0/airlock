@@ -6,4 +6,11 @@ public class TextContent extends GraphContent {
 	public TextContent(String text) {
 		this.text = text;
 	}
+
+	@Override
+	public String toString() {
+		return "TextContent{" +
+				"text='" + text + '\'' +
+				'}';
+	}
 }
