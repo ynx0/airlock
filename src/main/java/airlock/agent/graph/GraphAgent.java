@@ -34,11 +34,14 @@ import static java.util.stream.StreamSupport.stream;
 
 /**
  * This class represents the client side implementation of the %graph-store api,
- * and allows you to interact with %graph-store that is running on a ship through a given channel
+ * and allows you to interact with the %graph-store gall agent that is running on a ship through a given channel.
  *
- * It does minimal state handling, i.e. keeps track of latest keys and graphs when updated,
+ * It does minimal state handling; it keeps track of the latest keys and graphs
+ * based on the <code>graph-update</code> payload it receives,
  * but does not subscribe to "/all" by default.
  */
+// todo landscape is moving away from subscribing to "/all" for some agents
+//  we should watch for what they do instead and see if we want to implement it
 public class GraphAgent extends Agent {
 
 
@@ -65,7 +68,6 @@ public class GraphAgent extends Agent {
 		// https://github.com/urbit/urbit/blob/master/pkg/interface/src/logic/reducers/graph-update.js
 		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/store/store.ts
 		// https://github.com/urbit/urbit/blob/82851feaea21cdd04d326c80c4e456e9c4f9ca8e/pkg/interface/src/logic/api/graph.ts
-		// todo potentially use a separate AgentState class. right now we'll just store state locally within the class
 		// todo custom dataclass for graph-update with all derivatives
 	}
 
@@ -110,26 +112,62 @@ public class GraphAgent extends Agent {
 	};
 		 */
 	// thought: the original api calls Date.now() multiple times instead of using a single value. is this behavior preferred or necessary?
-	// todo migrate these index strings to actual `Index`
 	// todo move this to node? it could make more sense there
-	public static Node createBlankNodeWithChildPost(String shipAuthor, String parentIndex, String childIndex, List<GraphContent> contents) {
-		parentIndex = requireNonNullElse(parentIndex, "");
-		childIndex = requireNonNullElse(childIndex, "");
+	// todo make this a set of overloaded methods instead of using `requireNonNullElse`
+	/*
 
-		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli()).toString();
-		final var nodeIndex = parentIndex + '/' + date;
+		export const createBlankNodeWithChildPost = (
+		  parentIndex: string = '',
+		  childIndex: string = '',
+		  contents: Content[]
+		) => {
+		  const date = unixToDa(Date.now()).toString();
+		  const nodeIndex = parentIndex + '/' + date;
 
-		Index parsedIndexArray = Index.fromString(childIndex);
+		  const childGraph = {};
+		  childGraph[childIndex] = {
+			post: {
+			  author: `~${window.ship}`,
+			  index: nodeIndex + '/' + childIndex,
+			  'time-sent': Date.now(),
+			  contents,
+			  hash: null,
+			  signatures: []
+			},
+			children: null
+		  };
+
+		  return {
+			post: {
+			  author: `~${window.ship}`,
+			  index: nodeIndex,
+			  'time-sent': Date.now(),
+			  contents: [],
+			  hash: null,
+			  signatures: []
+			},
+			children: childGraph
+		  };
+		};
+			 */
+	public static Node createBlankNodeWithChildPost(String shipAuthor, List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
+		parentIndex = requireNonNullElse(parentIndex, Index.createEmptyIndex());
+		childIndex = requireNonNullElse(childIndex, Index.createEmptyIndex());
+
+		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli());
+		final var nodeIndex = Index.fromIndex(parentIndex, date);
+
+		Index parsedIndexArray = new Index(childIndex);
 		if (parsedIndexArray.size() != 1) {
-			// see if we want to keep  this or not
-			throw new IllegalArgumentException("invalid index provided");
+			// see if we want to keep this or not
+			throw new IllegalArgumentException("invalid index provided with size != 1");
 		}
 		BigInteger index = parsedIndexArray.get(0);
 
 		Graph childGraph = new Graph(Map.of(index, new Node(
 				new Post(
 						ShipName.withSig(shipAuthor),
-						Index.fromString(nodeIndex + '/' + childIndex),
+						Index.fromIndex(nodeIndex, childIndex),
 						Instant.now().toEpochMilli(),
 						contents,
 						null,
@@ -141,7 +179,7 @@ public class GraphAgent extends Agent {
 		return new Node(
 				new Post(
 						ShipName.withSig(shipAuthor),
-						Index.fromString(nodeIndex),
+						nodeIndex,
 						Instant.now().toEpochMilli(),
 						Collections.emptyList(),
 						null,
@@ -188,18 +226,18 @@ export const createPost = (
 	 * @param childIndex
 	 * @return The newly created post
 	 */
-	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable String parentIndex, @Nullable String childIndex) {
+	public static Post createPost(String shipAuthor, List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
 		// todo make this api design more idiomatic by using alternative to requireNonNull api
 		// todo move this into the `Post` class instead??
-		parentIndex = requireNonNullElse(parentIndex, "");
-		childIndex = requireNonNullElse(childIndex, "DATE_PLACEHOLDER");
-		if (childIndex.equals("DATE_PLACEHOLDER")) {
-			childIndex = AirlockUtils.unixToDa(Instant.now().toEpochMilli()).toString();
+		parentIndex = requireNonNullElse(parentIndex, new Index());
+
+		if (childIndex == null) {
+			childIndex = new Index(AirlockUtils.unixToDa(Instant.now().toEpochMilli()));
 		}
 
 		return new Post(
 				shipAuthor,
-				Index.fromString(parentIndex + "/" + childIndex),
+				Index.fromIndex(parentIndex, childIndex),
 				Instant.now().toEpochMilli(),
 				contents,
 				null,
@@ -255,7 +293,7 @@ export const createPost = (
 
 	/**
 	 * Perform a `store` action with the provided payload. This method is used to send a `graph-update` to the ship.
-	 * @param payload
+	 * @param payload The payload to send
 	 * @return A future {@link PokeResponse}
 	 * @throws AirlockResponseError
 	 * @throws AirlockRequestError
@@ -733,9 +771,6 @@ export const createPost = (
 	}
 
 
-	public void getNewest(Resource resource, int count) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		getNewest(resource, count, "");
-	}
 
 
 	/**
@@ -749,15 +784,17 @@ export const createPost = (
 	 * @throws AirlockResponseError
 	 * @throws AirlockRequestError
 	 */
-	public void getNewest(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		// todo document this better
-		final var data = this.urbit.scryRequest("graph-store", "/newest/" + resource.urlForm() + "/" + count + index);
+	public void getNewest(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		// todo document this better. I don't even know what it does myself
+		final var data = this.urbit.scryRequest("graph-store", "/newest/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		// thing to do: look at example payload and how it is used
 		// there is only one usage, which is here: https://github.com/urbit/urbit/blob/master/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
 	}
-	
-	
+
+	public void getNewest(Resource resource, int count) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		getNewest(resource, count, Index.createEmptyIndex());
+	}
 
 	/*
 
@@ -769,10 +806,8 @@ export const createPost = (
     this.store.handleEvent({ data });
   }
 */
-	public void getOlderSiblings(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		// todo fix and ensure that getOlderSiblings/getYoungerSiblings both work
-		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + resource.urlForm() + "/" + count + idx);
+	public void getOlderSiblings(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/older/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
@@ -788,9 +823,8 @@ export const createPost = (
   }
 	*/
 
-	public void getYoungerSiblings(Resource resource, int count, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + resource.urlForm() + "/" + count + idx);
+	public void getYoungerSiblings(Resource resource, int count, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + resource.urlForm() + "/" + count + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 	}
 
@@ -830,16 +864,8 @@ export const createPost = (
   }
 }
 */
-	public JsonElement getNode(String ship, String resource, String index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
-		// todo unpack the following mystery meat code for idx
-		//  it is unclear to me what the inputs and outputs to this are, reading it like 2 days later
-		// it would be best to see what the source is actually doing and replicate that rather than just blindly translating
-		final var idx = Arrays.stream(index.split("/")).map(AirlockUtils::decToUd).collect(Collectors.joining("/"));
-		// i think this is because index can be something like 1 turns to 2
-		// source (unix timestamp): 16555555555/2
-		// processed (@da timestamp): /17055555555555555555555555555555/2
-		//
-		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + idx);
+	public JsonElement getNode(String ship, String resource, Index index) throws ScryDataNotFoundException, ScryFailureException, AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
+		final var data = this.urbit.scryRequest("graph-store", "/node-siblings/younger/" + ship + "/" + resource + "/" + index.asString());
 		this.updateState(data.getAsJsonObject().getAsJsonObject("graph-update"));
 		return data;
 	}
