@@ -1,5 +1,9 @@
+### Jan 25
+I found [this](https://stackoverflow.com/questions/2683182/how-and-where-do-you-define-your-own-exception-hierarchy-in-java) 
+link which has some commentary on exception hierarchies. This was pretty much the only place I could find which actually 
+talked about the situation I was in.
 
-
+---
 ### Dec 25
 One thing to watch out for is whether you need a `~` or not in a ship name property.
 This is because urbit wants ships with sigs sometimes and sometimes will not. But it will treat them as two different things.
