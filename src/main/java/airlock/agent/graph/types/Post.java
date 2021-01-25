@@ -97,17 +97,20 @@ public class Post {
 	public static class Adapter implements JsonSerializer<Post>, JsonDeserializer<Post> {
 		@Override
 		public Post deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-			JsonObject postObj = json.getAsJsonObject();
 			Type contentList = new TypeToken<List<GraphContent>>() {
 			}.getType();
 			Type signatureList = new TypeToken<List<String>>() {
 			}.getType();
+
+			JsonObject postObj = json.getAsJsonObject();
+			JsonElement hashObj = postObj.get("hash");
+			String hash = hashObj.isJsonNull() ? null : hashObj.getAsString();
 			return new Post(
 					postObj.get("author").getAsString(),
 					Index.fromString(postObj.get("index").getAsString()),
 					postObj.get("time-sent").getAsLong(),
 					context.deserialize(postObj.get("contents").getAsJsonArray(), contentList),
-					postObj.get("hash").getAsString(),
+					hash,
 					context.deserialize(postObj.get("signatures").getAsJsonArray(), signatureList)
 			);
 		}
