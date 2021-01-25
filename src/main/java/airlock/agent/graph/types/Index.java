@@ -62,12 +62,13 @@ public class Index extends ArrayList<BigInteger>  {
 	 * @return the resulting "deep index"
 	 */
 	public static Index fromString(String indexStr) {
-		return (Index) Arrays
+		return new Index(
+				Arrays
 				.stream(indexStr.split("/"))
 				.skip(1)
 				.map(BigInteger::new)
 				.collect(Collectors.toList())
-				;
+		);
 	}
 
 
