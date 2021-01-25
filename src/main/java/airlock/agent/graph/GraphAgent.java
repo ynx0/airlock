@@ -847,6 +847,8 @@ export const createPost = (
 	 * @param graphUpdate The payload representing the graph update
 	 */
 
+	// todo make sure that this is being called properly. i.e. if the request fails but we still update the state,
+	//  that would erroneously look like the request completed successfully. we need to investigate how landscape handles pending messages nad then if they didnt complete.
 	// could also be called `reduce`
 	private void updateState(@NotNull JsonObject graphUpdate) {
 		// expects the object associated with the key "graph-update"

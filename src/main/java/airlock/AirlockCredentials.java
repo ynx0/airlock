@@ -2,6 +2,7 @@ package airlock;
 
 import java.net.URL;
 
+// todo add docs
 public class AirlockCredentials {
 
 	public final URL url;
