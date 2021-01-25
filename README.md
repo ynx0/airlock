@@ -73,11 +73,11 @@ However, if you want to try it out, you can download the jar without actually do
     - [x] `spider`
 - [x] Custom Exceptions for core interface 
 
-- [ ] `graph-store`
-    - [ ] Initial functional implementation of interface 
-    - [ ] Graph store tests
-    - [ ] Graph store documentation
-    - [ ] Graph store examples
+- [x] `graph-store`
+    - [x] Initial functional implementation of interface 
+    - [x] Graph store tests
+    - [x] Graph store documentation
+    - [x] Graph store examples
 
 - [ ] Other gall agent interfaces
 

@@ -8,8 +8,8 @@
 - cleanup Main.java. make it simpler
 
 ## Mid Term
-- see if i want dataclasses to be immutable, use getters, or just completely public access to instance variables
-    - for now, just to get things working, i will make the mpublic but in the future i should make getters for them or
+- see if I want dataclasses to be immutable, use getters, or just completely public access to instance variables
+    - for now, just to get things working, I will make the public but in the future I should make getters for them or
       make them immutable copies style modifications.
 
 - make certain dataclasses final where it makes sense (e.g. `EyreResponse`, `PokeResponse`, `SubscribeEvent`)
@@ -18,20 +18,7 @@
 
 ### Development Roadmap
 
-#### Jan 22
-
-##### Milestone 2
-- fix up test environment (done jan 25)
-- make sure tests still work (done jan 25 yay)
-- refactor graph store api if necessary (done jan 25)
-- cleanup documentation (sufficiently done jan 25)
-- add simple example for just graph-store to main (done jan 25)
-- ~~add graph-store unit tests~~ do this later once apps is finished
-- merge graph-store branch into master
-- tagged release to finalize milestone 2
-
-- (optional) try using the standalone jar in another project, fix if it doesn't work 
-- (optional) publish test report html artifact (done jan 25)
+#### Jan 25
 
 ##### Milestone 3
 
@@ -42,7 +29,6 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 
 - `%group-store`
 - `%metadata-store`
-
 
 
 
@@ -88,10 +74,6 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 - integrate above into tests - also try to go for full coverage if possible but this can come later
 - [optional] add experimental methods which are in hoon but not in Landscape
     - things like {add,remove}x{tags,signatures}, {archive,unarchive}graph
-- finalize api and refactorings - data classes for `graph-update` payload for example
-- document
-- tag
-- automate boot pill creation of master or updating os from master for environment
 
 ##### graph-store apps guide outline
 
@@ -141,6 +123,23 @@ TODO
 
 ## Completed Items
 
+### Milestone 2
+- fix up test environment (done jan 25)
+- automate boot pill creation of master or updating os from master for environment (done jan 25)
+- make sure tests still work (done jan 25 yay)
+- refactor graph store api if necessary (done jan 25)
+- cleanup documentation (sufficiently done jan 25)
+- add simple example for just graph-store to main (done jan 25)
+- ~~add graph-store unit tests~~ do this later once apps is finished
+- merge graph-store branch into master (done jan 25)
+- tagged release to finalize milestone 2
+
+- (optional) try using the standalone jar in another project, fix if it doesn't work
+- (optional) publish test report html artifact (done jan 25)
+
+
+
+### Dec 29
 - [Dec 29] update to be in sync with master. current code is porting outdated `graph.ts`
 - [Dec 27] make types based on sur/graph-store and whatnot
 - [Dec 27] make type adapters for various new types? (sufficiently done)
