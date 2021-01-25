@@ -23,18 +23,12 @@ public class Main {
 		Urbit urbit = new Urbit(url, shipName, code);
         urbit.authenticate();
 		urbit.connect();
-        
-        // MARK - create a mailbox subscription on a channel named 'test' 
-		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
-			System.out.println("[Subscribe Event]");
-			System.out.println(subscribeEvent);
-		});
 	}
 }
 
 ```
 
-For the most up to date usage examples, see `src/test/java/UrbitIntegrationTestsCore.java`.
+For the most up to date usage examples, see `src/test/java/UrbitIntegrationTestsCore.java` and related.
 
 The file `src/main/java/Main.java` serves as a starting point to experiment with the library, 
 but may not showcase all features and functionality of the api. 
