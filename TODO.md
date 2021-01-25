@@ -26,6 +26,8 @@
 - refactor graph store api if necessary (done jan 25)
 - cleanup documentation (sufficiently done jan 25)
 - add simple example for just graph-store to main (done jan 25)
+- ~~add graph-store unit tests~~ do this later once apps is finished
+- merge graph-store branch into master
 - tagged release to finalize milestone 2
 
 - (optional) try using the standalone jar in another project, fix if it doesn't work 
