@@ -200,11 +200,13 @@ Here is a list of each function and what it does:
 Here is the logic to set up the environment according to Method 2, found at: 
 https://github.com/ynx0/urbit/blob/master/test_environment/setup_env.sh
 
+XX: todo update this section to reflect ota changes
 
 ```bash
 # test_environment/setup_env.sh
 
 REBUILD=false
+OTA=true
 source ./setup_env_lib.sh					# import the functions from the library file
 
 								# 1: Download Urbit Runtime
@@ -292,6 +294,14 @@ The script:
 
 This script is handy for when you run the `setup_fakezod.sh` script in a local environment and don't want to leave your fakezod running.
 
+#### Manual OTAs
+
+It may be desirable to be able to target the latest OTA and build tests around it.
+However, this is not possible through the default fakezod creation process. 
+Instead, one must manually perform the ota by manually cloning the `urbit/urbit` repository,
+then running the urbit binary with the appropriate flags, while also ensuring that `git-lfs` is installed in order to properly clone the boot pills.
+
+Method 2 provides this functionality by simply setting the `OTA` variable to true in the `setup_env.sh` script.
 
 ## Using the Scripts - Integrating with GitHub Actions
 

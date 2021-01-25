@@ -1,0 +1,51 @@
+# LOGIN
+POST localhost/~/login
+Content-Type: application/x-www-form-urlencoded
+
+password=toprus-dopsul-dozmep-hocbep
+
+###
+
+# suceeds
+# curl -X 'PUT' -H 'Connection: keep-alive' -H 'Content-Type: application/json' -H 'Cookie: urbauth-~zod=0v6.okdli.f0pin.fds46.218rh.qnpov; urbauth-~sipfyn-pidmex=0v7.bb8er.4636n.gnap2.rgjan.l3p93' --data '[{"id":15,"action":"poke","ship":"sipfyn-pidmex","app":"graph-push-hook","mark":"graph-update","json":{"add-nodes":{"resource":{"ship":"~sipfyn-pidmex","name":"test-chat-from-http-runner-1"},"nodes":{"/170141184504830208844983581918819417869":{"post":{"author":"~sipfyn-pidmex","index":"/170141184504830208844983581918819417869","time-sent":1608849820268,"contents":[{"text":"j"}],"hash":null,"signatures":[]},"children":null}}}}}]' http://localhost/~/channel/1608849813582-ad659e
+PUT http://localhost/~/channel/1608849813582-ad659e
+Connection: keep-alive
+Content-Type: application/json
+
+[
+  {
+    "id": 15,
+    "action": "poke",
+    "ship": "sipfyn-pidmex",
+    "app": "graph-push-hook",
+    "mark": "graph-update",
+    "json": {
+      "add-nodes": {
+        "resource": {
+          "ship": "~sipfyn-pidmex",
+          "name": "test-chat-from-http-runner-1"
+        },
+        "nodes": {
+          "/170141184504830208844983581918819418888": {
+            "post": {
+              "author": "~sipfyn-pidmex",
+              "index": "/170141184504830208844983581918819418888",
+              "time-sent": 1608849828888,
+              "contents": [
+                {
+                  "text": "asdf"
+                }
+              ],
+              "hash": null,
+              "signatures": []
+            },
+            "children": null
+          }
+        }
+      }
+    }
+  }
+]
+
+###
+

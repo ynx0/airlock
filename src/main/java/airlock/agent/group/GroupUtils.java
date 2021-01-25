@@ -1,6 +1,6 @@
 package airlock.agent.group;
 
-import airlock.agent.graph.Resource;
+import airlock.agent.graph.types.Resource;
 
 public class GroupUtils {
 
@@ -8,9 +8,10 @@ public class GroupUtils {
 	// lib/group.ts
 
 	/**
-	 * // takes in input of the form "~landscape/ship/~bitbet-bolbel/urbit-community"
+	 * takes in input of the form "~landscape/ship/~bitbet-bolbel/urbit-community"
+	 *
 	 * @param pathOfGroup the full path to the group, including extra data from t=
-	 * @return
+	 * @return the resource that is represented by the path of the group given
 	 */
 	public static Resource resourceFromPath(String pathOfGroup) {
 
@@ -28,6 +29,7 @@ public class GroupUtils {
 
 
 	public static Resource makeResource(String shipName, String name) {
+		// todo do I even need this? it just calls a constructor
 		return new Resource(
 				shipName,
 				name

@@ -1,0 +1,33 @@
+# LOGIN
+POST localhost/~/login
+Content-Type: application/x-www-form-urlencoded
+
+password=toprus-dopsul-dozmep-hocbep
+###
+
+POST http://localhost/spider/graph-view-action/graph-create/json.json
+Connection: keep-alive
+Content-Type: application/json
+
+{
+  "create": {
+    "resource": {
+      "ship": "~sipfyn-pidmex",
+      "name": "test-chat-from-http-runner-1"
+    },
+    "title": "test chat :DDD",
+    "description": "test description",
+    "associated": {
+      "group": {
+        "ship": "~sipfyn-pidmex",
+        "name": "my-own-stuff"
+      }
+    },
+    "module": "chat",
+    "mark": "graph-validator-chat"
+  }
+}
+
+###
+
+

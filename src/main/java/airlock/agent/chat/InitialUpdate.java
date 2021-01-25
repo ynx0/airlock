@@ -2,7 +2,8 @@ package airlock.agent.chat;
 
 import java.util.List;
 
-public class InitialUpdate {
+@Deprecated
+class InitialUpdate {
 	public final List<Envelope> envelopes;
 	public final ChatConfig config;
 

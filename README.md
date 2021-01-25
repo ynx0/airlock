@@ -23,18 +23,12 @@ public class Main {
 		Urbit urbit = new Urbit(url, shipName, code);
         urbit.authenticate();
 		urbit.connect();
-        
-        // MARK - create a mailbox subscription on a channel named 'test' 
-		int subscriptionID = urbit.subscribe(urbit.getShipName(), "chat-store", "/mailbox/~zod/test", subscribeEvent -> {
-			System.out.println("[Subscribe Event]");
-			System.out.println(subscribeEvent);
-		});
 	}
 }
 
 ```
 
-For the most up to date usage examples, see `src/test/java/UrbitIntegrationTests.java`.
+For the most up to date usage examples, see `src/test/java/UrbitIntegrationTestsCore.java` and related.
 
 The file `src/main/java/Main.java` serves as a starting point to experiment with the library, 
 but may not showcase all features and functionality of the api. 
@@ -77,6 +71,7 @@ However, if you want to try it out, you can download the jar without actually do
 - [ ] Integration for `scry` and `spider`
     - [x] `scry`
     - [x] `spider`
+- [x] Custom Exceptions for core interface 
 
 - [ ] `graph-store`
     - [ ] Initial functional implementation of interface 

@@ -1,9 +1,10 @@
 package airlock.agent.chat;
 
-import airlock.Urbit;
+import airlock.AirlockChannel;
 
 import java.time.Instant;
 
+@Deprecated
 public class ChatUtils {
 
 	/**
@@ -50,11 +51,11 @@ public class ChatUtils {
 	}
 
 	public static MessagePayload createMessagePayload(String path, String author, long when, String textContent) {
-		return ChatUtils.createMessagePayload(path, Urbit.uid(), author, when, textContent);
+		return ChatUtils.createMessagePayload(path, AirlockChannel.uid(), author, when, textContent);
 	}
 
 	public static MessagePayload createMessagePayload(String path, String author, String textContent) {
-		return ChatUtils.createMessagePayload(path, Urbit.uid(), author, Instant.now().toEpochMilli(), textContent);
+		return ChatUtils.createMessagePayload(path, AirlockChannel.uid(), author, Instant.now().toEpochMilli(), textContent);
 	}
 
 }

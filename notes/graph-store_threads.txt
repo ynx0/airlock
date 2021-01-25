@@ -1,0 +1,27 @@
+# implemented
++graph-store-add-graph			::  graph-store|add-graph: add new graph
++graph-store-add-post			::  graph-store|add-post: add post to a graph
++graph-store-remove-graph		::  graph-store|remove-graph: remove graph
++graph-store-remove-nodes		::  graph-store|remove-nodes: remove nodes from a graph at indices
+
+# unimplemented
++graph-store-add-signatures		::  graph-store|add-signatures: add signatures to a node at a particular uid
++graph-store-remove-signatures	::  graph-store|remove-signatures: remove signatures from a node at a
++graph-store-add-tag			::  graph-store|add-tag: tag a particular graph
++graph-store-remove-tag			::  graph-store|remove-tag: remove a tag from a particular graph
++graph-store-archive-graph		::  graph-store|archive-graph: archive graph
++graph-store-unarchive-graph	::  graph-store|unarchive-graph: unarchive graph
+
+# wont implement
++graph-store-export-graph     <undocumented>
++graph-store-import-graph     <undocumented>
+
+
++group-store-add				::  group-store|add: add members to a group
++group-store-allow-ranks		::  group-store|allow-ranks: allow ranks for group
++group-store-allow-ships		::  group-store|allow-ships: remove ships from banlist
++group-store-ban-ranks			::  group-store|ban-ranks: ban ranks for group
++group-store-ban-ships			::  group-store|ban-ships: ban members from a group
++group-store-create				::  group-store|create: initialize a group
++group-store-join				::  group-store|join: join a group
++group-store-remove				::  group-store|remove: remove members from a group
