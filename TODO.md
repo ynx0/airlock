@@ -4,8 +4,7 @@
 
 - move towards stable master
 - up to date examples once everything stabilizes
-- upload junit report test.html as github actions artifact
-- cleanup Main.java. make it simpler
+- remove lombok dependency (?)
 
 ## Mid Term
 - see if I want dataclasses to be immutable, use getters, or just completely public access to instance variables
@@ -14,15 +13,13 @@
 
 - make certain dataclasses final where it makes sense (e.g. `EyreResponse`, `PokeResponse`, `SubscribeEvent`)
 
-## Current Focus — `%graph-store`
+## Development Roadmap
 
-### Development Roadmap
+Current Focus — Milestone 3
 
-#### Jan 25
+### Milestone 3
 
-##### Milestone 3
-
-To fulfill this milestone there needs to be 2 gall agents. 
+To fulfill this milestone there needs to be clients for 2 gall agents. 
 Right now, I've chosen group-store and metadata-store, but I may need to re-evaluate that.
 Also, there is a new agent to consider, settings-store. 
 Something to consider is that metadata-store is in the process of a rewrite (see PR: metadata-store: modernisation)
@@ -32,7 +29,7 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 
 
 
-#### After Milestone 3
+### After Milestone 3
 
 **Graph Store Stuff**
 - create helper for creating link entries
@@ -75,7 +72,7 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 - [optional] add experimental methods which are in hoon but not in Landscape
     - things like {add,remove}x{tags,signatures}, {archive,unarchive}graph
 
-##### graph-store apps guide outline
+### graph-store apps guide outline
 
 (should be platform-independent)
 
@@ -122,6 +119,9 @@ Something to consider is that metadata-store is in the process of a rewrite (see
 TODO
 
 ## Completed Items
+
+### Long Term
+- upload junit report test.html as github actions artifact
 
 ### Milestone 2
 - fix up test environment (done jan 25)
