@@ -1,12 +1,31 @@
 package airlock;
 
+import airlock.types.ShipName;
+
 import java.net.URL;
 
-// todo add docs
+import static java.util.Objects.requireNonNull;
+
+/**
+ * The set of information needed to connect to a ship.
+ */
 public class AirlockCredentials {
 
+
+	/**
+	 * The URL representing the location where eyre is listening for requests on the ship
+	 */
 	public final URL url;
-	public final String ship;
+
+	/**
+	 * The name of the ship that we are connecting to. (the @p without '~')
+	 */
+	public final String ship; // canonically, this is PatpNoSig
+
+	/**
+	 * The code is the deterministic password used to authenticate with an Urbit ship
+	 * It can be obtained by running `+code` in the dojo.
+	 */
 	public final String code;
 
 	/**
@@ -16,9 +35,12 @@ public class AirlockCredentials {
 	 * @param code     The access code for the ship at that address
 	 */
 	public AirlockCredentials(URL url, String ship, String code) {
-		this.url = url;
-		this.ship = ship;
-		this.code = code;
+		requireNonNull(url, "Please provide a url");
+		requireNonNull(ship, "Please provide a ship name");
+		requireNonNull(code, "Please provide a code");
+		this.url = AirlockUtils.normalizeOrBust(url);
+		this.ship = ShipName.withoutSig(ship); // by default, our ship name should be without a `sig`, as this is what's sent by the payload.
+		this.code = code; // todo: wishlist: validate code format
 	}
 
 }
