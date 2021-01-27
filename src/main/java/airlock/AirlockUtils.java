@@ -4,6 +4,7 @@ import airlock.agent.graph.types.Graph;
 import airlock.agent.graph.types.Index;
 import airlock.agent.graph.types.NodeMap;
 import airlock.agent.graph.types.Post;
+import airlock.agent.graph.types.content.CodeContent;
 import airlock.agent.graph.types.content.GraphContent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,6 +32,7 @@ public class AirlockUtils {
 			.registerTypeAdapter(NodeMap.class, NodeMap.ADAPTER)
 			.registerTypeAdapter(Index.class, Index.ADAPTER)
 			.registerTypeAdapter(Post.class, Post.ADAPTER)
+			.registerTypeAdapter(CodeContent.class, CodeContent.ADAPTER)
 			.serializeNulls() // necessary because certain payloads that we send / receive need explicit nulls. by default gson just omits the properties which will not work
 			.create();
 
