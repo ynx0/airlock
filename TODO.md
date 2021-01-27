@@ -15,17 +15,33 @@
 
 ## Development Roadmap
 
-Current Focus — Milestone 3
+Current Focus — Refactor Before Next Dev Cycle
+
+### Refactoring — Jan 27
+
+Basically, I want to get some todos and stuff out of the way before embarking on the next milestone.
+
 
 ### Milestone 3
 
-To fulfill this milestone there needs to be clients for 2 gall agents. 
-Right now, I've chosen group-store and metadata-store, but I may need to re-evaluate that.
-Also, there is a new agent to consider, settings-store. 
-Something to consider is that metadata-store is in the process of a rewrite (see PR: metadata-store: modernisation)
+To fulfill this milestone there needs to be clients for 2 gall agents.
+I have chosen `%group-store` and`%invite-store`.
 
-- `%group-store`
-- `%metadata-store`
+- [ ] `%invite-store`
+    - [ ] initial research and notes
+    - [ ] experimentation, payload analysis
+    - [ ] baseline port of data structures and some api functionality
+    - [ ] complete port
+    - [ ] unit tests
+    - [ ] documentation
+
+- [ ] `%group-store`
+      - [ ] initial research and notes
+      - [ ] experimentation, payload analysis
+      - [ ] baseline port of data structures and some api functionality
+      - [ ] complete port
+      - [ ] unit tests
+      - [ ] documentation
 
 
 
