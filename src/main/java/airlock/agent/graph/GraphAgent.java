@@ -132,9 +132,7 @@ public class GraphAgent extends Agent {
 						ShipName.withSig(this.channel.getShipName()),
 						Index.fromIndex(nodeIndex, childIndex),
 						AirlockUtils.currentTimeMS(),
-						contents,
-						null,
-						Collections.emptyList()
+						contents
 				),
 				new Graph()
 		)));
@@ -144,8 +142,6 @@ public class GraphAgent extends Agent {
 						ShipName.withSig(this.channel.getShipName()),
 						nodeIndex,
 						currentTimeMS(),
-						Collections.emptyList(),
-						null,
 						Collections.emptyList()
 				),
 				childGraph
@@ -201,9 +197,7 @@ export const createPost = (
 				this.channel.getShipName(),
 				Index.fromIndex(parentIndex, childIndex),
 				currentTimeMS(),
-				contents,
-				null,
-				Collections.emptyList()
+				contents
 		);
 
 	}
