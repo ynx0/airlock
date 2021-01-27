@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,10 +35,18 @@ public class AirlockUtils {
 			.serializeNulls() // necessary because certain payloads that we send / receive need explicit nulls. by default gson just omits the properties which will not work
 			.create();
 
+	/**
+	 * Returns the current time in milliseconds. Convenience method around <code>Instant.now().toEpochMilli()</code>
+	 * @return the current time in ms
+	 */
+	public static long currentTimeMS() {
+		// Maybe this is bad practice but I don't feel like typing this out over and over again
+		return Instant.now().toEpochMilli();
+	}
+
 	public static String decToUd(String ud) {
 		return ud.replaceAll("/\\./g", "");
 	}
-
 
 	public static BigInteger unixToDa(long unix) {
 		final var timeSinceEpoch = new BigInteger(String.valueOf(unix)).multiply(DA_SECOND).divide(new BigInteger(String.valueOf(1000)));
