@@ -49,7 +49,7 @@ public class CodeContent extends GraphContent {
 	public static final Adapter ADAPTER = new Adapter();
 
 
-	// todo when serialized, the payload looks like this:
+	// when serialized, the payload looks like this:
 	/*
 		"contents": [
 		            {

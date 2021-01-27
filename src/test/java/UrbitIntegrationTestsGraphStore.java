@@ -57,7 +57,7 @@ public class UrbitIntegrationTestsGraphStore {
 	@Order(1)
 	public void canCreateGraph() throws Exception {
 		await().until(urbit::isConnected);
-		// todo create the group
+
 		JsonElement responseJson = graphStoreAgent.createManagedGraph(
 				GRAPH_NAME,
 				GRAPH_TITLE,
