@@ -27,8 +27,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static airlock.AirlockUtils.gson;
-import static airlock.AirlockUtils.map2json;
+import static airlock.AirlockUtils.*;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.StreamSupport.stream;
 
@@ -118,7 +117,7 @@ public class GraphAgent extends Agent {
 		parentIndex = requireNonNullElse(parentIndex, Index.createEmptyIndex());
 		childIndex = requireNonNullElse(childIndex, Index.createEmptyIndex());
 
-		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli());
+		final var date = AirlockUtils.unixToDa(AirlockUtils.currentTimeMS());
 		final var nodeIndex = Index.fromIndex(parentIndex, date);
 
 		Index parsedIndexArray = new Index(childIndex);
@@ -132,7 +131,7 @@ public class GraphAgent extends Agent {
 				new Post(
 						ShipName.withSig(this.channel.getShipName()),
 						Index.fromIndex(nodeIndex, childIndex),
-						Instant.now().toEpochMilli(),
+						AirlockUtils.currentTimeMS(),
 						contents,
 						null,
 						Collections.emptyList()
@@ -144,7 +143,7 @@ public class GraphAgent extends Agent {
 				new Post(
 						ShipName.withSig(this.channel.getShipName()),
 						nodeIndex,
-						Instant.now().toEpochMilli(),
+						currentTimeMS(),
 						Collections.emptyList(),
 						null,
 						Collections.emptyList()
@@ -195,13 +194,13 @@ export const createPost = (
 		parentIndex = requireNonNullElse(parentIndex, new Index());
 
 		if (childIndex == null) {
-			childIndex = new Index(AirlockUtils.unixToDa(Instant.now().toEpochMilli()));
+			childIndex = new Index(AirlockUtils.unixToDa(currentTimeMS()));
 		}
 
 		return new Post(
 				this.channel.getShipName(),
 				Index.fromIndex(parentIndex, childIndex),
-				Instant.now().toEpochMilli(),
+				currentTimeMS(),
 				contents,
 				null,
 				Collections.emptyList()

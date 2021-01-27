@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static airlock.AirlockUtils.currentTimeMS;
 import static airlock.AirlockUtils.map2json;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,7 +29,7 @@ public class UrbitIntegrationTestsGraphStore {
 
 	private static AirlockChannel urbit;
 	private static GraphAgent graphStoreAgent;
-	public static final long NOW = Instant.now().toEpochMilli();
+	public static final long NOW = currentTimeMS();
 	public static final String GRAPH_NAME = "test-chat-" + NOW;
 	public static final String GRAPH_TITLE = "Test Graph Created " + NOW;
 	public static final String GRAPH_DESCRIPTION = "graph for testing only! having fun strictly prohibited";

@@ -750,7 +750,7 @@ public class AirlockChannel {
 
 	@NotNull
 	public static String generateChannelID() {
-		return Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + AirlockChannel.hexString(6);
+		return Math.round(Math.floor(AirlockUtils.currentTimeMS())) + "-" + AirlockChannel.hexString(6);
 	}
 
 
