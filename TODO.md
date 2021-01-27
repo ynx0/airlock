@@ -5,6 +5,7 @@
 - move towards stable master
 - up to date examples once everything stabilizes
 - remove lombok dependency (?)
+- write a lot more tests. also test more thoroughly
 
 ## Mid Term
 - see if I want dataclasses to be immutable, use getters, or just completely public access to instance variables
@@ -15,12 +16,7 @@
 
 ## Development Roadmap
 
-Current Focus — Refactor Before Next Dev Cycle
-
-### Refactoring — Jan 27
-
-Basically, I want to get some todos and stuff out of the way before embarking on the next milestone.
-
+Current Focus — Milestone 3
 
 ### Milestone 3
 
