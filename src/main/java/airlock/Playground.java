@@ -31,7 +31,7 @@ public class Playground {
 		Publisher publisher = new Publisher(channel);
 
 
-		long NOW = Instant.now().toEpochMilli();
+		long NOW = AirlockUtils.currentTimeMS();
 		Resource testGroup = new Resource(ship, "my-own-stuff"); // we are assuming this group already exists
 
 		// todo: landscape subscribes to `/all` on graph-store so it may be getting back messages
@@ -64,7 +64,6 @@ public class Playground {
 		assert futurePostResponse.get().success;
 		System.out.println(agent.getCurrentGraphs());
 
-		// todo whats the diff between get newest vs getYounger/Older
 		// entrypoint: https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/chat/components/ChatWindow.tsx#L200
 		// the above line of code has the landscape logic for fetching messages
 		// ChatResource wraps ChatWindow and ChatInput.
@@ -186,7 +185,7 @@ public class Playground {
 		// 2. publish to the notebook
 
 		// a. create post
-		long timeSent = Instant.now().toEpochMilli();
+		long timeSent = AirlockUtils.currentTimeMS();
 		NodeMap newPublishPost = publisher.newPost("Title of My Blog Post", "Body Content", timeSent);
 
 		// b. add notebook post

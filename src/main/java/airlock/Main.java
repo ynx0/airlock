@@ -30,7 +30,7 @@ public class Main {
 		channel.connect();      // establishes the ServerSideEvent (SSE) client. this is what is used to receive all responses from the ship
 
 		GraphAgent agent = new GraphAgent(channel);
-		long NOW = Instant.now().toEpochMilli();
+		long NOW = AirlockUtils.currentTimeMS();
 		Resource testGroup = new Resource(channel.getShipName(), "test-group"); // we are assuming this group already exists
 
 		// 1. create a chat

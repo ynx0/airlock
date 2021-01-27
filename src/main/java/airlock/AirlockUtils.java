@@ -4,6 +4,7 @@ import airlock.agent.graph.types.Graph;
 import airlock.agent.graph.types.Index;
 import airlock.agent.graph.types.NodeMap;
 import airlock.agent.graph.types.Post;
+import airlock.agent.graph.types.content.CodeContent;
 import airlock.agent.graph.types.content.GraphContent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,12 +15,12 @@ import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
 public class AirlockUtils {
 
-	// todo since we use `Instant.now().toEpochMilli` a lot, maybe just extract that out to a method here
 
 	public static final BigInteger DA_UNIX_EPOCH = new BigInteger("170141184475152167957503069145530368000"); // `@ud` ~1970.1.1
 	public static final BigInteger DA_SECOND = new BigInteger("18446744073709551616"); // `@ud` ~s1
@@ -31,13 +32,22 @@ public class AirlockUtils {
 			.registerTypeAdapter(NodeMap.class, NodeMap.ADAPTER)
 			.registerTypeAdapter(Index.class, Index.ADAPTER)
 			.registerTypeAdapter(Post.class, Post.ADAPTER)
+			.registerTypeAdapter(CodeContent.class, CodeContent.ADAPTER)
 			.serializeNulls() // necessary because certain payloads that we send / receive need explicit nulls. by default gson just omits the properties which will not work
 			.create();
+
+	/**
+	 * Returns the current time in milliseconds. Convenience method around <code>Instant.now().toEpochMilli()</code>
+	 * @return the current time in ms
+	 */
+	public static long currentTimeMS() {
+		// Maybe this is bad practice but I don't feel like typing this out over and over again
+		return Instant.now().toEpochMilli();
+	}
 
 	public static String decToUd(String ud) {
 		return ud.replaceAll("/\\./g", "");
 	}
-
 
 	public static BigInteger unixToDa(long unix) {
 		final var timeSinceEpoch = new BigInteger(String.valueOf(unix)).multiply(DA_SECOND).divide(new BigInteger(String.valueOf(1000)));

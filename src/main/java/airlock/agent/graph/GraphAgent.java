@@ -27,8 +27,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static airlock.AirlockUtils.gson;
-import static airlock.AirlockUtils.map2json;
+import static airlock.AirlockUtils.*;
 import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.StreamSupport.stream;
 
@@ -118,7 +117,7 @@ public class GraphAgent extends Agent {
 		parentIndex = requireNonNullElse(parentIndex, Index.createEmptyIndex());
 		childIndex = requireNonNullElse(childIndex, Index.createEmptyIndex());
 
-		final var date = AirlockUtils.unixToDa(Instant.now().toEpochMilli());
+		final var date = AirlockUtils.unixToDa(AirlockUtils.currentTimeMS());
 		final var nodeIndex = Index.fromIndex(parentIndex, date);
 
 		Index parsedIndexArray = new Index(childIndex);
@@ -132,10 +131,8 @@ public class GraphAgent extends Agent {
 				new Post(
 						ShipName.withSig(this.channel.getShipName()),
 						Index.fromIndex(nodeIndex, childIndex),
-						Instant.now().toEpochMilli(),
-						contents,
-						null,
-						Collections.emptyList()
+						AirlockUtils.currentTimeMS(),
+						contents
 				),
 				new Graph()
 		)));
@@ -144,9 +141,7 @@ public class GraphAgent extends Agent {
 				new Post(
 						ShipName.withSig(this.channel.getShipName()),
 						nodeIndex,
-						Instant.now().toEpochMilli(),
-						Collections.emptyList(),
-						null,
+						currentTimeMS(),
 						Collections.emptyList()
 				),
 				childGraph
@@ -190,23 +185,24 @@ export const createPost = (
 	 * @return The newly created post
 	 */
 	public Post createPost(List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
-		// todo make this api design more idiomatic by using alternative to requireNonNull api
-		// todo move this into the `Post` class instead??
+		// maybe find a better way to write this api to not have to use requireNonNull
 		parentIndex = requireNonNullElse(parentIndex, new Index());
 
 		if (childIndex == null) {
-			childIndex = new Index(AirlockUtils.unixToDa(Instant.now().toEpochMilli()));
+			childIndex = new Index(AirlockUtils.unixToDa(currentTimeMS()));
 		}
 
 		return new Post(
 				this.channel.getShipName(),
 				Index.fromIndex(parentIndex, childIndex),
-				Instant.now().toEpochMilli(),
-				contents,
-				null,
-				Collections.emptyList()
+				currentTimeMS(),
+				contents
 		);
 
+	}
+
+	public Post createPost(List<GraphContent> contents, Index parentIndex) {
+		return this.createPost(contents, parentIndex, null);
 	}
 
 	public Post createPost(List<GraphContent> contents) {

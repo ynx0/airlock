@@ -94,7 +94,7 @@ public class Post {
 	}
 
 
-	public static class Adapter implements JsonSerializer<Post>, JsonDeserializer<Post> {
+	private static class Adapter implements JsonSerializer<Post>, JsonDeserializer<Post> {
 		@Override
 		public Post deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			Type contentList = new TypeToken<List<GraphContent>>() {

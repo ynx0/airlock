@@ -32,16 +32,11 @@ import static java.util.Objects.requireNonNull;
  */
 public class AirlockChannel {
 
-	/**
-	 * The code is the deterministic password used to authenticate with an Urbit ship
-	 * It can be obtained by running `+code` in the dojo.
-	 */
-	private final String code;
 
 	/**
-	 * The URL representing the location where eyre is listening for requests on the ship
+	 * The credentials used to connect to the desired ship
 	 */
-	private final URL url;
+	private final AirlockCredentials credentials;
 
 
 	/**
@@ -71,11 +66,12 @@ public class AirlockChannel {
 	private EventSource sseClient;
 
 	/**
-	 * The authentication cookie given to us after logging in with the {@link AirlockChannel#code}.
+	 * The authentication cookie given to us after logging in with the {@link AirlockChannel#credentials#code}.
 	 * Note: it is possible to authenticate with an incorrect +code and still get an auth cookie.
 	 * Only after sending the first real request will it fail.
 	 */
 	private Cookie cookie;
+
 
 
 	/**
@@ -103,15 +99,10 @@ public class AirlockChannel {
 
 
 	/**
-	 * The name of the ship that we are connecting to. (the @p without '~')
-	 */
-	private final String shipName;
-
-	/**
 	 * @return the name of the ship that we are connecting to
 	 */
 	public String getShipName() {
-		return shipName;
+		return this.credentials.ship;
 	}
 
 	/**
@@ -147,13 +138,7 @@ public class AirlockChannel {
 	 * @param credentials The credentials of the ship to create a channel with
 	 */
 	public AirlockChannel(AirlockCredentials credentials) {
-		// todo refactor out normalization and stuff to AirlockCredentials
-		requireNonNull(credentials.url, "Please provide a url");
-		requireNonNull(credentials.ship, "Please provide a ship name");
-		requireNonNull(credentials.code, "Please provide a code");
-		this.code = credentials.code;  // todo: wishlist: validate code format
-		this.shipName = ShipName.withoutSig(credentials.ship); // by default, our ship name should be without a `sig`, as this is what's sent by the payload.
-		this.url = AirlockUtils.normalizeOrBust(credentials.url);
+		this.credentials = credentials;
 		this.pokeHandlers = new HashMap<>();
 		this.subscribeHandlers = new HashMap<>();
 		this.cookie = null;
@@ -169,7 +154,6 @@ public class AirlockChannel {
 				.readTimeout(1, TimeUnit.DAYS)  // possible max length of session (time before we get an event back) (as per https://stackoverflow.com/a/47232731)
 				.build();
 
-		// todo add a AirlockCredentials obj?
 
 		// todo figure out if newly changed `synchronized` blocks break functionality again or not
 		//  i basically removed what i thought would not be affected by inter-thread bugs (i.e. only local thread data stuff outside of synchronized
@@ -177,12 +161,6 @@ public class AirlockChannel {
 
 		// todo make this class more modular so we can easily replace http clients/libraries.
 		//  the only thing that would have some friction is adapting the cookie jar, but you could just go back to string based auth temporarily
-
-		// todo figure out what happens vs what should happen when:
-		//  ship ~tun is running at localhost:80 and has code sampel-sampel
-		//  you use the library, and make a new ship new Urbit("localhost:80", "~zod", "sampel-sample");
-		//  you are now successfully authenticated, but you have the wrong ship name. what do?
-		//  ok so urbit 1.0 runs into a silent failure (on our end) and the helm hi fails when we use the ship tun while pretending our name is zod
 
 	}
 
@@ -200,20 +178,20 @@ public class AirlockChannel {
 	 * @return the URL to the unique channel created
 	 */
 	public URL getChannelUrl() {
-		return AirlockUtils.resolveOrBust(this.url, "/~/channel/" + this.channelID);
+		return AirlockUtils.resolveOrBust(this.credentials.url, "/~/channel/" + this.channelID);
 	}
 
 	@NotNull
 	public URL getLoginUrl() {
-		return AirlockUtils.resolveOrBust(this.url, "/~/login");
+		return AirlockUtils.resolveOrBust(this.credentials.url, "/~/login");
 	}
 
 	public URL getScryUrl(String app, String path, String mark) {
-		return AirlockUtils.resolveOrBust(this.url, "/~/scry/" + app + "/" + path + "." + mark);
+		return AirlockUtils.resolveOrBust(this.credentials.url, "/~/scry/" + app + "/" + path + "." + mark);
 	}
 
 	public URL getSpiderUrl(String inputMark, String threadName, String outputMark) {
-		return AirlockUtils.resolveOrBust(this.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
+		return AirlockUtils.resolveOrBust(this.credentials.url, "/spider/" + inputMark + "/" + threadName + "/" + outputMark + ".json");
 	}
 
 	private InMemoryResponseWrapper sendRequest(Request request) throws AirlockRequestError, AirlockResponseError, AirlockAuthenticationError {
@@ -245,7 +223,7 @@ public class AirlockChannel {
 	 */
 	public InMemoryResponseWrapper authenticate() throws AirlockRequestError, AirlockAuthenticationError, AirlockResponseError {
 		RequestBody formBody = new FormBody.Builder()
-				.add("password", this.code)
+				.add("password", this.credentials.code)
 				.build();
 
 		Request request = new Request.Builder()
@@ -258,7 +236,7 @@ public class AirlockChannel {
 		// after we made the request, here we extract the cookie. it's quite ceremonial
 		this.cookie = this.client.cookieJar().loadForRequest(requireNonNull(HttpUrl.get(this.getChannelUrl())))
 				.stream()
-				.filter(cookie -> cookie.name().startsWith("urbauth-" + ShipName.withSig(this.shipName)))
+				.filter(cookie -> cookie.name().startsWith("urbauth-" + ShipName.withSig(this.credentials.ship)))
 				.findFirst().orElseThrow(() -> new IllegalStateException("Did not receive valid authcookie"));
 		// stream api is probably expensive and extra af but this is basically necessary to prevent brittle behavior
 
@@ -460,7 +438,7 @@ public class AirlockChannel {
 
 		Request request = new Request.Builder()
 				.url(this.getChannelUrl())
-				.header("Content-Type", "application/json") // todo see what the difference between header and addHeader is
+				.header("Content-Type", "application/json") // `header` just adds the name/value pair to headers array, while addHeader does validation on the content apparently
 				.put(requestBody)
 				.build();
 
@@ -472,9 +450,6 @@ public class AirlockChannel {
 		System.out.println(".============SendMessage============.");
 
 		synchronized (channelLock) {
-			// todo is this correct behavior?? I just adapted it blindly-ish
-			// commenting it out seems to not have an effect, i.e. tests still pass,
-			// but that could simply be because we are not testing rigorously enough. it remains to be seen
 			this.lastAcknowledgedEventId = this.lastSeenEventId;
 			return this.sendRequest(request);
 		}
@@ -495,7 +470,7 @@ public class AirlockChannel {
 			String ship,
 			@NotNull String app,
 			@NotNull String mark,
-			@NotNull JsonElement json // todo maybe migrate type to JsonObject
+			@NotNull JsonElement json
 	) throws AirlockResponseError, AirlockRequestError, AirlockAuthenticationError {
 
 		// according to https://gist.github.com/tylershuster/74d69e09650df5a86c4d8d8f00101b42#gistcomment-3477201
@@ -750,7 +725,7 @@ public class AirlockChannel {
 
 	@NotNull
 	public static String generateChannelID() {
-		return Math.round(Math.floor(Instant.now().toEpochMilli())) + "-" + AirlockChannel.hexString(6);
+		return Math.round(Math.floor(AirlockUtils.currentTimeMS())) + "-" + AirlockChannel.hexString(6);
 	}
 
 
