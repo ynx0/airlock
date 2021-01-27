@@ -201,6 +201,10 @@ export const createPost = (
 
 	}
 
+	public Post createPost(List<GraphContent> contents, Index parentIndex) {
+		return this.createPost(contents, parentIndex, null);
+	}
+
 	public Post createPost(List<GraphContent> contents) {
 		return this.createPost(contents, null, null);
 	}
