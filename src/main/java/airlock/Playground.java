@@ -64,7 +64,6 @@ public class Playground {
 		assert futurePostResponse.get().success;
 		System.out.println(agent.getCurrentGraphs());
 
-		// todo whats the diff between get newest vs getYounger/Older
 		// entrypoint: https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/chat/components/ChatWindow.tsx#L200
 		// the above line of code has the landscape logic for fetching messages
 		// ChatResource wraps ChatWindow and ChatInput.

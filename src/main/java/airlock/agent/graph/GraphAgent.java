@@ -185,8 +185,7 @@ export const createPost = (
 	 * @return The newly created post
 	 */
 	public Post createPost(List<GraphContent> contents, @Nullable Index parentIndex, @Nullable Index childIndex) {
-		// todo make this api design more idiomatic by using alternative to requireNonNull api
-		// todo move this into the `Post` class instead??
+		// maybe find a better way to write this api to not have to use requireNonNull
 		parentIndex = requireNonNullElse(parentIndex, new Index());
 
 		if (childIndex == null) {
