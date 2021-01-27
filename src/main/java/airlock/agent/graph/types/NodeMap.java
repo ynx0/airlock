@@ -32,7 +32,7 @@ public class NodeMap extends HashMap<Index, Node> {
 
 
 
-	public static class Adapter implements JsonSerializer<NodeMap>, JsonDeserializer<NodeMap> {
+	private static class Adapter implements JsonSerializer<NodeMap>, JsonDeserializer<NodeMap> {
 		@Override
 		public NodeMap deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			// hash map.

@@ -31,7 +31,7 @@ import java.lang.reflect.Type;
  */
 public abstract class GraphContent {
 
-	static class Adapter implements JsonDeserializer<GraphContent>, JsonSerializer<GraphContent> {
+	private static class Adapter implements JsonDeserializer<GraphContent>, JsonSerializer<GraphContent> {
 		@Override
 		public GraphContent deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			var keySet = json.getAsJsonObject().keySet();

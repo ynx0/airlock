@@ -132,7 +132,7 @@ public class Index extends ArrayList<BigInteger>  {
 
 
 
-	public static class Adapter implements JsonSerializer<Index>, JsonDeserializer<Index> {
+	private static class Adapter implements JsonSerializer<Index>, JsonDeserializer<Index> {
 		@Override
 		public Index deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			String indexStr = json.getAsJsonPrimitive().getAsString();

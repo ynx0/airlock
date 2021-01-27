@@ -108,7 +108,7 @@ public class Graph extends TreeMap<BigInteger, Node> {
 		}
 	}
 
-	static class Adapter implements JsonSerializer<Graph>, JsonDeserializer<Graph> {
+	private static class Adapter implements JsonSerializer<Graph>, JsonDeserializer<Graph> {
 
 		@Override
 		public JsonElement serialize(Graph src, Type typeOfSrc, JsonSerializationContext context) {

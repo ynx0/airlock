@@ -68,7 +68,7 @@ public class EyreResponse {
 				'}';
 	}
 
-	static class Adapter implements JsonDeserializer<EyreResponse> {
+	private static class Adapter implements JsonDeserializer<EyreResponse> {
 
 		@Override
 		public EyreResponse deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
