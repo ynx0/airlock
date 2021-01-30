@@ -9,6 +9,10 @@ OTA_PATH=./urbit
 
 #cd test_environment || exit
 
+### N.B. all functions in this file should be stateless, and accept any state as parameters
+
+### TODO: make functions generic over ship so that we can spawn fleets of fakeships, defaulting to ~zod
+
 die() {
   echo "$*" 1>&2
   exit 1
