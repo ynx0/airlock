@@ -6,6 +6,7 @@
 - up to date examples once everything stabilizes
 - remove lombok dependency (?)
 - write a lot more tests. also test more thoroughly
+- rename stuff like GraphAgent to Api? like how landscape has BaseApi and GraphApi
 
 ## Mid Term
 - see if I want dataclasses to be immutable, use getters, or just completely public access to instance variables
@@ -24,9 +25,9 @@ To fulfill this milestone there needs to be clients for 2 gall agents.
 I have chosen `%group-store` and`%invite-store`.
 
 - [ ] `%invite-store`
-    - [ ] initial research and notes
+    - [x] initial research and notes
     - [ ] experimentation, payload analysis
-    - [ ] baseline port of data structures and some api functionality
+    - [x] baseline port of data structures and some api functionality
     - [ ] complete port
     - [ ] unit tests
     - [ ] documentation
