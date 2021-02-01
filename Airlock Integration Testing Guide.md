@@ -66,7 +66,7 @@ There are two methods to setting up the environment.
 
 Both methods:
 * Download the urbit runtime
-* Create a **pristine** (a freshly created fake ship which has not been touched since boot)
+* Create a **pristine** (a freshly created fakeship which has not been touched since boot)
 * Allow you to send arbitrary input to the dojo in order to set up the ship
 
 * Method 1 - **Boot From Scratch** has the following properties:
@@ -78,7 +78,7 @@ Both methods:
 
 * Method 2 - **Boot From Cache** has the following properties:
 	* Uses an archive of pristine state to avoid booting from scratch
-	* Can create any number of fake ships
+	* Can create any number of fakeships
 	* Can perform a manual OTA
 	* Made up of multiple shell scripts
 	* Only downloads certain dependencies (i.e. the urbit runtime, OTA) if they don't exist
@@ -98,7 +98,7 @@ screen -d -m -S fakeship -L -Logfile "./fakeship_output.log" ./urbit -F zod	# 1
 screen -S fakeship -p 0 -X stuff "(add 2 2)^M"					# 2
 
 until [[ "$(tail -n1 fakeship_output.log)" =~ "~zod:dojo>" ]]; do		# 3
-  sleep 10s # wait for fakezod to boot
+  sleep 10s # wait for fakeship to boot
 done
 ```
 
@@ -185,14 +185,14 @@ Here is a list of each function and what it does:
 
 * `downloadUrbitRuntime` - downloads the urbit runtime binary from bootstrap.urbit.org
 * `downloadLatestOTA` - downloads the `urbit/urbit` repo, which contains the arvo kernel and boot pill
-* `start_ship` - starts a fakezod from an existing pier (`./urbit zod`)
-* `send2ship` - sends arbitrary input to the dojo of the fakezod
-* `getLastNLines` - gets the last `n` lines from the fakezod's output (from "fakeship_output.log")
-* `wait4boot` - waits for the fakezod to boot by periodically checking the "fakeship_output.log"
+* `start_ship` - starts the desired fakeship from an existing pier (`./urbit zod`)
+* `send2ship` - sends arbitrary input to the dojo of the desired fakeship
+* `getLastNLines` - gets the last `n` lines from the fakeship's output (from "fakeship_output.log")
+* `wait4boot` - waits for the fakeship to boot by periodically checking the "fakeship_output.log"
 * `killShip` - kills the **screen session** for the ship, killing the ship as well
-* `make_fakezod` - boots up a fresh fakezod (`./urbit -F zod`), then kills it when booted
-* `tar_fakezod_state` - archives the current fakezod pier. (assumes it will be pristine)
-* `untar_fakezod_state` - unarchives a pristine fakezod state
+* `make_fakeship` - boots up a fresh fakeship, then kills it when booted
+* `tar_fakeship` - archives the pier of the desired fakeship. (assumes a pristine pier)
+* `untar_fakeship` - unarchives the pristine pier of a given fakeship
 * `cleanup` - calls `killShip`, moves the current log into `./old_logs`, removes the tainted pier, and removes the urbit runtime zipfile.
 
 
@@ -235,14 +235,14 @@ The steps are as follows:
 		<ol type="a">
 			<li>In the case of a rebuild or non-existent cache
 				<ul>
-					<li>Boot a fakezod from scratch</li>
-					<li>Archive the pristine fakezod state</li>
+					<li>Boot a fakeship from scratch</li>
+					<li>Archive the pristine fakeship state</li>
 				</ul>
 			</li>
-			<li>Otherwise, use the existing pristine fakezod and unarchive it</li>
+			<li>Otherwise, use the existing pristine fakeship and unarchive it</li>
 		</ol>
 	</li>
-	<li>Boot from the pristine fakezod</li>
+	<li>Boot from the pristine pier of the desired ship</li>
 </ol>
 
 
@@ -250,7 +250,7 @@ The steps are as follows:
 
 #### Ship Setup
 
-Now that our pristine fakezod is ready, we move on to the actual setup of the ship.
+Now that our pristine fakeship(s) are ready, we move on to the actual setup of the ship(s).
 To do this, we edit the contents of `setup_env.sh` and send commands to the dojo. 
 This will be our entry point for the CI/CD pipeline as it imports and runs the environment setup script.
 
@@ -260,18 +260,14 @@ $TODO update
 
 
 sleep 1s
-send2ship "^X"                      # 2
-send2ship ";create channel /test^M" # 3
-send2ship "^X"                      # 4
+send2ship "$SHIP" "+code^M"
 getLastNLines 5                     # 5
 ```
 
 The script:
-1. Imports and runs the environment setup script, booting up a fakezod
-2. Sends `Control-X` to the ship to enter `chat-cli`
-3. Sends a command to create a channel called test, followed by an enter `^M`
-4. Switches back to the dojo
-5. Prints the last 5 lines of output from the ship
+1. Imports and runs the environment setup script, booting/creating fakeships for each ship specified in `ships.cfg`
+2. prints the code of the ship
+3. Prints the last 5 lines of output from the ship
 
 Again, this is where you should put all of your setup code that you want entered in the dojo.
 
@@ -281,7 +277,7 @@ Again, this is where you should put all of your setup code that you want entered
 One final thing to note is that Method 2 comes with a teardown script, which simply sends `Ctrl-D` to the ship, 
 kills the screen process in case it hangs, and does some cleanup on the log files. Feel free to change this to your liking.
  
-The contents of `teardown_fakezod.sh` are:
+The contents of `teardown_env.sh` are:
 
 ```bash
 send2ship "^D"	# 1
@@ -295,12 +291,12 @@ The script:
 3. Executes the cleanup function
 
 
-This script is handy for when you run the `setup_env.sh` script in a local environment and don't want to leave your fakezod running.
+This script is handy for when you run the `setup_env.sh` script in a local environment and don't want to leave your fakeship(s) running.
 
 #### Manual OTAs
 
 It may be desirable to be able to target the latest OTA and build tests around it.
-However, this is not possible through the default fakezod creation process. 
+However, this is not possible through the default fakeship creation process. 
 Instead, one must manually perform the ota by manually cloning the `urbit/urbit` repository,
 then running the urbit binary with the appropriate flags, while also ensuring that `git-lfs` is installed in order to properly clone the boot pills.
 
@@ -393,6 +389,6 @@ In summary, here are the steps:
 	* Method 1: https://github.com/ynx0/urbit/blob/master/extras/setup_fakezod_basic.sh
 	* Method 2: https://github.com/ynx0/urbit/blob/master/test_environment
 3. Call the scripts in your CI/CD pipeline
-4. If using Method 2, make sure to generate and commit the pristine fakezod to your repository
+4. If using Method 2, make sure to generate and commit the pristine(s) to your repository
 
 Happy Hooning!
