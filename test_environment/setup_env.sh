@@ -5,33 +5,53 @@ cd "$(dirname "$0")"  # ensure that the current directory is where the script is
 source ./setup_env_lib.sh
 
 ########################################
-# this script sets up a pristine fakezod
+# TODO write description of this script
 ########################################
 
-REBUILD=false
+# todo update docs
+
+# for now, ota is all or nothing. I can't imagine a (sane) scenario yet where you need some ships to be OTA'd but others not
+# it would pretty simple to add per-ship ota setting to ships.cfg when needed
 OTA=true
 
-cleanup  # always start fresh. if we are in the setup, we'll never use a running fakezod directory
-
 # download the urbit runtime if it doesn't exist
-if [ ! -d "./$URBIT_VERSION/" ]; then
+if [ ! -d "./$URBIT_VERSION" ]; then
   downloadUrbitRuntime
 fi
 
-
-if [[ $REBUILD == true || ! -f ./$FAKEZOD_TAR ]]; then
-  echo "REBUILD: $REBUILD"
-
-  if [[ $OTA == true ]]; then
-    downloadLatestOTA
-    make_fakezod_ota
-  else
-    make_fakezod
-  fi
-
-  tar_fakezod_state
-else
-  untar_fakezod_state
+# download the urbit runtime if it doesn't exist
+if [ $OTA == true ] && [ ! -d "./$OTA_PATH" ]; then
+  downloadLatestOTA
 fi
 
-boot_fakezod
+
+function setup_environment() {
+  # $1 = patp of desired ship
+  local SHIP SAFE_SHIP
+  SHIP="$1"
+  SAFE_SHIP=$(safepatp "$SHIP")
+
+  cleanup "$SHIP" # always start fresh. if we are in the setup, we'll never use a running pier
+
+  if [[ ! -f "./$SAFE_SHIP-$TAR_SUFFIX" ]]; then
+    make_fakeship "$SHIP" "$OTA"
+    tar_fakeship "$SHIP"
+  else
+    untar_fakeship "$SHIP"
+  fi
+
+  boot_fakeship "$SHIP"
+}
+
+while read -r SHIP; do
+  # set up each ship in parallel.
+  {
+    setup_environment "$SHIP"
+    send2ship "$SHIP" "+code^M^M"
+    getLastNLines "$SHIP" 5
+  } &
+done < "./ships.cfg"
+
+wait  # wait for all ship jobs to complete
+
+echo "Finished setting up environment"

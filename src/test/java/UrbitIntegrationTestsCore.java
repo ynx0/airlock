@@ -31,7 +31,7 @@ public class UrbitIntegrationTestsCore {
 		AirlockCredentials zodCredentials = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
 		urbit = new AirlockChannel(zodCredentials);
 
-		// Assumes fake ship zod is booted and running
+		// Assumes fakeship zod is booted and running
 
 	}
 
