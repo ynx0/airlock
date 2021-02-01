@@ -153,6 +153,7 @@ function tar_fakezod_state() {
 
   echo "Saving pristine fake $SHIP state"
   if [ -d "./$SAFE_SHIP" ]; then
+    # todo figure out what to do with .http.ports and .vere.lock. doesn't seem harmful to leave them right now
 #        rm "./$SAFE_SHIP/.urb/.http.ports"
 #        rm "./$SAFE_SHIP/.urb/.vere.lock"
     tar cvzf "$SAFE_SHIP-$FAKEZOD_TAR" "$SAFE_SHIP"
