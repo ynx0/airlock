@@ -10,6 +10,9 @@ OTA_PATH=./urbit
 #cd test_environment || exit
 
 ### N.B. all functions in this file should be stateless, and accept any state as parameters
+### N.B. all functions that accept a ship should always accept an normal/"unsafe" @p, and call `safepatp` themselves
+###      in addition, all library functions that call other library functions should pass in the "unsafe" patp.
+###      this is mainly just for uniform code
 
 die() {
   echo "$*" 1>&2

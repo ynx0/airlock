@@ -47,11 +47,8 @@ while read -r SHIP; do
   # set up each ship in parallel.
   {
     setup_environment "$SHIP"
-    send2ship "$SHIP" "+code^M"
+    send2ship "$SHIP" "+code^M^M"
     getLastNLines "$SHIP" 5
-    #send2ship "$SHIP" "^X"
-    #send2ship "$SHIP" ";create channel /test^M"
-    #send2ship "$SHIP" "^X"
   } &
 done < "./ships.cfg"
 
