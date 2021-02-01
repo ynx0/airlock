@@ -11,7 +11,7 @@ source ./setup_env_lib.sh
 
 while read -r SHIP; do
   {
-    send2ship "^D"
+    send2ship "$SHIP" "^D"
     sleep 3s  # give it time to exit
     cleanup "$SHIP"
   } &

@@ -131,7 +131,7 @@ function make_fakeship() {
   sleep 3s # wait for all fakeships on local network to properly poke/ack. should prevent some errors from smudging up the event log.
   # but it didn't. weird. getting a poke-ack on nus. todo investigate this later
   echo "Fake $SHIP created"
-  send2ship "^D"
+  send2ship "$SHIP" "^D"
   sleep 3s
 }
 
