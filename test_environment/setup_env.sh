@@ -20,7 +20,7 @@ if [ ! -d "./$URBIT_VERSION" ]; then
 fi
 
 # download the urbit runtime if it doesn't exist
-if [ ! -d "./$OTA_PATH" ]; then
+if [ $OTA == true ] && [ ! -d "./$OTA_PATH" ]; then
   downloadLatestOTA
 fi
 
