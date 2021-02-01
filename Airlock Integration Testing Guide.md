@@ -66,7 +66,7 @@ There are two methods to setting up the environment.
 
 Both methods:
 * Download the urbit runtime
-* Create a **pristine fakezod state** (a freshly created fakezod which has not been touched since boot)
+* Create a **pristine** (a freshly created fake ship which has not been touched since boot)
 * Allow you to send arbitrary input to the dojo in order to set up the ship
 
 * Method 1 - **Boot From Scratch** has the following properties:
@@ -77,12 +77,14 @@ Both methods:
 
 
 * Method 2 - **Boot From Cache** has the following properties:
-	* Only downloads the urbit runtime if it doesn't exist
-	* Uses an archive of a pristine fakezod state to avoid booting from scratch
+	* Uses an archive of pristine state to avoid booting from scratch
+	* Can create any number of fake ships
+	* Can perform a manual OTA
 	* Made up of multiple shell scripts
+	* Only downloads certain dependencies (i.e. the urbit runtime, OTA) if they don't exist
 
 
-Method 1 doesn't really make much sense running as a local script, and is only really useful as a CI script.
+Method 1 doesn't really make much sense running as a local script, and is only really useful as a quick and dirty CI script.
 Method 2, on the other hand works equally well both as a local script and as a script running in a CI environment. 
 
 
@@ -157,13 +159,12 @@ function send2ship() {
   screen -S fakeship -p 0 -X stuff "$1"
 }
 
-send2ship "^X"
-send2ship ";create channel /test^M"
+send2ship "(add 2 2)"
 ```
 
 
 This is all that's necessary to boot a fakezod and perform various setup tasks like creating chats it in an automated fashion. 
-However, it makes no promises with regards to speed—necessarily, it boots up a fakezod from scratch, *every time it runs*. 
+However, it makes no promises in regard to speed—necessarily, it boots up a fakezod from scratch, *every time it runs*. 
 This means that every time the script runs on a CI/CD platform, it will take roughly **5 minutes** just to set up the tests. 
 Not the end of the world, but quite problematic for quickly evaluating and merging pull requests, for example.
 
@@ -183,6 +184,7 @@ https://github.com/ynx0/urbit/blob/master/test_environment/setup_env_lib.sh
 Here is a list of each function and what it does:
 
 * `downloadUrbitRuntime` - downloads the urbit runtime binary from bootstrap.urbit.org
+* `downloadLatestOTA` - downloads the `urbit/urbit` repo, which contains the arvo kernel and boot pill
 * `start_ship` - starts a fakezod from an existing pier (`./urbit zod`)
 * `send2ship` - sends arbitrary input to the dojo of the fakezod
 * `getLastNLines` - gets the last `n` lines from the fakezod's output (from "fakeship_output.log")
