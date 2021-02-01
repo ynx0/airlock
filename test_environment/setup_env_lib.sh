@@ -168,7 +168,7 @@ function untar_fakezod_state() {
   SAFE_SHIP=$(safepatp "$SHIP")
 
   echo "Unzipping existing fake $SHIP"
-  tar xvf ./"$SAFE_SHIP-$FAKEZOD_TAR"
+  tar xvf "./$SAFE_SHIP-$FAKEZOD_TAR"
 }
 
 function cleanup() {

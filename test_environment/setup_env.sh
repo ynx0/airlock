@@ -27,12 +27,13 @@ fi
 
 function setup_environment() {
   # $1 = patp of desired ship
-  local SHIP
+  local SHIP SAFE_SHIP
   SHIP="$1"
+  SAFE_SHIP=$(safepatp "$SHIP")
 
   cleanup "$SHIP" # always start fresh. if we are in the setup, we'll never use a running fakezod directory
 
-  if [[ ! -f ./$FAKEZOD_TAR ]]; then
+  if [[ ! -f "./$SAFE_SHIP-$FAKEZOD_TAR" ]]; then
     make_fakezod "$SHIP" "$OTA"
     tar_fakezod_state "$SHIP"
   else
