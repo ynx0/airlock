@@ -4,8 +4,20 @@
 cd "$(dirname "$0")"
 source ./setup_env_lib.sh
 
-# this script is responsible for tearing down the environment after testing is complete
+#############################################
+# this script is responsible for tearing down
+# the environment after testing is complete
+#############################################
 
-send2ship "^D"
-sleep 3s
-cleanup
+while read -r SHIP; do
+  {
+    send2ship "^D"
+    sleep 3s  # give it time to exit
+    cleanup "$SHIP"
+  } &
+
+done < "./ships.cfg"
+
+wait  # wait for each job to complete
+
+echo "Finished tearing down environment"
