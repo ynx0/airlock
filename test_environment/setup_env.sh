@@ -10,8 +10,6 @@ source ./setup_env_lib.sh
 
 # todo update docs
 
-set -x
-
 # for now, ota is all or nothing. I can't imagine a (sane) scenario yet where you need some ships to be OTA'd but others not
 # it would pretty simple to add per-ship ota setting to ships.cfg when needed
 OTA=true
@@ -49,7 +47,7 @@ while read -r SHIP; do
   # set up each ship in parallel.
   {
     setup_environment "$SHIP"
-    send2ship "$SHIP" "(add 2 2)^M"
+    send2ship "$SHIP" "+code^M"
     getLastNLines "$SHIP" 5
     #send2ship "$SHIP" "^X"
     #send2ship "$SHIP" ";create channel /test^M"
