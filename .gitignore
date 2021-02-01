@@ -1,7 +1,7 @@
 .gradle/
 build/
 
-notes/*.har
+# notes/*.har
 
 test_environment/*
 !test_environment/*.sh
