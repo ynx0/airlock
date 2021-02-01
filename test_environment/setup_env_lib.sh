@@ -95,7 +95,7 @@ function wait4boot() {
   done
 }
 
-function killShip() {
+function killShipSession() {
   # $1 = patp of desired ship
   local SHIP SAFE_SHIP
   SHIP="$1"
@@ -180,7 +180,7 @@ function cleanup() {
   SHIP="$1"
   SAFE_SHIP=$(safepatp "$SHIP")
 
-  killShip "$SHIP"
+  killShipSession "$SHIP"
   mkdir -p ./old_logs
   mv "$SAFE_SHIP-$LOGFILE_SUFFIX" "./old_logs/$SAFE_SHIP-${LOGFILE_SUFFIX}_$(date -Iminutes).old.log" >>/dev/null 2>&1
   rm -rf "./$SAFE_SHIP" >>/dev/null 2>&1 # remove the non-compressed pier
