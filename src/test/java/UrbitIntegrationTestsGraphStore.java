@@ -44,7 +44,7 @@ public class UrbitIntegrationTestsGraphStore {
 		urbit.connect();
 		graphStoreAgent = new GraphAgent(urbit);
 
-		// Assumes fake ship zod is booted and running, and group exists named `test-group`
+		// Assumes fakeship zod is booted and running, and group exists named `test-group`
 
 	}
 

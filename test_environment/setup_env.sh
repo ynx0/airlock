@@ -31,7 +31,7 @@ function setup_environment() {
   SHIP="$1"
   SAFE_SHIP=$(safepatp "$SHIP")
 
-  cleanup "$SHIP" # always start fresh. if we are in the setup, we'll never use a running fakezod directory
+  cleanup "$SHIP" # always start fresh. if we are in the setup, we'll never use a running pier
 
   if [[ ! -f "./$SAFE_SHIP-$TAR_SUFFIX" ]]; then
     make_fakeship "$SHIP" "$OTA"

@@ -29,8 +29,8 @@ function downloadUrbitRuntime() {
 
 function downloadLatestOTA() {
   echo "Downloading latest OTA"
-  # this function is necessary for fakezods because they are created from the latest boot pill, not the latest ota
-  # however, if you are targeting the latest ota, you will not be able to get it because of the fact that you are a fake ship
+  # this function is necessary for fakeships because they are created from the latest boot pill, not the latest ota
+  # however, if you are targeting the latest ota, you will not be able to get it because of the fact that you are a fakeship
   # this function clones urbit/urbit
   # # #
   #  curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash  # uncomment for latest version
@@ -114,7 +114,7 @@ function make_fakeship() {
   OTA="$2"
   SAFE_SHIP="$(safepatp "$SHIP")"
 
-  rm -rf "./$SAFE_SHIP" # remove if existing fake ship
+  rm -rf "./$SAFE_SHIP" # remove if existing fakeship
   echo "Creating fake $SHIP"
 
   # screen command adapted from https://stackoverflow.com/a/15026227
@@ -128,7 +128,7 @@ function make_fakeship() {
   fi
 
   wait4boot "$SHIP"
-  sleep 3s # wait for all fake ships on local network to properly poke/ack. should prevent some errors from smudging up the event log.
+  sleep 3s # wait for all fakeships on local network to properly poke/ack. should prevent some errors from smudging up the event log.
   # but it didn't. weird. getting a poke-ack on nus. todo investigate this later
   echo "Fake $SHIP created"
   send2ship "^D"

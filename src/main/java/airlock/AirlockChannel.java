@@ -352,7 +352,7 @@ public class AirlockChannel {
 						// todo better error handling
 						//  right now, if I try to
 
-						// here, we get an EOFException if we have a running connection and then Ctrl-z forcibly close the fakezod
+						// here, we get an EOFException if we have a running connection and then Ctrl-z forcibly close the fakeship
 						// so maybe that's another custom error to make
 						// socket exception occurs because by default, the okhttp sse event client times out after like 500ms
 						// if it hasn't received any data from the connection, even though that's normal when using eyre. this is why we set the timeout really high.
