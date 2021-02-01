@@ -4,5 +4,6 @@ build/
 notes/*.har
 
 test_environment/*
-!test_environment/fakezod-init.tar.gz
 !test_environment/*.sh
+!test_environment/ships.cfg
+!test_environment/*-init.tar.gz
