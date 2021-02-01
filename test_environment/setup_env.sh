@@ -33,14 +33,14 @@ function setup_environment() {
 
   cleanup "$SHIP" # always start fresh. if we are in the setup, we'll never use a running fakezod directory
 
-  if [[ ! -f "./$SAFE_SHIP-$FAKEZOD_TAR" ]]; then
-    make_fakezod "$SHIP" "$OTA"
-    tar_fakezod_state "$SHIP"
+  if [[ ! -f "./$SAFE_SHIP-$TAR_SUFFIX" ]]; then
+    make_fakeship "$SHIP" "$OTA"
+    tar_fakeship "$SHIP"
   else
-    untar_fakezod_state "$SHIP"
+    untar_fakeship "$SHIP"
   fi
 
-  boot_fakezod "$SHIP"
+  boot_fakeship "$SHIP"
 }
 
 while read -r SHIP; do
