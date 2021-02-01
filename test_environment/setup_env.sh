@@ -8,6 +8,8 @@ source ./setup_env_lib.sh
 # TODO write description of this script
 ########################################
 
+# todo update docs
+
 set -x
 
 # for now, ota is all or nothing. I can't imagine a (sane) scenario yet where you need some ships to be OTA'd but others not

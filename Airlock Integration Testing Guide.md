@@ -249,12 +249,13 @@ The steps are as follows:
 #### Ship Setup
 
 Now that our pristine fakezod is ready, we move on to the actual setup of the ship.
-To do this, we edit the contents of `setup_fakezod.sh` and send commands to the dojo. 
+To do this, we edit the contents of `setup_env.sh` and send commands to the dojo. 
 This will be our entry point for the CI/CD pipeline as it imports and runs the environment setup script.
 
+$TODO update
 ```bash
-# test_environment/setup_fakezod.sh
-source ./setup_env.sh               # 1
+# test_environment/setup_env.sh
+
 
 sleep 1s
 send2ship "^X"                      # 2
@@ -292,7 +293,7 @@ The script:
 3. Executes the cleanup function
 
 
-This script is handy for when you run the `setup_fakezod.sh` script in a local environment and don't want to leave your fakezod running.
+This script is handy for when you run the `setup_env.sh` script in a local environment and don't want to leave your fakezod running.
 
 #### Manual OTAs
 
@@ -359,7 +360,7 @@ jobs:
 
     # 4. Run the setup script
     - name: Setup test environment
-      run: ./test_environment/setup_fakezod.sh  # or setup_fakezod_basic.sh
+      run: ./test_environment/setup_env.sh  # or setup_fakezod_basic.sh
 
     # 5. Run the tests
     - name: Test with Gradle
@@ -367,7 +368,7 @@ jobs:
 
     # 6. Run the teardown script if you are using method 2
     - name: Teardown test environment
-      run: ./test_environment/teardown_fakezod.sh
+      run: ./test_environment/teardown_env.sh
 
 ```
 
@@ -377,8 +378,7 @@ A general reference for the syntax of this file can be found [here](https://docs
 
 ### Notes
 * I keep the scripts in a separate directory called `test_environment` to keep the rest of my repository clean.
-* To force a rebuild of the cached fakezod state, simply delete the cached file or set the `REBUILD` variable in the file `setup_env.sh` to true.
-* **IMPORTANT:** When running the `setup_fakezod` script, the cached version is saved as a `.tar.gz` file in the same directory. 
+* **IMPORTANT:** When running the `setup_env.sh` script, the cached version is saved as a `.tar.gz` file in the same directory. 
     -  You **must** add and commit this file so that it is uploaded to the repository as well, 
        otherwise the script will simply start from scratch when running in the CI runner (and will take forever).
 
