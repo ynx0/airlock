@@ -2,6 +2,8 @@
 
 Communicate with an Urbit ship over the eyre protocol in Java
 
+[![awesome urbit badge](https://img.shields.io/badge/~-awesome%20urbit-lightgrey)](https://github.com/urbit/awesome-urbit)
+
 ## Example
 ```java
 public class Main {
