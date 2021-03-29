@@ -243,8 +243,13 @@ The steps are as follows:
 	<li>Boot from the pristine fakezod</li>
 </ol>
 
+Also note that the script now takes in a `ships.cfg` in the same directory that boots in a fleet of ship, with @p's separated by lines.
 
-
+`test_environment/ships.cfg`
+```
+~zod
+~nus
+```
 
 #### Ship Setup
 
