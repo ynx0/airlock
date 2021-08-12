@@ -54,4 +54,11 @@ done < "./ships.cfg"
 
 wait  # wait for all ship jobs to complete
 
+### Write your setup code below ###
+
+# on zod: create a group called test-group, inviting ~nus
+send2ship "~zod" ":contact-view &contact-view-action [%create %test-group [%invite (sy ~[~nus])] 'Test Group' 'This is a test group']^M"
+# on nus: join the resource ~zod/test-group
+#send2ship "~nus" ":contact-view &contact-view-action [%join ~zod %test-group]^M"
+
 echo "Finished setting up environment"

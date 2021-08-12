@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 PLATFORM=linux64
-VERSION_NUM=v1.0-rc1
+VERSION_NUM=v1.5
 URBIT_VERSION=urbit-$VERSION_NUM-$PLATFORM # example output: urbit-v1.0-rc1-linux64
 TAR_SUFFIX=init.tar.gz
 LOGFILE_SUFFIX=output.log
@@ -104,7 +104,8 @@ function killShipSession() {
   SHIP="$1"
   SAFE_SHIP=$(safepatp "$SHIP")
 
-  screen -X -S "$SAFE_SHIP" quit 2>/dev/null # ok if it doesn't exist
+  # screen -X -S "$SAFE_SHIP" quit 2>/dev/null # ok if it doesn't exist
+  pkill -F "$SAFE_SHIP/.vere.lock"
   # if ship is null then everything will be killed ...
 }
 
