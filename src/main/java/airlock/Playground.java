@@ -21,16 +21,18 @@ public class Playground {
 	public static void main(String[] args) throws Exception {
 
 
-		AirlockCredentials zodCreds = new AirlockCredentials(new URL("http://localhost:8080"), "zod", "lidlut-tabwed-pillex-ridrup");
+		AirlockCredentials zodCreds = new AirlockCredentials(new URL("http://localhost:8081"), "zod", "lidlut-tabwed-pillex-ridrup");
+		AirlockCredentials nusCreds = new AirlockCredentials(new URL("http://localhost:8080"), "nus", "bortem-pinwyl-macnyx-topdeg");
 		AirlockCredentials sipfynCreds = new AirlockCredentials(new URL("http://localhost:80"), "sipfyn-pidmex", "toprus-dopsul-dozmep-hocbep");
-		AirlockChannel channel = new AirlockChannel(sipfynCreds);
+		AirlockChannel channel = new AirlockChannel(zodCreds);
 		String ship = channel.getShipName();
 		channel.authenticate();
 		channel.connect();
 
 		InviteAgent inviteAgent = new InviteAgent(channel);
-
-
+		var currentInvites = inviteAgent.getInvites();
+		System.out.println("Current Invites are: ");
+		System.out.println(currentInvites);
 
 		channel.teardown();
 
