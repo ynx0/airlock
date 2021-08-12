@@ -964,6 +964,10 @@ export const createPost = (
 		// no further code should be written here because it would be skipped by early exits
 	}
 
+	/**
+	 * Returns a {@link Map} of all graphs that the agent is aware of keyed by resource
+	 * @return map of resources and their respective graph
+	 */
 	public Map<Resource, Graph> getCurrentGraphs() {
 		return graphs;
 	}
