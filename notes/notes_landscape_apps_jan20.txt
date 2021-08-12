@@ -2,11 +2,11 @@
 links:
     * https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/chat/ChatResource.tsx#L42
     * https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/chat/components/ChatWindow.tsx#L200
-    * https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/publish/components/new-post.tsx#L22
 
-# publish notes 
+# publish notes
 links:
     * https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/logic/lib/publish.ts
+    * https://github.com/urbit/urbit/blob/6499eb5fe0bd81c91f12d6f9ebcc6843b2ca7ac7/pkg/interface/src/views/apps/publish/components/new-post.tsx#L22
 
 src/logic/lib/publish.ts:newPost is the money function
 

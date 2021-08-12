@@ -1,0 +1,5 @@
+:contact-view &contact-view-action [%create %test-group [%invite ~] 'Test Group' 'This is a test group']
+
+https://github.com/urbit/urbit/blob/d0d8f7d9f0c9143d37d0bde589cec8fb021dcdcf/pkg/arvo/sur/contact-view.hoon#L4
+
+https://github.com/urbit/urbit/blob/5cb6af0433a65fb28b4bc957be10cb436781392d/pkg/arvo/ted/ph/migrate/make-groups.hoon#L29

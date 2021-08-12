@@ -14,6 +14,10 @@
       make them immutable copies style modifications.
 
 - make certain dataclasses final where it makes sense (e.g. `EyreResponse`, `PokeResponse`, `SubscribeEvent`)
+- rename the test java files
+- fix the TOC in the readme
+- formatting and optimize imports on the whole repo
+
 
 ## Development Roadmap
 
@@ -26,7 +30,7 @@ I have chosen `%group-store` and`%invite-store`.
 
 - [ ] `%invite-store`
     - [x] initial research and notes
-    - [ ] experimentation, payload analysis
+    - [x] experimentation, payload analysis
     - [x] baseline port of data structures and some api functionality
     - [ ] complete port
     - [ ] unit tests
@@ -45,6 +49,7 @@ I have chosen `%group-store` and`%invite-store`.
 ### After Milestone 3
 
 **Graph Store Stuff**
+- subscribe to `/keys`
 - create helper for creating link entries
 - create helper for creating blog posts
 

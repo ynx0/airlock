@@ -1,3 +1,6 @@
+# data oriented programming in java
+https://github.com/GlenKPeterson/Paguro
+https://blog.klipse.tech/java/2021/03/05/data-oriented-programming-in-java.html
 
 # threading and datastructures
 http://fastutil.di.unimi.it/docs/
