@@ -21,6 +21,10 @@ public class InviteAgent extends Agent {
 
 	private final Invites invites;
 
+	public Invites getInvites() {
+		return invites;
+	}
+
 	public InviteAgent(AirlockChannel channel) throws AirlockAuthenticationError, AirlockResponseError, AirlockRequestError {
 		super(channel);
 		this.invites = new Invites();
